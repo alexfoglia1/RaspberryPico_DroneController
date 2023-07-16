@@ -6,7 +6,7 @@
 #define I2C_SCL 9
 #define I2C_FREQUENCY_HZ 400000
 
-#define CTRL_LOOP_FREQUENCY_HZ 345
+#define CTRL_LOOP_FREQUENCY_HZ 500
 
 void InitBoard(void);
 
