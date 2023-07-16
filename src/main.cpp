@@ -21,7 +21,7 @@ int main()
 
     while(1)
     {
-        printf("Orientation: %f %f %f\n", ATTITUDE_Roll, ATTITUDE_Pitch, ATTITUDE_Yaw);
+        //printf("Orientation: %f %f %f\n", ATTITUDE_Roll, ATTITUDE_Pitch, ATTITUDE_Yaw);
     }
     return 0;
 }
