@@ -22,8 +22,8 @@ Distributed as-is; no warranty is given.
 #ifndef __LSM9DS1_H__
 #define __LSM9DS1_H__
 
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
+#include <pico/stdlib.h>
+#include <hardware/i2c.h>
 
 #include "LSM9DS1_Registers.h"
 #include "LSM9DS1_Types.h"

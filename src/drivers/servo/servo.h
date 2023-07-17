@@ -16,7 +16,7 @@ private:
     uint32_t _slice_num;
     uint32_t _chan;
 
-    uint32_t pwm_set_freq_duty(uint32_t slice_num, uint32_t chan,uint32_t f, int d);
+    uint32_t pwm_set_freq_duty(uint32_t f, float dc);
 
 };
 

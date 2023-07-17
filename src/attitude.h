@@ -15,8 +15,8 @@ extern float ATTITUDE_Roll;
 extern float ATTITUDE_Pitch;
 extern float ATTITUDE_Yaw;
 
-bool ATTITUDE_Init(void);
-void ATTITUDE_Handler(void);
+bool ATTITUDE_Init();
+void ATTITUDE_Handler();
 
 
 #endif //ATTITUDE_H

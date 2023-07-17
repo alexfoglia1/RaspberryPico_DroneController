@@ -5,7 +5,7 @@
 #include <hardware/i2c.h>
 
 
-void InitBoard(void)
+void InitBoard()
 {
     stdio_init_all();
 

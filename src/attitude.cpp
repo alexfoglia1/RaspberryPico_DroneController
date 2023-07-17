@@ -120,7 +120,7 @@ static void estimate_attitude()
     ATTITUDE_Yaw = heading * RADIANS_TO_DEGREES;
 }
 
-bool ATTITUDE_Init(void)
+bool ATTITUDE_Init()
 {
     ax_flt_tag = {};
     ay_flt_tag = {};
@@ -142,7 +142,7 @@ bool ATTITUDE_Init(void)
 }
 
 
-void ATTITUDE_Handler(void)
+void ATTITUDE_Handler()
 {
     if (imu.accelAvailable()) imu.readAccel();
     if (imu.gyroAvailable())  imu.readGyro();

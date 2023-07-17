@@ -8,6 +8,16 @@
 
 #define CTRL_LOOP_FREQUENCY_HZ 500
 
-void InitBoard(void);
+#define CHANNEL_ROLL     15
+#define CHANNEL_PITCH    14
+#define CHANNEL_THROTTLE 13
+#define CHANNEL_ARMED    12
+
+#define MOTOR_1 4
+#define MOTOR_2 5
+#define MOTOR_3 6
+#define MOTOR_4 7
+
+void InitBoard();
 
 #endif //USER_H
