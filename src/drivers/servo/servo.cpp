@@ -8,6 +8,7 @@ Servo::Servo(int gpio)
     _gpio = gpio;
     _slice_num = pwm_gpio_to_slice_num(_gpio);
     _chan = pwm_gpio_to_channel(_gpio);
+    _period_us = 0;
 }
 
 
@@ -26,6 +27,14 @@ void Servo::writeMicroseconds(uint32_t period_us)
 
     float duty_cycle = ((float) period_us) / ((float)(pwm_period_us));
     pwm_set_freq_duty(PWM_FREQUENCY_HZ, duty_cycle);
+
+    _period_us = period_us;
+}
+
+
+uint32_t Servo::currentSignal()
+{
+    return _period_us;
 }
 
 

@@ -3,6 +3,7 @@
 #include "attitude.h"
 #include "joystick.h"
 #include "motors.h"
+#include "maint.h"
 #include <stdio.h>
 
 const int MOTOR_ARM_THRESHOLD = 100;
@@ -32,18 +33,7 @@ int main()
 
     while(1)
     {
-#ifdef __ASCI_MAINT__
-        printf("ROLL(%f)\tPITCH(%f)\tYAW(%f)\t",
-        ATTITUDE_Roll, ATTITUDE_Pitch, ATTITUDE_Yaw);
-
-        printf("JS_ROLL(%f)\tJS_PITCH(%f)\tJS_THROTTLE(%f)\tJS_ARM(%d)\t",
-        JOYSTICK_Roll, JOYSTICK_Pitch, JOYSTICK_Throttle, JOYSTICK_MotorsArmed);
-
-        printf("M1(%d)\tM2(%d)\tM3(%d)\tM4(%d)\n",
-        M1_Signal, M2_Signal, M3_Signal, M4_Signal);
-#else
-        MAINT_Manager();
-#endif
+        MAINT_Handler();
     }
     return 0;
 }

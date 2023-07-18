@@ -1,5 +1,5 @@
 #ifndef PULSE_H
-#define PULSE_h
+#define PULSE_H
 
 #include <hardware/gpio.h>
 #include <stdint.h>
@@ -25,4 +25,4 @@ private:
 };
 
 extern std::vector<Pulse*> pulse_in_vector;
-#endif
+#endif // PULSE_H

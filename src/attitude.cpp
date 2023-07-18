@@ -10,15 +10,15 @@ static const float CTRL_LOOP_PERIOD = 1.0f/CTRL_LOOP_FREQUENCY_HZ;
 
 static LSM9DS1 imu;
 
-static pt1_flt_tag ax_flt_tag;
-static pt1_flt_tag ay_flt_tag;
-static pt1_flt_tag az_flt_tag;
-static pt1_flt_tag gx_flt_tag;
-static pt1_flt_tag gy_flt_tag;
-static pt1_flt_tag gz_flt_tag;
-static pt1_flt_tag mx_flt_tag;
-static pt1_flt_tag my_flt_tag;
-static pt1_flt_tag mz_flt_tag;
+pt1_flt_tag ax_flt_tag;
+pt1_flt_tag ay_flt_tag;
+pt1_flt_tag az_flt_tag;
+pt1_flt_tag gx_flt_tag;
+pt1_flt_tag gy_flt_tag;
+pt1_flt_tag gz_flt_tag;
+pt1_flt_tag mx_flt_tag;
+pt1_flt_tag my_flt_tag;
+pt1_flt_tag mz_flt_tag;
 
 static bool filter_on;
 

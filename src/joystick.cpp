@@ -1,6 +1,5 @@
 #include "joystick.h"
 #include "user.h"
-#include "pulse.h"
 #include <pico/float.h>
 
 float JOYSTICK_Roll;
@@ -8,10 +7,10 @@ float JOYSTICK_Pitch;
 float JOYSTICK_Throttle;
 bool  JOYSTICK_MotorsArmed;
 
-static Pulse roll_signal(CHANNEL_ROLL);
-static Pulse pitch_signal(CHANNEL_PITCH);
-static Pulse throttle_signal(CHANNEL_THROTTLE);
-static Pulse armed_signal(CHANNEL_ARMED);
+Pulse roll_signal(CHANNEL_ROLL);
+Pulse pitch_signal(CHANNEL_PITCH);
+Pulse throttle_signal(CHANNEL_THROTTLE);
+Pulse armed_signal(CHANNEL_ARMED);
 
 static float min_roll;
 static float max_roll;

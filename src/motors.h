@@ -5,11 +5,12 @@
 #define MOTOR_MAX_SIGNAL    2000
 
 #include <stdint.h>
+#include "servo.h"
 
-extern uint32_t M1_Signal;
-extern uint32_t M2_Signal;
-extern uint32_t M3_Signal;
-extern uint32_t M4_Signal;
+extern Servo motor1;
+extern Servo motor2;
+extern Servo motor3;
+extern Servo motor4;
 
 void MOTORS_Init();
 void MOTORS_Handler();

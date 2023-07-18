@@ -1,6 +1,8 @@
 #ifndef JOYSTICK_H
 #define JOYSTICK_H
 
+#include "pulse.h"
+
 #define RADIO_MIN_SIGNAL 1000
 #define RADIO_MAX_SIGNAL 2000
 #define RADIO_MIN_SIGNAL_ROLL 1046
@@ -14,6 +16,11 @@ extern float JOYSTICK_Roll;
 extern float JOYSTICK_Pitch;
 extern float JOYSTICK_Throttle;
 extern bool  JOYSTICK_MotorsArmed;
+
+extern Pulse roll_signal;
+extern Pulse pitch_signal;
+extern Pulse throttle_signal;
+extern Pulse armed_signal;
 
 void JOYSTICK_Init(float min_roll, float max_roll, float min_pitch, float max_pitch, float min_throttle, float max_throttle);
 void JOYSTICK_Handler();
