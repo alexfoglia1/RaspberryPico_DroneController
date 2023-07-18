@@ -15,7 +15,7 @@ Maint::Maintenance::Maintenance(QString serialPortName)
 
 }
 
-void Maint::Maintenance::Open()
+bool Maint::Maintenance::Open()
 {
 	_serialPort->setBaudRate(QSerialPort::Baud115200);
 	_serialPort->setParity(QSerialPort::NoParity);
@@ -25,11 +25,7 @@ void Maint::Maintenance::Open()
 
 	connect(_serialPort, SIGNAL(readyRead()), this, SLOT(OnRx()));
 
-	bool res = _serialPort->open(QSerialPort::OpenModeFlag::ReadWrite);
-	if (!res)
-	{
-		printf("@\r\n");
-	}
+	return _serialPort->open(QSerialPort::OpenModeFlag::ReadWrite);
 }
 
 
@@ -75,8 +71,10 @@ void Maint::Maintenance::Tx()
     _txMutex.unlock();
 
 	qba.push_back(cks);
-	_serialPort->write(qba);
+	int bytesWritten = _serialPort->write(qba);
     _serialPort->flush();
+
+    emit txRawData(reinterpret_cast<quint8*>(qba.data()), bytesWritten);
 }
 
 
@@ -175,6 +173,8 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
     uint8_t local_cks = checksum(&_rx_buf[0], data_len - 1);
     Maint::MAINT_HEADER_T* rx_header = reinterpret_cast<Maint::MAINT_HEADER_T*>(&_rx_buf[0]);
     uint8_t* pPayload = reinterpret_cast<uint8_t*>(&_rx_buf[sizeof(Maint::MAINT_HEADER_T)]);
+
+    emit rxRawData(local_cks == rx_cks, reinterpret_cast<quint8*>(&_rx_buf[0]), data_len);
 
     if (local_cks == rx_cks)
     {

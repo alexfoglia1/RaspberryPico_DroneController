@@ -15,9 +15,11 @@ ${CMAKE_SOURCE_DIR}/src/MaintenanceGui.ui
 ${CMAKE_SOURCE_DIR}/src/MaintenanceWindow.h
 ${CMAKE_SOURCE_DIR}/src/MaintenanceWindow.cpp
 
-
 ${CMAKE_SOURCE_DIR}/src/maint.h
 ${CMAKE_SOURCE_DIR}/src/maint.cpp
+
+${CMAKE_SOURCE_DIR}/src/PlotWidget.h
+${CMAKE_SOURCE_DIR}/src/PlotWidget.cpp
  
 ${CMAKE_SOURCE_DIR}/src/main.cpp
 )

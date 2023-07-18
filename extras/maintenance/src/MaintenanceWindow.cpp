@@ -1,5 +1,7 @@
 #include "MaintenanceWindow.h"
 #include <qserialport.h>
+#include <qdatetime.h>
+#include <qmessagebox.h>
 
 
 MaintenanceWindow::MaintenanceWindow()
@@ -11,6 +13,14 @@ MaintenanceWindow::MaintenanceWindow()
 	autoScanComPorts();
 
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
+	connect(_ui.plotTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotSliderValueChanged(int)));
+	connect(_ui.plotTrack1Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack1ValueChanged(int)));
+	connect(_ui.plotTrack2Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack2ValueChanged(int)));
+	connect(_ui.plotTrack3Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack3ValueChanged(int)));
+
+	connect(_ui.comboSelTrack1, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack1TextChanged(const QString&)));
+	connect(_ui.comboSelTrack2, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack2TextChanged(const QString&)));
+	connect(_ui.comboSelTrack3, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack3TextChanged(const QString&)));
 
 	connect(_ui.checkTxThrottleSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxRollSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
@@ -19,7 +29,6 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxCmdThrottle, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxCmdRoll, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxCmdPitch, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
 
 	connect(_ui.checkTxMotor1Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotor2Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
@@ -45,32 +54,101 @@ void MaintenanceWindow::autoScanComPorts()
 	}
 }
 
+void MaintenanceWindow::OnPlotSliderValueChanged(int newValue)
+{
+	const double SAMPLE_PERIOD_S = _txDelayMillis * 1e-3;
+	const double SAMPLE_FREQ = 1 / SAMPLE_PERIOD_S;
+
+	_ui.plot->UpdateSamplesPerSecond(SAMPLE_FREQ);
+
+	int samplesInNewValue = SAMPLE_FREQ * newValue;
+
+	_ui.plot->SetXSpan(samplesInNewValue);
+
+	_ui.lblTimeSpan->setText(QString("Time: %1s").arg(newValue));
+}
+
+
+void MaintenanceWindow::OnPlotTrack1ValueChanged(int newValue)
+{
+	_ui.plot->SetYSpan(0, newValue);
+}
+
+
+void MaintenanceWindow::OnPlotTrack2ValueChanged(int newValue)
+{
+	_ui.plot->SetYSpan(1, newValue);
+}
+
+
+void MaintenanceWindow::OnPlotTrack3ValueChanged(int newValue)
+{
+	_ui.plot->SetYSpan(2, newValue);
+}
+
+
+
+void MaintenanceWindow::OnComboTrack1TextChanged(const QString& newText)
+{
+	if (newText.toUpper().contains("NONE"))
+	{
+		_ui.plot->ClearData(0);
+	}
+}
+
+
+void MaintenanceWindow::OnComboTrack2TextChanged(const QString& newText)
+{
+	if (newText.toUpper().contains("NONE"))
+	{
+		_ui.plot->ClearData(1);
+	}
+}
+
+void MaintenanceWindow::OnComboTrack3TextChanged(const QString& newText)
+{
+	if (newText.toUpper().contains("NONE"))
+	{
+		_ui.plot->ClearData(2);
+	}
+}
+
 
 void MaintenanceWindow::OnBtnOpenSerialPort()
 {
 	_maintHandler = new Maint::Maintenance(_ui.comboSelPort->currentText());
 
-	connect(_maintHandler, SIGNAL(receivedThrottleSgn(uint32_t)), this, SLOT(OnReceivedThrottleSgn(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedPitchSgn(uint32_t)), this, SLOT(OnReceivedPitchSgn(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedRollSgn(uint32_t)), this, SLOT(OnReceivedRollSgn(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedCmdThr(float)), this, SLOT(OnReceivedCmdThr(float)));
-	connect(_maintHandler, SIGNAL(receivedCmdPitch(float)), this, SLOT(OnReceivedCmdPitch(float)));
-	connect(_maintHandler, SIGNAL(receivedCmdRoll(float)), this, SLOT(OnReceivedCmdRoll(float)));
+	if (_maintHandler->Open())
+	{
+		connect(_maintHandler, SIGNAL(receivedThrottleSgn(uint32_t)), this, SLOT(OnReceivedThrottleSgn(uint32_t)));
+		connect(_maintHandler, SIGNAL(receivedPitchSgn(uint32_t)), this, SLOT(OnReceivedPitchSgn(uint32_t)));
+		connect(_maintHandler, SIGNAL(receivedRollSgn(uint32_t)), this, SLOT(OnReceivedRollSgn(uint32_t)));
+		connect(_maintHandler, SIGNAL(receivedCmdThr(float)), this, SLOT(OnReceivedCmdThr(float)));
+		connect(_maintHandler, SIGNAL(receivedCmdPitch(float)), this, SLOT(OnReceivedCmdPitch(float)));
+		connect(_maintHandler, SIGNAL(receivedCmdRoll(float)), this, SLOT(OnReceivedCmdRoll(float)));
 
-	connect(_maintHandler, SIGNAL(receivedMotor1(uint32_t)), this, SLOT(OnReceivedMotor1(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedMotor2(uint32_t)), this, SLOT(OnReceivedMotor2(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedMotor3(uint32_t)), this, SLOT(OnReceivedMotor3(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedMotor4(uint32_t)), this, SLOT(OnReceivedMotor4(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedMotorsArmed(uint32_t)), this, SLOT(OnReceivedMotorsArmed(uint32_t)));
+		connect(_maintHandler, SIGNAL(receivedMotor1(uint32_t)), this, SLOT(OnReceivedMotor1(uint32_t)));
+		connect(_maintHandler, SIGNAL(receivedMotor2(uint32_t)), this, SLOT(OnReceivedMotor2(uint32_t)));
+		connect(_maintHandler, SIGNAL(receivedMotor3(uint32_t)), this, SLOT(OnReceivedMotor3(uint32_t)));
+		connect(_maintHandler, SIGNAL(receivedMotor4(uint32_t)), this, SLOT(OnReceivedMotor4(uint32_t)));
+		connect(_maintHandler, SIGNAL(receivedMotorsArmed(uint32_t)), this, SLOT(OnReceivedMotorsArmed(uint32_t)));
+
+		connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
+		connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
 
 
-	_maintHandler->Open();
-	_maintHandler->EnableTx();
+		_maintHandler->EnableTx();
 
-	_ui.btnOpenSerialPort->setEnabled(false);
-	_ui.comboSelPort->setEnabled(false);
-	_ui.groupBoxTx->setEnabled(true);
-	_ui.TxMaintenanceGroup->setEnabled(true);
+		_ui.btnOpenSerialPort->setEnabled(false);
+		_ui.comboSelPort->setEnabled(false);
+		_ui.groupBoxTx->setEnabled(true);
+		_ui.TxMaintenanceGroup->setEnabled(true);
+	}
+	else
+	{
+		_maintHandler->deleteLater();
+		QMessageBox::warning(this, "Error", QString("Cannot open serial port %1").arg(_ui.comboSelPort->currentText()));
+	}
 }
 
 
@@ -204,8 +282,80 @@ void MaintenanceWindow::OnHeaderChanged()
 	{
 		_maintHandler->SetTxHeader(header);
 	}
+}
+
+
+void MaintenanceWindow::OnRxRawData(bool valid, quint8* data, int size)
+{
+	QString dataString;
+
+	for (int i = 0; i < size; i++)
+	{
+		QString hex = QString::number(data[i], 16).toUpper();
+
+		if (hex.length() == 1)
+		{
+			hex = "0" + hex;
+		}
+
+		dataString += "0x" + hex + " ";
+	}
+
+	_ui.textEditRxData->setText(dataString);
+
+	if (!valid)
+	{
+		_ui.lblRxData->setStyleSheet("background-color: #FFFF00");
+	}
+	else
+	{
+		_ui.lblRxData->setStyleSheet("background-color: #00FF00");
+	}
+}
+
+
+void MaintenanceWindow::OnTxRawData(quint8* data, int size)
+{
+	static qint64 lastTxTime = 0;
+	qint64 currTxTime = QDateTime::currentMSecsSinceEpoch();
+
+	if (size > 0)
+	{
+		_ui.lblTxData->setStyleSheet("background-color: #00FF00");
+		QString dataString;
+		for (int i = 0; i < size; i++)
+		{
+			QString hex = QString::number(data[i], 16).toUpper();
+
+			if (hex.length() == 1)
+			{
+				hex = "0" + hex;
+			}
+
+			dataString += "0x" + hex + " ";
+		}
+
+		_ui.textEditTxData->setText(dataString);
+	}
+
+	if (lastTxTime == 0)
+	{
+		lastTxTime = currTxTime;
+	}
+	else
+	{
+		qint64 delta = currTxTime - lastTxTime;
+		lastTxTime = size > 0 ? currTxTime : lastTxTime;
+
+		if (delta > qint64(2 * _txDelayMillis))
+		{
+			_ui.lblTxData->setStyleSheet("background-color: #FF0000");
+			lastTxTime = 0;
+		}
+	}
 
 }
+
 
 
 void MaintenanceWindow::OnReceivedThrottleSgn(uint32_t data)

@@ -106,7 +106,7 @@ class Maintenance : public QObject
 	Q_OBJECT
 public:
 	Maintenance(QString serialPortName);
-    void Open();
+    bool Open();
     void EnableTx();
     void SetTxHeader(MAINT_HEADER_T txHeader);
 
@@ -115,6 +115,9 @@ public slots:
     void OnRx();
 
 signals:
+    void rxRawData(bool valid, quint8* data, int size);
+    void txRawData(quint8* data, int size);
+
     void receivedRawAccelX(float data);
     void receivedRawAccelY(float data);
     void receivedRawAccelZ(float data);

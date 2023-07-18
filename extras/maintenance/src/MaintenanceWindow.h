@@ -15,13 +15,23 @@ public:
 private:
 	Ui_MaintenanceGui _ui;
 	Maint::Maintenance* _maintHandler;
+	const int _txDelayMillis = 100;
 
 	void autoScanComPorts();
 
 private slots:
 	void OnBtnOpenSerialPort();
+	void OnPlotSliderValueChanged(int newValue);
+	void OnPlotTrack1ValueChanged(int newValue);
+	void OnPlotTrack2ValueChanged(int newValue);
+	void OnPlotTrack3ValueChanged(int newValue);
+	void OnComboTrack1TextChanged(const QString& newText);
+	void OnComboTrack2TextChanged(const QString& newText);
+	void OnComboTrack3TextChanged(const QString& newText);
 	void OnHeaderChanged();
 
+	void OnRxRawData(bool valid, quint8* data, int size);
+	void OnTxRawData(quint8* data, int size);
 
 	void OnReceivedThrottleSgn(uint32_t data);
 	void OnReceivedPitchSgn(uint32_t data);

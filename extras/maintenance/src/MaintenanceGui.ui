@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1025</width>
-    <height>713</height>
+    <width>1663</width>
+    <height>916</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -443,7 +443,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>400</y>
+      <y>410</y>
       <width>971</width>
       <height>271</height>
      </rect>
@@ -970,19 +970,986 @@
      <string>Serial Port</string>
     </property>
    </widget>
+   <widget class="PlotWidget" name="plot">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>70</y>
+      <width>570</width>
+      <height>570</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:#000000</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboSelTrack1">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>10</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:#55FFFF</string>
+    </property>
+    <item>
+     <property name="text">
+      <string>NONE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>THROTTLE_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_THROTTLE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_ROLL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_PITCH</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_ROLL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_PITCH</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_YAW</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_2</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_3</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_4</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTORS_ARMED</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QComboBox" name="comboSelTrack2">
+    <property name="geometry">
+     <rect>
+      <x>1450</x>
+      <y>10</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:#FFFF55</string>
+    </property>
+    <item>
+     <property name="text">
+      <string>NONE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>THROTTLE_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_THROTTLE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_ROLL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_PITCH</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_ROLL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_PITCH</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_YAW</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_2</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_3</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_4</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTORS_ARMED</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QComboBox" name="comboSelTrack3">
+    <property name="geometry">
+     <rect>
+      <x>1250</x>
+      <y>10</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:#FF55FF</string>
+    </property>
+    <item>
+     <property name="text">
+      <string>NONE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_ACC_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_GYRO_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RAW_MAGN_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_ACC_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_GYRO_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_X</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_Y</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FILTERED_MAGN_Z</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>THROTTLE_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_SIGNAL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_THROTTLE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_ROLL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>CMD_PITCH</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_ROLL</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_PITCH</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>BODY_YAW</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>ROLL_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>PITCH_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_ERR</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_P</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_I</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_D</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>YAW_PID_U</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_1</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_2</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_3</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTOR_4</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>MOTORS_ARMED</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QSlider" name="plotTrack1Slider">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>40</y>
+      <width>171</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>2</number>
+    </property>
+    <property name="maximum">
+     <number>16000</number>
+    </property>
+    <property name="value">
+     <number>4000</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QSlider" name="plotTrack2Slider">
+    <property name="geometry">
+     <rect>
+      <x>1250</x>
+      <y>40</y>
+      <width>171</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>2</number>
+    </property>
+    <property name="maximum">
+     <number>16000</number>
+    </property>
+    <property name="value">
+     <number>4000</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QSlider" name="plotTrack3Slider">
+    <property name="geometry">
+     <rect>
+      <x>1450</x>
+      <y>40</y>
+      <width>171</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>2</number>
+    </property>
+    <property name="maximum">
+     <number>16000</number>
+    </property>
+    <property name="value">
+     <number>4000</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QSlider" name="plotTimeSlider">
+    <property name="geometry">
+     <rect>
+      <x>1050</x>
+      <y>650</y>
+      <width>571</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="minimum">
+     <number>1</number>
+    </property>
+    <property name="maximum">
+     <number>15</number>
+    </property>
+    <property name="value">
+     <number>5</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lblTimeSpan">
+    <property name="geometry">
+     <rect>
+      <x>1560</x>
+      <y>670</y>
+      <width>47</width>
+      <height>13</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Time: 5s</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lblTxData">
+    <property name="geometry">
+     <rect>
+      <x>710</x>
+      <y>720</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: #FF0000;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_18">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>720</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>RX Data</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="textEditTxData">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>740</y>
+      <width>351</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 75 8pt &quot;Courier New&quot;;</string>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="textEditRxData">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>740</y>
+      <width>361</width>
+      <height>111</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 75 8pt &quot;Courier New&quot;;</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_19">
+    <property name="geometry">
+     <rect>
+      <x>650</x>
+      <y>720</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TX Data</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lblRxData">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>720</y>
+      <width>16</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: #FF0000;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1025</width>
+     <width>1663</width>
      <height>21</height>
     </rect>
    </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PlotWidget</class>
+   <extends>QLabel</extends>
+   <header>PlotWidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
