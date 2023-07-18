@@ -18,6 +18,7 @@ private:
 	const int _txDelayMillis = 100;
 
 	void autoScanComPorts();
+	void checkPlot(QString expectedText, double value);
 
 private slots:
 	void OnBtnOpenSerialPort();
@@ -32,6 +33,26 @@ private slots:
 
 	void OnRxRawData(bool valid, quint8* data, int size);
 	void OnTxRawData(quint8* data, int size);
+
+	void OnReceivedRawAccelX(float data);
+	void OnReceivedRawAccelY(float data);
+	void OnReceivedRawAccelZ(float data);
+	void OnReceivedRawGyroX(float data);
+	void OnReceivedRawGyroY(float data);
+	void OnReceivedRawGyroZ(float data);
+	void OnReceivedRawMagnX(float data);
+	void OnReceivedRawMagnY(float data);
+	void OnReceivedRawMagnZ(float data);
+
+	void OnReceivedFilteredAccelX(float data);
+	void OnReceivedFilteredAccelY(float data);
+	void OnReceivedFilteredAccelZ(float data);
+	void OnReceivedFilteredGyroX(float data);
+	void OnReceivedFilteredGyroY(float data);
+	void OnReceivedFilteredGyroZ(float data);
+	void OnReceivedFilteredMagnX(float data);
+	void OnReceivedFilteredMagnY(float data);
+	void OnReceivedFilteredMagnZ(float data);
 
 	void OnReceivedThrottleSgn(uint32_t data);
 	void OnReceivedPitchSgn(uint32_t data);

@@ -22,6 +22,27 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.comboSelTrack2, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack2TextChanged(const QString&)));
 	connect(_ui.comboSelTrack3, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack3TextChanged(const QString&)));
 
+	connect(_ui.checkTxRawAccX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRawAccY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRawAccZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRawGyroX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRawGyroY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRawGyroZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRawMagnX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRawMagnY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRawMagnZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+
+	connect(_ui.checkTxFiltAccX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxFiltAccY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxFiltAccZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxFiltGyroX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxFiltGyroY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxFiltGyroZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxFiltMagnX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxFiltMagnY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxFiltMagnZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+
+
 	connect(_ui.checkTxThrottleSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxRollSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxPitchSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
@@ -53,6 +74,26 @@ void MaintenanceWindow::autoScanComPorts()
 		}
 	}
 }
+
+
+void MaintenanceWindow::checkPlot(QString expected, double value)
+{
+	if (_ui.comboSelTrack1->currentText().toUpper() == expected.toUpper())
+	{
+		_ui.plot->AddValue(0, value);
+	}
+
+	if (_ui.comboSelTrack2->currentText().toUpper() == expected.toUpper())
+	{
+		_ui.plot->AddValue(1, value);
+	}
+
+	if (_ui.comboSelTrack3->currentText().toUpper() == expected.toUpper())
+	{
+		_ui.plot->AddValue(2, value);
+	}
+}
+
 
 void MaintenanceWindow::OnPlotSliderValueChanged(int newValue)
 {
@@ -120,6 +161,26 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 
 	if (_maintHandler->Open())
 	{
+		connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
+		connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
+		connect(_maintHandler, SIGNAL(receivedRawAccelZ(float)), this, SLOT(OnReceivedRawAccelZ(float)));
+		connect(_maintHandler, SIGNAL(receivedRawGyroX(float)), this, SLOT(OnReceivedRawGyroX(float)));
+		connect(_maintHandler, SIGNAL(receivedRawGyroY(float)), this, SLOT(OnReceivedRawGyroY(float)));
+		connect(_maintHandler, SIGNAL(receivedRawGyroZ(float)), this, SLOT(OnReceivedRawGyroZ(float)));
+		connect(_maintHandler, SIGNAL(receivedRawMagnX(float)), this, SLOT(OnReceivedRawMagnX(float)));
+		connect(_maintHandler, SIGNAL(receivedRawMagnY(float)), this, SLOT(OnReceivedRawMagnY(float)));
+		connect(_maintHandler, SIGNAL(receivedRawMagnZ(float)), this, SLOT(OnReceivedRawMagnZ(float)));
+
+		connect(_maintHandler, SIGNAL(receivedFilteredAccelX(float)), this, SLOT(OnReceivedFilteredAccelX(float)));
+		connect(_maintHandler, SIGNAL(receivedFilteredAccelY(float)), this, SLOT(OnReceivedFilteredAccelY(float)));
+		connect(_maintHandler, SIGNAL(receivedFilteredAccelZ(float)), this, SLOT(OnReceivedFilteredAccelZ(float)));
+		connect(_maintHandler, SIGNAL(receivedFilteredGyroX(float)), this, SLOT(OnReceivedFilteredGyroX(float)));
+		connect(_maintHandler, SIGNAL(receivedFilteredGyroY(float)), this, SLOT(OnReceivedFilteredGyroY(float)));
+		connect(_maintHandler, SIGNAL(receivedFilteredGyroZ(float)), this, SLOT(OnReceivedFilteredGyroZ(float)));
+		connect(_maintHandler, SIGNAL(receivedFilteredMagnX(float)), this, SLOT(OnReceivedFilteredMagnX(float)));
+		connect(_maintHandler, SIGNAL(receivedFilteredMagnY(float)), this, SLOT(OnReceivedFilteredMagnY(float)));
+		connect(_maintHandler, SIGNAL(receivedFilteredMagnZ(float)), this, SLOT(OnReceivedFilteredMagnZ(float)));
+
 		connect(_maintHandler, SIGNAL(receivedThrottleSgn(uint32_t)), this, SLOT(OnReceivedThrottleSgn(uint32_t)));
 		connect(_maintHandler, SIGNAL(receivedPitchSgn(uint32_t)), this, SLOT(OnReceivedPitchSgn(uint32_t)));
 		connect(_maintHandler, SIGNAL(receivedRollSgn(uint32_t)), this, SLOT(OnReceivedRollSgn(uint32_t)));
@@ -157,6 +218,204 @@ void MaintenanceWindow::OnHeaderChanged()
 	Maint::MAINT_HEADER_T header;
 	header.All = 0x00;
 
+	if (_ui.checkTxRawAccX->isChecked())
+	{
+		header.Bits.accel_x = 1;
+	}
+	else
+	{
+		header.Bits.accel_x = 0;
+		_ui.checkRxRawAccX->setChecked(false);
+		_ui.lineRxRawAccX->setText("");
+	}
+
+	if (_ui.checkTxRawAccY->isChecked())
+	{
+		header.Bits.accel_y = 1;
+	}
+	else
+	{
+		header.Bits.accel_y = 0;
+		_ui.checkRxRawAccY->setChecked(false);
+		_ui.lineRxRawAccY->setText("");
+	}
+
+	if (_ui.checkTxRawAccZ->isChecked())
+	{
+		header.Bits.accel_z = 1;
+	}
+	else
+	{
+		header.Bits.accel_z = 0;
+		_ui.checkRxRawAccZ->setChecked(false);
+		_ui.lineRxRawAccZ->setText("");
+	}
+
+	if (_ui.checkTxRawGyroX->isChecked())
+	{
+		header.Bits.gyro_x = 1;
+	}
+	else
+	{
+		header.Bits.gyro_x = 0;
+		_ui.checkRxRawGyroX->setChecked(false);
+		_ui.lineRxRawGyroX->setText("");
+	}
+
+	if (_ui.checkTxRawGyroY->isChecked())
+	{
+		header.Bits.gyro_y = 1;
+	}
+	else
+	{
+		header.Bits.gyro_y = 0;
+		_ui.checkRxRawGyroY->setChecked(false);
+		_ui.lineRxRawGyroY->setText("");
+	}
+
+	if (_ui.checkTxRawGyroZ->isChecked())
+	{
+		header.Bits.gyro_z = 1;
+	}
+	else
+	{
+		header.Bits.gyro_z = 0;
+		_ui.checkRxRawGyroZ->setChecked(false);
+		_ui.lineRxRawGyroZ->setText("");
+	}
+
+	if (_ui.checkTxRawMagnX->isChecked())
+	{
+		header.Bits.magn_x = 1;
+	}
+	else
+	{
+		header.Bits.magn_x = 0;
+		_ui.checkRxRawMagnX->setChecked(false);
+		_ui.lineRxRawMagnX->setText("");
+	}
+
+	if (_ui.checkTxRawMagnY->isChecked())
+	{
+		header.Bits.magn_y = 1;
+	}
+	else
+	{
+		header.Bits.magn_y = 0;
+		_ui.checkRxRawMagnY->setChecked(false);
+		_ui.lineRxRawMagnY->setText("");
+	}
+
+	if (_ui.checkTxRawMagnZ->isChecked())
+	{
+		header.Bits.magn_z = 1;
+	}
+	else
+	{
+		header.Bits.magn_z = 0;
+		_ui.checkRxRawMagnZ->setChecked(false);
+		_ui.lineRxRawMagnZ->setText("");
+	}
+
+	if (_ui.checkTxFiltAccX->isChecked())
+	{
+		header.Bits.accel_x_f = 1;
+	}
+	else
+	{
+		header.Bits.accel_x_f = 0;
+		_ui.checkRxFiltAccX->setChecked(false);
+		_ui.lineRxFiltAccX->setText("");
+	}
+
+	if (_ui.checkTxFiltAccY->isChecked())
+	{
+		header.Bits.accel_y_f = 1;
+	}
+	else
+	{
+		header.Bits.accel_y_f = 0;
+		_ui.checkRxFiltAccY->setChecked(false);
+		_ui.lineRxFiltAccY->setText("");
+	}
+
+	if (_ui.checkTxFiltAccZ->isChecked())
+	{
+		header.Bits.accel_z_f = 1;
+	}
+	else
+	{
+		header.Bits.accel_z_f = 0;
+		_ui.checkRxFiltAccZ->setChecked(false);
+		_ui.lineRxFiltAccZ->setText("");
+	}
+
+	if (_ui.checkTxFiltGyroX->isChecked())
+	{
+		header.Bits.gyro_x_f = 1;
+	}
+	else
+	{
+		header.Bits.gyro_x_f = 0;
+		_ui.checkRxFiltGyroX->setChecked(false);
+		_ui.lineRxFiltGyroX->setText("");
+	}
+
+	if (_ui.checkTxFiltGyroY->isChecked())
+	{
+		header.Bits.gyro_y_f = 1;
+	}
+	else
+	{
+		header.Bits.gyro_y_f = 0;
+		_ui.checkRxFiltGyroY->setChecked(false);
+		_ui.lineRxFiltGyroY->setText("");
+	}
+
+	if (_ui.checkTxFiltGyroZ->isChecked())
+	{
+		header.Bits.gyro_z_f = 1;
+	}
+	else
+	{
+		header.Bits.gyro_z_f = 0;
+		_ui.checkRxFiltGyroZ->setChecked(false);
+		_ui.lineRxFiltGyroZ->setText("");
+	}
+
+	if (_ui.checkTxFiltMagnX->isChecked())
+	{
+		header.Bits.magn_x_f = 1;
+	}
+	else
+	{
+		header.Bits.magn_x_f = 0;
+		_ui.checkRxFiltMagnX->setChecked(false);
+		_ui.lineRxFiltMagnX->setText("");
+	}
+
+	if (_ui.checkTxFiltMagnY->isChecked())
+	{
+		header.Bits.magn_y_f = 1;
+	}
+	else
+	{
+		header.Bits.magn_y_f = 0;
+		_ui.checkRxFiltMagnY->setChecked(false);
+		_ui.lineRxFiltMagnY->setText("");
+	}
+
+	if (_ui.checkTxFiltMagnZ->isChecked())
+	{
+		header.Bits.magn_z_f = 1;
+	}
+	else
+	{
+		header.Bits.magn_z_f = 0;
+		_ui.checkRxFiltMagnZ->setChecked(false);
+		_ui.lineRxFiltMagnZ->setText("");
+	}
+
 	if (_ui.checkTxThrottleSignal->isChecked())
 	{
 		header.Bits.throttle_sgn = 1;
@@ -186,8 +445,8 @@ void MaintenanceWindow::OnHeaderChanged()
 	else
 	{
 		header.Bits.pitch_sgn = 0;
-		_ui.checkRxThrottleSignal->setChecked(false);
-		_ui.lineRxThrottleSignal->setText("");
+		_ui.checkRxPitchSignal->setChecked(false);
+		_ui.lineRxPitchSignal->setText("");
 	}
 
 	if (_ui.checkTxCmdThrottle->isChecked())
@@ -357,11 +616,174 @@ void MaintenanceWindow::OnTxRawData(quint8* data, int size)
 }
 
 
+void MaintenanceWindow::OnReceivedRawAccelX(float data)
+{
+	_ui.checkRxRawAccX->setChecked(true);
+	_ui.lineRxRawAccX->setText(QString::number(data));
+
+	checkPlot("RAW_ACC_X", data);
+}
+
+
+void MaintenanceWindow::OnReceivedRawAccelY(float data)
+{
+	_ui.checkRxRawAccY->setChecked(true);
+	_ui.lineRxRawAccY->setText(QString::number(data));
+
+	checkPlot("RAW_ACC_Y", data);
+}
+
+
+void MaintenanceWindow::OnReceivedRawAccelZ(float data)
+{
+	_ui.checkRxRawAccZ->setChecked(true);
+	_ui.lineRxRawAccZ->setText(QString::number(data));
+
+	checkPlot("RAW_ACC_Z", data);
+}
+
+
+void MaintenanceWindow::OnReceivedRawGyroX(float data)
+{
+	_ui.checkRxRawGyroX->setChecked(true);
+	_ui.lineRxRawGyroX->setText(QString::number(data));
+
+	checkPlot("RAW_GYRO_X", data);
+}
+
+
+void MaintenanceWindow::OnReceivedRawGyroY(float data)
+{
+	_ui.checkRxRawGyroY->setChecked(true);
+	_ui.lineRxRawGyroY->setText(QString::number(data));
+
+	checkPlot("RAW_GYRO_Y", data);
+}
+
+
+void MaintenanceWindow::OnReceivedRawGyroZ(float data)
+{
+	_ui.checkRxRawGyroZ->setChecked(true);
+	_ui.lineRxRawGyroZ->setText(QString::number(data));
+
+	checkPlot("RAW_GYRO_Z", data);
+}
+
+
+void MaintenanceWindow::OnReceivedRawMagnX(float data)
+{
+	_ui.checkRxRawMagnX->setChecked(true);
+	_ui.lineRxRawMagnX->setText(QString::number(data));
+
+	checkPlot("RAW_MAGN_X", data);
+}
+
+
+void MaintenanceWindow::OnReceivedRawMagnY(float data)
+{
+	_ui.checkRxRawMagnY->setChecked(true);
+	_ui.lineRxRawMagnY->setText(QString::number(data));
+
+	checkPlot("RAW_MAGN_Y", data);
+}
+
+
+void MaintenanceWindow::OnReceivedRawMagnZ(float data)
+{
+	_ui.checkRxRawMagnZ->setChecked(true);
+	_ui.lineRxRawMagnZ->setText(QString::number(data));
+
+	checkPlot("RAW_MAGN_Z", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredAccelX(float data)
+{
+	_ui.checkRxFiltAccX->setChecked(true);
+	_ui.lineRxFiltAccX->setText(QString::number(data));
+
+	checkPlot("FILTERED_ACC_X", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredAccelY(float data)
+{
+	_ui.checkRxFiltAccY->setChecked(true);
+	_ui.lineRxFiltAccY->setText(QString::number(data));
+
+	checkPlot("FILTERED_ACC_Y", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredAccelZ(float data)
+{
+	_ui.checkRxFiltAccZ->setChecked(true);
+	_ui.lineRxFiltAccZ->setText(QString::number(data));
+
+	checkPlot("FILTERED_ACC_Z", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredGyroX(float data)
+{
+	_ui.checkRxFiltGyroX->setChecked(true);
+	_ui.lineRxFiltGyroX->setText(QString::number(data));
+
+	checkPlot("FILTERED_GYRO_X", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredGyroY(float data)
+{
+	_ui.checkRxFiltGyroY->setChecked(true);
+	_ui.lineRxFiltGyroY->setText(QString::number(data));
+
+	checkPlot("FILTERED_GYRO_Y", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredGyroZ(float data)
+{
+	_ui.checkRxFiltGyroZ->setChecked(true);
+	_ui.lineRxFiltGyroZ->setText(QString::number(data));
+
+	checkPlot("FILTERED_GYRO_Z", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredMagnX(float data)
+{
+	_ui.checkRxFiltMagnX->setChecked(true);
+	_ui.lineRxFiltMagnX->setText(QString::number(data));
+
+	checkPlot("FILTERED_MAGN_X", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredMagnY(float data)
+{
+	_ui.checkRxFiltMagnY->setChecked(true);
+	_ui.lineRxFiltMagnY->setText(QString::number(data));
+
+	checkPlot("FILTERED_MAGN_Y", data);
+}
+
+
+void MaintenanceWindow::OnReceivedFilteredMagnZ(float data)
+{
+	_ui.checkRxFiltMagnZ->setChecked(true);
+	_ui.lineRxFiltMagnZ->setText(QString::number(data));
+
+	checkPlot("FILTERED_MAGN_Z", data);
+}
+
 
 void MaintenanceWindow::OnReceivedThrottleSgn(uint32_t data)
 {
 	_ui.checkRxThrottleSignal->setChecked(true);
 	_ui.lineRxThrottleSignal->setText(QString::number(data));
+
+	checkPlot("THROTTLE_SIGNAL", data);
 }
 
 
@@ -369,6 +791,8 @@ void MaintenanceWindow::OnReceivedRollSgn(uint32_t data)
 {
 	_ui.checkRxRollSignal->setChecked(true);
 	_ui.lineRxRollSignal->setText(QString::number(data));
+
+	checkPlot("ROLL_SIGNAL", data);
 }
 
 
@@ -376,6 +800,8 @@ void MaintenanceWindow::OnReceivedPitchSgn(uint32_t data)
 {
 	_ui.checkRxPitchSignal->setChecked(true);
 	_ui.lineRxPitchSignal->setText(QString::number(data));
+
+	checkPlot("PITCH_SIGNAL", data);
 }
 
 
@@ -383,6 +809,8 @@ void MaintenanceWindow::OnReceivedCmdThr(float data)
 {
 	_ui.checkRxCmdThrottle->setChecked(true);
 	_ui.lineRxCmdThrottle->setText(QString::number(data));
+
+	checkPlot("CMD_THROTTLE", data);
 }
 
 
@@ -390,6 +818,8 @@ void MaintenanceWindow::OnReceivedCmdRoll(float data)
 {
 	_ui.checkRxCmdRoll->setChecked(true);
 	_ui.lineRxCmdRoll->setText(QString::number(data));
+
+	checkPlot("CMD_ROLL", data);
 }
 
 
@@ -397,6 +827,8 @@ void MaintenanceWindow::OnReceivedCmdPitch(float data)
 {
 	_ui.checkRxCmdPitch->setChecked(true);
 	_ui.lineRxCmdPitch->setText(QString::number(data));
+
+	checkPlot("CMD_PITCH", data);
 }
 
 
@@ -404,6 +836,8 @@ void MaintenanceWindow::OnReceivedMotor1(uint32_t data)
 {
 	_ui.checkRxMotor1Signal->setChecked(true);
 	_ui.lineRxMotor1Signal->setText(QString::number(data));
+
+	checkPlot("MOTOR_1", data);
 }
 
 
@@ -411,6 +845,8 @@ void MaintenanceWindow::OnReceivedMotor2(uint32_t data)
 {
 	_ui.checkRxMotor2Signal->setChecked(true);
 	_ui.lineRxMotor2Signal->setText(QString::number(data));
+
+	checkPlot("MOTOR_2", data);
 }
 
 
@@ -418,6 +854,8 @@ void MaintenanceWindow::OnReceivedMotor3(uint32_t data)
 {
 	_ui.checkRxMotor3Signal->setChecked(true);
 	_ui.lineRxMotor3Signal->setText(QString::number(data));
+
+	checkPlot("MOTOR_3", data);
 }
 
 
@@ -425,6 +863,8 @@ void MaintenanceWindow::OnReceivedMotor4(uint32_t data)
 {
 	_ui.checkRxMotor4Signal->setChecked(true);
 	_ui.lineRxMotor4Signal->setText(QString::number(data));
+
+	checkPlot("MOTOR_4", data);
 }
 
 
@@ -432,4 +872,6 @@ void MaintenanceWindow::OnReceivedMotorsArmed(uint32_t data)
 {
 	_ui.checkRxMotorsArmed->setChecked(true);
 	_ui.lineRxMotorsArmed->setText(QString::number(data));
+
+	checkPlot("MOTORS_ARMED", data);
 }
