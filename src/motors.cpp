@@ -1,6 +1,7 @@
 #include "motors.h"
 #include "user.h"
 #include "attitude.h"
+#include "maint.h"
 #include "joystick.h"
 
 
@@ -25,7 +26,7 @@ void MOTORS_Handler()
     uint32_t m2_signal = MOTOR_MIN_SIGNAL;
     uint32_t m3_signal = MOTOR_MIN_SIGNAL;
     uint32_t m4_signal = MOTOR_MIN_SIGNAL;
-    
+
     if (JOYSTICK_MotorsArmed)
     {
         //TODO : PID
@@ -33,6 +34,18 @@ void MOTORS_Handler()
         m2_signal = JOYSTICK_Throttle;
         m3_signal = JOYSTICK_Throttle;
         m4_signal = JOYSTICK_Throttle;
+    }
+    else if (MAINT_IsPresent())
+    {
+        m1_signal = motor1.currentSignal();
+        m2_signal = motor2.currentSignal();
+        m3_signal = motor3.currentSignal();
+        m4_signal = motor4.currentSignal();
+    }
+    else
+    {
+        /** m_signals = MOTOR_MIN_SIGNAL as initialized **/
+        asm(" NOP");
     }
 
     motor1.writeMicroseconds(m1_signal);

@@ -46,6 +46,12 @@ uint64_t Pulse::pulseIn()
 }
 
 
+uint64_t Pulse::lastRise_us()
+{
+    return _t_rise_us;
+}
+
+
 void Pulse::rise(uint gpio, uint64_t time_us)
 {
     if ((int)gpio == _gpio)

@@ -14,6 +14,7 @@ public:
     Pulse(int gpio);
     void attach();
     uint64_t pulseIn();
+    uint64_t lastRise_us();
 
     void rise(uint gpio, uint64_t time_us);
     void fall(uint gpio, uint64_t time_us);

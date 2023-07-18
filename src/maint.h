@@ -100,5 +100,6 @@ enum class MAINT_CMD_ID
 void MAINT_Init();
 void MAINT_OnByteReceived(uint8_t byte_rx);
 void MAINT_Handler();
+bool MAINT_IsPresent();
 
 #endif //MAINT_H

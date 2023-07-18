@@ -1,6 +1,7 @@
 #include "joystick.h"
 #include "user.h"
 #include <pico/float.h>
+#include <pico/time.h>
 
 float JOYSTICK_Roll;
 float JOYSTICK_Pitch;
@@ -69,6 +70,8 @@ void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p, float min
 
 void JOYSTICK_Handler()
 {
+    uint64_t cur_t_us = time_us_64();
+
     uint32_t roll_signal_value = roll_signal.pulseIn();
     uint32_t pitch_signal_value = pitch_signal.pulseIn();
     uint32_t throttle_signal_value = throttle_signal.pulseIn();
@@ -78,4 +81,21 @@ void JOYSTICK_Handler()
     JOYSTICK_Pitch = dead_center(to_range(pitch_signal_value, RADIO_MIN_SIGNAL_PITCH, RADIO_MAX_SIGNAL_PITCH, min_pitch, max_pitch));
     JOYSTICK_Throttle = dead_center(to_range(throttle_signal_value, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_throttle, max_throttle));
     JOYSTICK_MotorsArmed = (armed_signal_value > ((RADIO_MAX_SIGNAL + RADIO_MIN_SIGNAL) / 2));
+
+    /** Check failure **/
+    uint64_t lastRollRise_t_us = roll_signal.lastRise_us();
+    uint64_t lastPitchRise_t_us = pitch_signal.lastRise_us();
+    uint64_t lastThrottleise_t_us = throttle_signal.lastRise_us();
+    uint64_t lastArmedRise_t_us = armed_signal.lastRise_us();
+
+    bool js_downlink =  ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
+                        ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
+                        ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
+                        ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS));
+                        
+    if (js_downlink)
+    {
+        JOYSTICK_MotorsArmed = false;
+    }
+
 }

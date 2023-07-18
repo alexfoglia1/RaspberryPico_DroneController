@@ -77,7 +77,13 @@ namespace Maint
         WAIT_HEADER_BYTE_5,
         WAIT_HEADER_BYTE_6,
         WAIT_HEADER_BYTE_7,
-        WAIT_PAYLOAD,
+        WAIT_PAYLOAD
+    };
+
+    enum class TX_STATUS
+    {
+        TX_GET = 0,
+        TX_SET
     };
 
     enum class MAINT_CMD_ID
@@ -89,10 +95,11 @@ namespace Maint
         MAINT_CMD_SET_M4
     };
 
-    static inline uint8_t checksum(uint8_t* buf, uint32_t size)
+    static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
     {
         uint8_t cks = 0;
-        for (uint32_t i = 0; i < size; i++)
+        uint32_t first = (firstSync) ? 1 : 0;
+        for (uint32_t i = first; i < size; i++)
         {
             cks ^= buf[i];
         }
@@ -109,6 +116,7 @@ public:
     bool Open();
     void EnableTx();
     void SetTxHeader(MAINT_HEADER_T txHeader);
+    void TxMaintenanceCommand(MAINT_CMD_ID txCommand, uint32_t data);
 
 public slots:
     void Tx();
@@ -169,10 +177,13 @@ signals:
 private:
 	QSerialPort* _serialPort;
     Maint::MAINT_STATUS _status;
+    Maint::TX_STATUS _txStatus;
     uint32_t _expected_bytes;
     uint32_t _rx_payload_idx;
     uint8_t _rx_buf[1024];
     Maint::MAINT_HEADER_T _txHeader;
+    Maint::MAINT_HEADER_T _txCommand;
+    uint32_t _tx_data;
     QMutex _txMutex;
 
     void update_fsm(uint8_t byte_rx);

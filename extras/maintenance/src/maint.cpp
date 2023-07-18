@@ -5,13 +5,18 @@
 Maint::Maintenance::Maintenance(QString serialPortName)
 {
     _txHeader.All = 0;
+    _txCommand.All = 0;
 
     _serialPort = new QSerialPort(serialPortName);
 
     _status = Maint::MAINT_STATUS::WAIT_SYNC;
+    _txStatus = Maint::TX_STATUS::TX_GET;
+
     _expected_bytes = 0;
     _rx_payload_idx = 0;
     memset(&_rx_buf, 0x00, 1024);
+
+    _tx_data = 0;
 
 }
 
@@ -51,28 +56,75 @@ void Maint::Maintenance::SetTxHeader(MAINT_HEADER_T txHeader)
 }
 
 
+void Maint::Maintenance::TxMaintenanceCommand(MAINT_CMD_ID txCommand, uint32_t data)
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(txCommand);
+    _tx_data = data;
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_SET;
+    _txMutex.unlock();
+}
+
+
 void Maint::Maintenance::Tx()
 {
     _txMutex.lock();
 
-	uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(&_txHeader), sizeof(Maint::MAINT_HEADER_T));
+    QByteArray qba;
+    int bytesWritten = 0;
 
-	QByteArray qba;
-	qba.push_back(Maint::SYNC_CHAR);
-	qba.push_back(_txHeader.Bytes[0]);
-	qba.push_back(_txHeader.Bytes[1]);
-	qba.push_back(_txHeader.Bytes[2]);
-	qba.push_back(_txHeader.Bytes[3]);
-	qba.push_back(_txHeader.Bytes[4]);
-	qba.push_back(_txHeader.Bytes[5]);
-	qba.push_back(_txHeader.Bytes[6]);
-	qba.push_back(_txHeader.Bytes[7]);
+    if (_txStatus == Maint::TX_STATUS::TX_GET)
+    {
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(&_txHeader), sizeof(Maint::MAINT_HEADER_T), false);
 
-    _txMutex.unlock();
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txHeader.Bytes[0]);
+        qba.push_back(_txHeader.Bytes[1]);
+        qba.push_back(_txHeader.Bytes[2]);
+        qba.push_back(_txHeader.Bytes[3]);
+        qba.push_back(_txHeader.Bytes[4]);
+        qba.push_back(_txHeader.Bytes[5]);
+        qba.push_back(_txHeader.Bytes[6]);
+        qba.push_back(_txHeader.Bytes[7]);
 
-	qba.push_back(cks);
-	int bytesWritten = _serialPort->write(qba);
-    _serialPort->flush();
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+    }
+    else
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* dataBytes = reinterpret_cast<uint8_t*>(&_tx_data);
+        qba.push_back(dataBytes[0]);
+        qba.push_back(dataBytes[1]);
+        qba.push_back(dataBytes[2]);
+        qba.push_back(dataBytes[3]);
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
 
     emit txRawData(reinterpret_cast<quint8*>(qba.data()), bytesWritten);
 }

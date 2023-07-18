@@ -42,6 +42,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxFiltMagnY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxFiltMagnZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
+	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
 
 	connect(_ui.checkTxThrottleSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxRollSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
@@ -540,6 +541,18 @@ void MaintenanceWindow::OnHeaderChanged()
 	if (_maintHandler)
 	{
 		_maintHandler->SetTxHeader(header);
+	}
+}
+
+
+void MaintenanceWindow::OnBtnSendMaintenanceCommand()
+{
+	if (_maintHandler)
+	{
+		uint32_t data = _ui.lineSetCommandValue->text().toUInt();
+		_ui.lineSetCommandValue->setText(QString::number(data));
+
+		_maintHandler->TxMaintenanceCommand(Maint::MAINT_CMD_ID(_ui.comboSetCommandId->currentIndex() + 1), data);
 	}
 }
 

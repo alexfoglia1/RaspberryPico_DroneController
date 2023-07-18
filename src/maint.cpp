@@ -2,6 +2,8 @@
 #include "motors.h"
 #include "attitude.h"
 #include "joystick.h"
+#include "user.h"
+#include <pico/time.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -13,7 +15,7 @@ static uint32_t expected_bytes;
 static uint32_t rx_payload_idx;
 static bool shall_tx;
 static bool shall_set;
-
+static uint64_t last_msg_us;
 
 static void put_packet(uint8_t* buf, uint32_t len)
 {
@@ -41,9 +43,11 @@ static void data_ingest(uint8_t rx_cks, uint32_t data_len)
     uint8_t local_cks = checksum(&rx_buf[0], data_len - 1);
     if (local_cks == rx_cks)
     {
+        last_msg_us = time_us_64();
+
         memcpy(&rx_message, &rx_buf[0], data_len);
         shall_tx = true;
-        shall_set = (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id & 0x08) != MAINT_CMD_ID::MAINT_CMD_NONE);
+        shall_set = (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id) != MAINT_CMD_ID::MAINT_CMD_NONE);
     }
 }
 
@@ -52,7 +56,7 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
 {
     uint64_t cmd_id = header->Bits.maint_cmd_id;
     
-    switch (static_cast<MAINT_CMD_ID>(cmd_id & 0x08))
+    switch (static_cast<MAINT_CMD_ID>(cmd_id))
     {
         case MAINT_CMD_ID::MAINT_CMD_NONE:
             return 1; /** Checksum only **/
@@ -71,7 +75,6 @@ static void update_fsm(uint8_t byte_rx)
 {
     switch (status)
     {
-        
         case MAINT_STATUS::WAIT_SYNC:
         {
             if (byte_rx == MAINT_SYNC_CHAR)
@@ -148,7 +151,7 @@ static void update_fsm(uint8_t byte_rx)
 
 void MAINT_Init()
 {
-    status = MAINT_STATUS::WAIT_SYNC;
+    last_msg_us = 0;
 
     memset(rx_buf, sizeof(MAINT_MESSAGE_TAG), 0x00);
     memset(&rx_message, sizeof(MAINT_MESSAGE_TAG), 0x00);
@@ -158,6 +161,8 @@ void MAINT_Init()
     rx_payload_idx = 0;
     shall_tx = false;
     shall_set = false;
+
+    status = MAINT_STATUS::WAIT_SYNC;
 }
 
 
@@ -167,17 +172,21 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
 }
 
 
+bool MAINT_IsPresent()
+{
+    return (time_us_64() - last_msg_us) < MAINT_TIMEOUT_S * SECONDS_TO_MICROSECONDS;
+}
+
+
 void MAINT_Handler()
 {
     int byteIn = getchar();
-    //if (byteIn >= 0)
-    {
-        MAINT_OnByteReceived((uint8_t)byteIn & 0xFF);
-    }
 
+    MAINT_OnByteReceived((uint8_t)byteIn & 0xFF);
+    
     if (shall_set)
     {
-        switch (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id & 0x08))
+        switch (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id))
         {
             case MAINT_CMD_ID::MAINT_CMD_NONE:
                 break;
