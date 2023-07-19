@@ -16,9 +16,11 @@ add_executable(DroneController
   src/user.h
   src/timer.h
   src/attitude.h
+  src/pid.h
   src/joystick.h
   src/motors.h
   src/maint.h
+  src/cbit.h
 
   src/drivers/lsm9ds1/LSM9DS1.cpp
   src/drivers/servo/servo.cpp
@@ -26,10 +28,11 @@ add_executable(DroneController
   src/user.cpp
   src/timer.cpp
   src/attitude.cpp
-  src/attitude.cpp
+  src/pid.cpp
   src/joystick.cpp
   src/motors.cpp
   src/maint.cpp
+  src/cbit.cpp
   src/main.cpp
 )
 
