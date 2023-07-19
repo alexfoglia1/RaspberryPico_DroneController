@@ -68,6 +68,22 @@ private slots:
 	void OnReceivedBodyPitch(float data);
 	void OnReceivedBodyYaw(float data);
 
+	void OnReceivedRollPidErr(float data);
+	void OnReceivedRollPidP(float data);
+	void OnReceivedRollPidI(float data);
+	void OnReceivedRollPidD(float data);
+	void OnReceivedRollPidU(float data);
+	void OnReceivedPitchPidErr(float data);
+	void OnReceivedPitchPidP(float data);
+	void OnReceivedPitchPidI(float data);
+	void OnReceivedPitchPidD(float data);
+	void OnReceivedPitchPidU(float data);
+	void OnReceivedYawPidErr(float data);
+	void OnReceivedYawPidP(float data);
+	void OnReceivedYawPidI(float data);
+	void OnReceivedYawPidD(float data);
+	void OnReceivedYawPidU(float data);
+
 	void OnReceivedMotor1(uint32_t data);
 	void OnReceivedMotor2(uint32_t data);
 	void OnReceivedMotor3(uint32_t data);

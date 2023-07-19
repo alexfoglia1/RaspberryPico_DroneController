@@ -309,7 +309,7 @@
        </widget>
       </item>
       <item row="7" column="3">
-       <widget class="QCheckBox" name="checkTxPidPidI">
+       <widget class="QCheckBox" name="checkTxPitchPidI">
         <property name="text">
          <string>Pitch Pid I</string>
         </property>

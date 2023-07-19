@@ -109,6 +109,25 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxBodyPitch, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxBodyYaw, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
+	connect(_ui.checkTxRollPidErr, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRollPidP, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRollPidI, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRollPidD, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxRollPidU, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+
+	connect(_ui.checkTxPitchPidErr, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxPitchPidP, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxPitchPidI, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxPitchPidD, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxPitchPidU, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+
+	connect(_ui.checkTxYawPidErr, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxYawPidP, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxYawPidI, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxYawPidD, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxYawPidU, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+
+
 	connect(_ui.checkTxMotor1Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotor2Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotor3Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
@@ -261,6 +280,22 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 		connect(_maintHandler, SIGNAL(receivedMotor3(uint32_t)), this, SLOT(OnReceivedMotor3(uint32_t)));
 		connect(_maintHandler, SIGNAL(receivedMotor4(uint32_t)), this, SLOT(OnReceivedMotor4(uint32_t)));
 		connect(_maintHandler, SIGNAL(receivedMotorsArmed(uint32_t)), this, SLOT(OnReceivedMotorsArmed(uint32_t)));
+
+		connect(_maintHandler, SIGNAL(receivedRollPidErr(float)), this, SLOT(OnReceivedRollPidErr(float)));
+		connect(_maintHandler, SIGNAL(receivedRollPidP(float)), this, SLOT(OnReceivedRollPidP(float)));
+		connect(_maintHandler, SIGNAL(receivedRollPidI(float)), this, SLOT(OnReceivedRollPidI(float)));
+		connect(_maintHandler, SIGNAL(receivedRollPidD(float)), this, SLOT(OnReceivedRollPidD(float)));
+		connect(_maintHandler, SIGNAL(receivedRollPidU(float)), this, SLOT(OnReceivedRollPidU(float)));
+		connect(_maintHandler, SIGNAL(receivedPitchPidErr(float)), this, SLOT(OnReceivedPitchPidErr(float)));
+		connect(_maintHandler, SIGNAL(receivedPitchPidP(float)), this, SLOT(OnReceivedPitchPidP(float)));
+		connect(_maintHandler, SIGNAL(receivedPitchPidI(float)), this, SLOT(OnReceivedPitchPidI(float)));
+		connect(_maintHandler, SIGNAL(receivedPitchPidD(float)), this, SLOT(OnReceivedPitchPidD(float)));
+		connect(_maintHandler, SIGNAL(receivedPitchPidU(float)), this, SLOT(OnReceivedPitchPidU(float)));
+		connect(_maintHandler, SIGNAL(receivedYawPidErr(float)), this, SLOT(OnReceivedYawPidErr(float)));
+		connect(_maintHandler, SIGNAL(receivedYawPidP(float)), this, SLOT(OnReceivedYawPidP(float)));
+		connect(_maintHandler, SIGNAL(receivedYawPidI(float)), this, SLOT(OnReceivedYawPidI(float)));
+		connect(_maintHandler, SIGNAL(receivedYawPidD(float)), this, SLOT(OnReceivedYawPidD(float)));
+		connect(_maintHandler, SIGNAL(receivedYawPidU(float)), this, SLOT(OnReceivedYawPidU(float)));
 
 		connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 		connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
@@ -581,6 +616,171 @@ void MaintenanceWindow::OnHeaderChanged()
 		header.Bits.body_yaw = 0;
 		_ui.checkRxBodyYaw->setChecked(false);
 		_ui.lineRxBodyYaw->setText("");
+	}
+
+	if (_ui.checkTxRollPidErr->isChecked())
+	{
+		header.Bits.roll_pid_err = 1;
+	}
+	else
+	{
+		header.Bits.roll_pid_err = 0;
+		_ui.checkRxRollPidErr->setChecked(false);
+		_ui.lineRxRollPidErr->setText("");
+	}
+
+	if (_ui.checkTxRollPidP->isChecked())
+	{
+		header.Bits.roll_pid_p = 1;
+	}
+	else
+	{
+		header.Bits.roll_pid_p = 0;
+		_ui.checkRxRollPidP->setChecked(false);
+		_ui.lineRxRollPidP->setText("");
+	}
+
+	if (_ui.checkTxRollPidI->isChecked())
+	{
+		header.Bits.roll_pid_i = 1;
+	}
+	else
+	{
+		header.Bits.roll_pid_i = 0;
+		_ui.checkRxRollPidI->setChecked(false);
+		_ui.lineRxRollPidI->setText("");
+	}
+
+	if (_ui.checkTxRollPidD->isChecked())
+	{
+		header.Bits.roll_pid_d = 1;
+	}
+	else
+	{
+		header.Bits.roll_pid_d = 0;
+		_ui.checkRxRollPidD->setChecked(false);
+		_ui.lineRxRollPidD->setText("");
+	}
+
+	if (_ui.checkTxRollPidU->isChecked())
+	{
+		header.Bits.roll_pid_u = 1;
+	}
+	else
+	{
+		header.Bits.roll_pid_u = 0;
+		_ui.checkRxRollPidU->setChecked(false);
+		_ui.lineRxRollPidU->setText("");
+	}
+
+	if (_ui.checkTxPitchPidErr->isChecked())
+	{
+		header.Bits.pitch_pid_err = 1;
+	}
+	else
+	{
+		header.Bits.pitch_pid_err = 0;
+		_ui.checkRxPitchPidErr->setChecked(false);
+		_ui.lineRxPitchPidErr->setText("");
+	}
+
+	if (_ui.checkTxPitchPidP->isChecked())
+	{
+		header.Bits.pitch_pid_p = 1;
+	}
+	else
+	{
+		header.Bits.pitch_pid_p = 0;
+		_ui.checkRxPitchPidP->setChecked(false);
+		_ui.lineRxPitchPidP->setText("");
+	}
+
+	if (_ui.checkTxPitchPidI->isChecked())
+	{
+		header.Bits.pitch_pid_i = 1;
+	}
+	else
+	{
+		header.Bits.pitch_pid_i = 0;
+		_ui.checkRxPitchPidI->setChecked(false);
+		_ui.lineRxPitchPidI->setText("");
+	}
+
+	if (_ui.checkTxPitchPidD->isChecked())
+	{
+		header.Bits.pitch_pid_d = 1;
+	}
+	else
+	{
+		header.Bits.pitch_pid_d = 0;
+		_ui.checkRxPitchPidD->setChecked(false);
+		_ui.lineRxPitchPidD->setText("");
+	}
+
+	if (_ui.checkTxPitchPidU->isChecked())
+	{
+		header.Bits.pitch_pid_u = 1;
+	}
+	else
+	{
+		header.Bits.pitch_pid_u = 0;
+		_ui.checkRxPitchPidU->setChecked(false);
+		_ui.lineRxPitchPidU->setText("");
+	}
+
+	if (_ui.checkTxYawPidErr->isChecked())
+	{
+		header.Bits.yaw_pid_err = 1;
+	}
+	else
+	{
+		header.Bits.yaw_pid_err = 0;
+		_ui.checkRxYawPidErr->setChecked(false);
+		_ui.lineRxYawPidErr->setText("");
+	}
+
+	if (_ui.checkTxYawPidP->isChecked())
+	{
+		header.Bits.yaw_pid_p = 1;
+	}
+	else
+	{
+		header.Bits.yaw_pid_p = 0;
+		_ui.checkRxYawPidP->setChecked(false);
+		_ui.lineRxYawPidP->setText("");
+	}
+
+	if (_ui.checkTxYawPidI->isChecked())
+	{
+		header.Bits.yaw_pid_i = 1;
+	}
+	else
+	{
+		header.Bits.yaw_pid_i = 0;
+		_ui.checkRxYawPidI->setChecked(false);
+		_ui.lineRxYawPidI->setText("");
+	}
+
+	if (_ui.checkTxYawPidD->isChecked())
+	{
+		header.Bits.yaw_pid_d = 1;
+	}
+	else
+	{
+		header.Bits.yaw_pid_d = 0;
+		_ui.checkRxYawPidD->setChecked(false);
+		_ui.lineRxYawPidD->setText("");
+	}
+
+	if (_ui.checkTxYawPidU->isChecked())
+	{
+		header.Bits.yaw_pid_u = 1;
+	}
+	else
+	{
+		header.Bits.yaw_pid_u = 0;
+		_ui.checkRxYawPidU->setChecked(false);
+		_ui.lineRxYawPidU->setText("");
 	}
 
 	if (_ui.checkTxMotor1Signal->isChecked())
@@ -979,6 +1179,126 @@ void MaintenanceWindow::OnReceivedBodyYaw(float data)
 	checkPlot("BODY_YAW", data);
 }
 
+
+void MaintenanceWindow::OnReceivedRollPidErr(float data)
+{
+	_ui.checkRxRollPidErr->setChecked(true);
+	_ui.lineRxRollPidErr->setText(QString::number(data));
+
+	checkPlot("ROLL_PID_ERR", data);
+}
+
+void MaintenanceWindow::OnReceivedRollPidP(float data)
+{
+	_ui.checkRxRollPidP->setChecked(true);
+	_ui.lineRxRollPidP->setText(QString::number(data));
+
+	checkPlot("ROLL_PID_P", data);
+}
+
+void MaintenanceWindow::OnReceivedRollPidI(float data)
+{
+	_ui.checkRxRollPidI->setChecked(true);
+	_ui.lineRxRollPidI->setText(QString::number(data));
+
+	checkPlot("ROLL_PID_I", data);
+}
+
+void MaintenanceWindow::OnReceivedRollPidD(float data)
+{
+	_ui.checkRxRollPidD->setChecked(true);
+	_ui.lineRxRollPidD->setText(QString::number(data));
+
+	checkPlot("ROLL_PID_D", data);
+}
+
+void MaintenanceWindow::OnReceivedRollPidU(float data)
+{
+	_ui.checkRxRollPidU->setChecked(true);
+	_ui.lineRxRollPidU->setText(QString::number(data));
+
+	checkPlot("ROLL_PID_U", data);
+}
+
+void MaintenanceWindow::OnReceivedPitchPidErr(float data)
+{
+	_ui.checkRxPitchPidErr->setChecked(true);
+	_ui.lineRxPitchPidErr->setText(QString::number(data));
+
+	checkPlot("PITCH_PID_ERR", data);
+}
+
+void MaintenanceWindow::OnReceivedPitchPidP(float data)
+{
+	_ui.checkRxPitchPidP->setChecked(true);
+	_ui.lineRxPitchPidP->setText(QString::number(data));
+
+	checkPlot("PITCH_PID_P", data);
+}
+
+void MaintenanceWindow::OnReceivedPitchPidI(float data)
+{
+	_ui.checkRxPitchPidI->setChecked(true);
+	_ui.lineRxPitchPidI->setText(QString::number(data));
+
+	checkPlot("PITCH_PID_I", data);
+}
+
+void MaintenanceWindow::OnReceivedPitchPidD(float data)
+{
+	_ui.checkRxPitchPidD->setChecked(true);
+	_ui.lineRxPitchPidD->setText(QString::number(data));
+
+	checkPlot("PITCH_PID_D", data);
+}
+
+void MaintenanceWindow::OnReceivedPitchPidU(float data)
+{
+	_ui.checkRxPitchPidU->setChecked(true);
+	_ui.lineRxPitchPidU->setText(QString::number(data));
+
+	checkPlot("PITCH_PID_U", data);
+}
+
+void MaintenanceWindow::OnReceivedYawPidErr(float data)
+{
+	_ui.checkRxYawPidErr->setChecked(true);
+	_ui.lineRxYawPidErr->setText(QString::number(data));
+
+	checkPlot("YAW_PID_ERR", data);
+}
+
+void MaintenanceWindow::OnReceivedYawPidP(float data)
+{
+	_ui.checkRxYawPidP->setChecked(true);
+	_ui.lineRxYawPidP->setText(QString::number(data));
+
+	checkPlot("YAW_PID_P", data);
+}
+
+void MaintenanceWindow::OnReceivedYawPidI(float data)
+{
+	_ui.checkRxYawPidI->setChecked(true);
+	_ui.lineRxYawPidI->setText(QString::number(data));
+
+	checkPlot("YAW_PID_I", data);
+}
+
+void MaintenanceWindow::OnReceivedYawPidD(float data)
+{
+	_ui.checkRxYawPidD->setChecked(true);
+	_ui.lineRxYawPidD->setText(QString::number(data));
+
+	checkPlot("YAW_PID_D", data);
+}
+
+void MaintenanceWindow::OnReceivedYawPidU(float data)
+{
+	_ui.checkRxYawPidU->setChecked(true);
+	_ui.lineRxYawPidU->setText(QString::number(data));
+
+	checkPlot("YAW_PID_U", data);
+}
 
 void MaintenanceWindow::OnReceivedMotor1(uint32_t data)
 {
