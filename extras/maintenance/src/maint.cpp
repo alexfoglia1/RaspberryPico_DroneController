@@ -1,13 +1,13 @@
 #include "maint.h"
-#include <qtimer.h>
 
 
-Maint::Maintenance::Maintenance(QString serialPortName)
+Maint::Maintenance::Maintenance()
 {
     _txHeader.All = 0;
     _txCommand.All = 0;
 
-    _serialPort = new QSerialPort(serialPortName);
+    _serialPort = new QSerialPort();
+    _txTimer = new QTimer();
 
     _status = Maint::MAINT_STATUS::WAIT_SYNC;
     _txStatus = Maint::TX_STATUS::TX_GET;
@@ -20,8 +20,9 @@ Maint::Maintenance::Maintenance(QString serialPortName)
 
 }
 
-bool Maint::Maintenance::Open()
+bool Maint::Maintenance::Open(QString serialPortName)
 {
+    _serialPort->setPortName(serialPortName);
 	_serialPort->setBaudRate(QSerialPort::Baud115200);
 	_serialPort->setParity(QSerialPort::NoParity);
 	_serialPort->setDataBits(QSerialPort::Data8);
@@ -34,15 +35,24 @@ bool Maint::Maintenance::Open()
 }
 
 
+void Maint::Maintenance::Close()
+{
+    _txTimer->stop();
+    _txTimer->disconnect(_txTimer, SIGNAL(timeout()), this, SLOT(Tx()));
+
+    _serialPort->disconnect(_serialPort, SIGNAL(readyRead()), this, SLOT(OnRx()));
+    _serialPort->close();
+}
+
+
 void Maint::Maintenance::EnableTx()
 {
-    QTimer* t = new QTimer(this);
-    t->setInterval(100);
-    t->setSingleShot(false);
-    t->setTimerType(Qt::PreciseTimer);
+    _txTimer->setInterval(100);
+    _txTimer->setSingleShot(false);
+    _txTimer->setTimerType(Qt::PreciseTimer);
 
-    connect(t, SIGNAL(timeout()), this, SLOT(Tx()));
-    t->start();
+    connect(_txTimer, SIGNAL(timeout()), this, SLOT(Tx()));
+    _txTimer->start();
 }
 
 

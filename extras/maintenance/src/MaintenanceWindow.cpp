@@ -40,21 +40,21 @@ MaintenanceWindow::MaintenanceWindow()
 		{"BODY_ROLL", 360},
 		{"BODY_PITCH", 360},
 		{"BODY_YAW", 360},
-		{"ROLL_PID_ERR", 16000},
-		{"ROLL_PID_P", 16000},
-		{"ROLL_PID_I", 16000},
-		{"ROLL_PID_D", 16000},
-		{"ROLL_PID_U", 16000},
-		{"PITCH_PID_ERR", 16000},
-		{"PITCH_PID_P", 16000},
-		{"PITCH_PID_I", 16000},
-		{"PITCH_PID_D", 16000},
-		{"PITCH_PID_U", 16000},
-		{"YAW_PID_ERR", 16000},
-		{"YAW_PID_P", 16000},
-		{"YAW_PID_I", 16000},
-		{"YAW_PID_D", 16000},
-		{"YAW_PID_U", 16000},
+		{"ROLL_PID_ERR", 100},
+		{"ROLL_PID_P", 100},
+		{"ROLL_PID_I", 100},
+		{"ROLL_PID_D", 100},
+		{"ROLL_PID_U", 100},
+		{"PITCH_PID_ERR", 100},
+		{"PITCH_PID_P", 100},
+		{"PITCH_PID_I", 100},
+		{"PITCH_PID_D", 100},
+		{"PITCH_PID_U", 100},
+		{"YAW_PID_ERR", 100},
+		{"YAW_PID_P", 100},
+		{"YAW_PID_I", 100},
+		{"YAW_PID_D", 100},
+		{"YAW_PID_U", 100},
 		{"MOTOR_1", 4000},
 		{"MOTOR_2", 4000},
 		{"MOTOR_3", 4000},
@@ -63,6 +63,8 @@ MaintenanceWindow::MaintenanceWindow()
 	};
 
 	autoScanComPorts();
+
+	_maintHandler = new Maint::Maintenance();
 
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
 	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
@@ -127,13 +129,70 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxYawPidD, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxYawPidU, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
-
 	connect(_ui.checkTxMotor1Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotor2Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotor3Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotor4Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotorsArmed, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxCbit, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+
+	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
+	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
+	connect(_maintHandler, SIGNAL(receivedRawAccelZ(float)), this, SLOT(OnReceivedRawAccelZ(float)));
+	connect(_maintHandler, SIGNAL(receivedRawGyroX(float)), this, SLOT(OnReceivedRawGyroX(float)));
+	connect(_maintHandler, SIGNAL(receivedRawGyroY(float)), this, SLOT(OnReceivedRawGyroY(float)));
+	connect(_maintHandler, SIGNAL(receivedRawGyroZ(float)), this, SLOT(OnReceivedRawGyroZ(float)));
+	connect(_maintHandler, SIGNAL(receivedRawMagnX(float)), this, SLOT(OnReceivedRawMagnX(float)));
+	connect(_maintHandler, SIGNAL(receivedRawMagnY(float)), this, SLOT(OnReceivedRawMagnY(float)));
+	connect(_maintHandler, SIGNAL(receivedRawMagnZ(float)), this, SLOT(OnReceivedRawMagnZ(float)));
+
+	connect(_maintHandler, SIGNAL(receivedFilteredAccelX(float)), this, SLOT(OnReceivedFilteredAccelX(float)));
+	connect(_maintHandler, SIGNAL(receivedFilteredAccelY(float)), this, SLOT(OnReceivedFilteredAccelY(float)));
+	connect(_maintHandler, SIGNAL(receivedFilteredAccelZ(float)), this, SLOT(OnReceivedFilteredAccelZ(float)));
+	connect(_maintHandler, SIGNAL(receivedFilteredGyroX(float)), this, SLOT(OnReceivedFilteredGyroX(float)));
+	connect(_maintHandler, SIGNAL(receivedFilteredGyroY(float)), this, SLOT(OnReceivedFilteredGyroY(float)));
+	connect(_maintHandler, SIGNAL(receivedFilteredGyroZ(float)), this, SLOT(OnReceivedFilteredGyroZ(float)));
+	connect(_maintHandler, SIGNAL(receivedFilteredMagnX(float)), this, SLOT(OnReceivedFilteredMagnX(float)));
+	connect(_maintHandler, SIGNAL(receivedFilteredMagnY(float)), this, SLOT(OnReceivedFilteredMagnY(float)));
+	connect(_maintHandler, SIGNAL(receivedFilteredMagnZ(float)), this, SLOT(OnReceivedFilteredMagnZ(float)));
+
+	connect(_maintHandler, SIGNAL(receivedThrottleSgn(uint32_t)), this, SLOT(OnReceivedThrottleSgn(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedPitchSgn(uint32_t)), this, SLOT(OnReceivedPitchSgn(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedRollSgn(uint32_t)), this, SLOT(OnReceivedRollSgn(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedCmdThr(float)), this, SLOT(OnReceivedCmdThr(float)));
+	connect(_maintHandler, SIGNAL(receivedCmdPitch(float)), this, SLOT(OnReceivedCmdPitch(float)));
+	connect(_maintHandler, SIGNAL(receivedCmdRoll(float)), this, SLOT(OnReceivedCmdRoll(float)));
+
+	connect(_maintHandler, SIGNAL(receivedBodyRoll(float)), this, SLOT(OnReceivedBodyRoll(float)));
+	connect(_maintHandler, SIGNAL(receivedBodyPitch(float)), this, SLOT(OnReceivedBodyPitch(float)));
+	connect(_maintHandler, SIGNAL(receivedBodyYaw(float)), this, SLOT(OnReceivedBodyYaw(float)));
+
+	connect(_maintHandler, SIGNAL(receivedMotor1(uint32_t)), this, SLOT(OnReceivedMotor1(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedMotor2(uint32_t)), this, SLOT(OnReceivedMotor2(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedMotor3(uint32_t)), this, SLOT(OnReceivedMotor3(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedMotor4(uint32_t)), this, SLOT(OnReceivedMotor4(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedMotorsArmed(uint32_t)), this, SLOT(OnReceivedMotorsArmed(uint32_t)));
+
+	connect(_maintHandler, SIGNAL(receivedRollPidErr(float)), this, SLOT(OnReceivedRollPidErr(float)));
+	connect(_maintHandler, SIGNAL(receivedRollPidP(float)), this, SLOT(OnReceivedRollPidP(float)));
+	connect(_maintHandler, SIGNAL(receivedRollPidI(float)), this, SLOT(OnReceivedRollPidI(float)));
+	connect(_maintHandler, SIGNAL(receivedRollPidD(float)), this, SLOT(OnReceivedRollPidD(float)));
+	connect(_maintHandler, SIGNAL(receivedRollPidU(float)), this, SLOT(OnReceivedRollPidU(float)));
+	connect(_maintHandler, SIGNAL(receivedPitchPidErr(float)), this, SLOT(OnReceivedPitchPidErr(float)));
+	connect(_maintHandler, SIGNAL(receivedPitchPidP(float)), this, SLOT(OnReceivedPitchPidP(float)));
+	connect(_maintHandler, SIGNAL(receivedPitchPidI(float)), this, SLOT(OnReceivedPitchPidI(float)));
+	connect(_maintHandler, SIGNAL(receivedPitchPidD(float)), this, SLOT(OnReceivedPitchPidD(float)));
+	connect(_maintHandler, SIGNAL(receivedPitchPidU(float)), this, SLOT(OnReceivedPitchPidU(float)));
+	connect(_maintHandler, SIGNAL(receivedYawPidErr(float)), this, SLOT(OnReceivedYawPidErr(float)));
+	connect(_maintHandler, SIGNAL(receivedYawPidP(float)), this, SLOT(OnReceivedYawPidP(float)));
+	connect(_maintHandler, SIGNAL(receivedYawPidI(float)), this, SLOT(OnReceivedYawPidI(float)));
+	connect(_maintHandler, SIGNAL(receivedYawPidD(float)), this, SLOT(OnReceivedYawPidD(float)));
+	connect(_maintHandler, SIGNAL(receivedYawPidU(float)), this, SLOT(OnReceivedYawPidU(float)));
+
+	connect(_maintHandler, SIGNAL(receivedCbit(uint32_t)), this, SLOT(OnReceivedCbit(uint32_t)));
+
+	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
+	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
 }
 
 
@@ -241,80 +300,30 @@ void MaintenanceWindow::OnComboTrack3TextChanged(const QString& newText)
 
 void MaintenanceWindow::OnBtnOpenSerialPort()
 {
-	_maintHandler = new Maint::Maintenance(_ui.comboSelPort->currentText());
-
-	if (_maintHandler->Open())
+	if (_ui.btnOpenSerialPort->text().toUpper() == "OPEN")
 	{
-		connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
-		connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
-		connect(_maintHandler, SIGNAL(receivedRawAccelZ(float)), this, SLOT(OnReceivedRawAccelZ(float)));
-		connect(_maintHandler, SIGNAL(receivedRawGyroX(float)), this, SLOT(OnReceivedRawGyroX(float)));
-		connect(_maintHandler, SIGNAL(receivedRawGyroY(float)), this, SLOT(OnReceivedRawGyroY(float)));
-		connect(_maintHandler, SIGNAL(receivedRawGyroZ(float)), this, SLOT(OnReceivedRawGyroZ(float)));
-		connect(_maintHandler, SIGNAL(receivedRawMagnX(float)), this, SLOT(OnReceivedRawMagnX(float)));
-		connect(_maintHandler, SIGNAL(receivedRawMagnY(float)), this, SLOT(OnReceivedRawMagnY(float)));
-		connect(_maintHandler, SIGNAL(receivedRawMagnZ(float)), this, SLOT(OnReceivedRawMagnZ(float)));
+		if (_maintHandler->Open(_ui.comboSelPort->currentText()))
+		{
+			_maintHandler->EnableTx();
 
-		connect(_maintHandler, SIGNAL(receivedFilteredAccelX(float)), this, SLOT(OnReceivedFilteredAccelX(float)));
-		connect(_maintHandler, SIGNAL(receivedFilteredAccelY(float)), this, SLOT(OnReceivedFilteredAccelY(float)));
-		connect(_maintHandler, SIGNAL(receivedFilteredAccelZ(float)), this, SLOT(OnReceivedFilteredAccelZ(float)));
-		connect(_maintHandler, SIGNAL(receivedFilteredGyroX(float)), this, SLOT(OnReceivedFilteredGyroX(float)));
-		connect(_maintHandler, SIGNAL(receivedFilteredGyroY(float)), this, SLOT(OnReceivedFilteredGyroY(float)));
-		connect(_maintHandler, SIGNAL(receivedFilteredGyroZ(float)), this, SLOT(OnReceivedFilteredGyroZ(float)));
-		connect(_maintHandler, SIGNAL(receivedFilteredMagnX(float)), this, SLOT(OnReceivedFilteredMagnX(float)));
-		connect(_maintHandler, SIGNAL(receivedFilteredMagnY(float)), this, SLOT(OnReceivedFilteredMagnY(float)));
-		connect(_maintHandler, SIGNAL(receivedFilteredMagnZ(float)), this, SLOT(OnReceivedFilteredMagnZ(float)));
+			_ui.comboSelPort->setEnabled(false);
+			_ui.groupBoxTx->setEnabled(true);
+			_ui.TxMaintenanceGroup->setEnabled(true);
 
-		connect(_maintHandler, SIGNAL(receivedThrottleSgn(uint32_t)), this, SLOT(OnReceivedThrottleSgn(uint32_t)));
-		connect(_maintHandler, SIGNAL(receivedPitchSgn(uint32_t)), this, SLOT(OnReceivedPitchSgn(uint32_t)));
-		connect(_maintHandler, SIGNAL(receivedRollSgn(uint32_t)), this, SLOT(OnReceivedRollSgn(uint32_t)));
-		connect(_maintHandler, SIGNAL(receivedCmdThr(float)), this, SLOT(OnReceivedCmdThr(float)));
-		connect(_maintHandler, SIGNAL(receivedCmdPitch(float)), this, SLOT(OnReceivedCmdPitch(float)));
-		connect(_maintHandler, SIGNAL(receivedCmdRoll(float)), this, SLOT(OnReceivedCmdRoll(float)));
-
-		connect(_maintHandler, SIGNAL(receivedBodyRoll(float)), this, SLOT(OnReceivedBodyRoll(float)));
-		connect(_maintHandler, SIGNAL(receivedBodyPitch(float)), this, SLOT(OnReceivedBodyPitch(float)));
-		connect(_maintHandler, SIGNAL(receivedBodyYaw(float)), this, SLOT(OnReceivedBodyYaw(float)));
-
-		connect(_maintHandler, SIGNAL(receivedMotor1(uint32_t)), this, SLOT(OnReceivedMotor1(uint32_t)));
-		connect(_maintHandler, SIGNAL(receivedMotor2(uint32_t)), this, SLOT(OnReceivedMotor2(uint32_t)));
-		connect(_maintHandler, SIGNAL(receivedMotor3(uint32_t)), this, SLOT(OnReceivedMotor3(uint32_t)));
-		connect(_maintHandler, SIGNAL(receivedMotor4(uint32_t)), this, SLOT(OnReceivedMotor4(uint32_t)));
-		connect(_maintHandler, SIGNAL(receivedMotorsArmed(uint32_t)), this, SLOT(OnReceivedMotorsArmed(uint32_t)));
-
-		connect(_maintHandler, SIGNAL(receivedRollPidErr(float)), this, SLOT(OnReceivedRollPidErr(float)));
-		connect(_maintHandler, SIGNAL(receivedRollPidP(float)), this, SLOT(OnReceivedRollPidP(float)));
-		connect(_maintHandler, SIGNAL(receivedRollPidI(float)), this, SLOT(OnReceivedRollPidI(float)));
-		connect(_maintHandler, SIGNAL(receivedRollPidD(float)), this, SLOT(OnReceivedRollPidD(float)));
-		connect(_maintHandler, SIGNAL(receivedRollPidU(float)), this, SLOT(OnReceivedRollPidU(float)));
-		connect(_maintHandler, SIGNAL(receivedPitchPidErr(float)), this, SLOT(OnReceivedPitchPidErr(float)));
-		connect(_maintHandler, SIGNAL(receivedPitchPidP(float)), this, SLOT(OnReceivedPitchPidP(float)));
-		connect(_maintHandler, SIGNAL(receivedPitchPidI(float)), this, SLOT(OnReceivedPitchPidI(float)));
-		connect(_maintHandler, SIGNAL(receivedPitchPidD(float)), this, SLOT(OnReceivedPitchPidD(float)));
-		connect(_maintHandler, SIGNAL(receivedPitchPidU(float)), this, SLOT(OnReceivedPitchPidU(float)));
-		connect(_maintHandler, SIGNAL(receivedYawPidErr(float)), this, SLOT(OnReceivedYawPidErr(float)));
-		connect(_maintHandler, SIGNAL(receivedYawPidP(float)), this, SLOT(OnReceivedYawPidP(float)));
-		connect(_maintHandler, SIGNAL(receivedYawPidI(float)), this, SLOT(OnReceivedYawPidI(float)));
-		connect(_maintHandler, SIGNAL(receivedYawPidD(float)), this, SLOT(OnReceivedYawPidD(float)));
-		connect(_maintHandler, SIGNAL(receivedYawPidU(float)), this, SLOT(OnReceivedYawPidU(float)));
-
-		connect(_maintHandler, SIGNAL(receivedCbit(uint32_t)), this, SLOT(OnReceivedCbit(uint32_t)));
-
-		connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
-		connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
-
-
-		_maintHandler->EnableTx();
-
-		_ui.btnOpenSerialPort->setEnabled(false);
-		_ui.comboSelPort->setEnabled(false);
-		_ui.groupBoxTx->setEnabled(true);
-		_ui.TxMaintenanceGroup->setEnabled(true);
+			_ui.btnOpenSerialPort->setText("Close");
+		}
+		else
+		{
+			QMessageBox::warning(this, "Error", QString("Cannot open serial port %1").arg(_ui.comboSelPort->currentText()));
+		}
 	}
 	else
 	{
-		_maintHandler->deleteLater();
-		QMessageBox::warning(this, "Error", QString("Cannot open serial port %1").arg(_ui.comboSelPort->currentText()));
+		_maintHandler->Close();
+		_ui.comboSelPort->setEnabled(true);
+		_ui.btnOpenSerialPort->setText("Open");
+		_ui.lblRxData->setStyleSheet("background-color:#FF0000");
+		_ui.lblTxData->setStyleSheet("background-color:#FF0000");
 	}
 }
 

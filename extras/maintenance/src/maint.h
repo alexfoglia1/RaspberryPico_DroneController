@@ -4,6 +4,7 @@
 #include <qobject.h>
 #include <qserialport.h>
 #include <qmutex.h>
+#include <qtimer.h>
 
 namespace Maint
 {
@@ -130,8 +131,9 @@ class Maintenance : public QObject
 {
 	Q_OBJECT
 public:
-	Maintenance(QString serialPortName);
-    bool Open();
+	Maintenance();
+    bool Open(QString serialPortName);
+    void Close();
     void EnableTx();
     void SetTxHeader(MAINT_HEADER_T txHeader);
     void TxMaintenanceCommand(MAINT_CMD_ID txCommand, uint32_t data);
@@ -204,6 +206,7 @@ private:
     Maint::MAINT_HEADER_T _txCommand;
     uint32_t _tx_data;
     QMutex _txMutex;
+    QTimer* _txTimer;
 
     void update_fsm(uint8_t byte_rx);
     void data_ingest(uint8_t rx_cks, uint32_t data_len);
