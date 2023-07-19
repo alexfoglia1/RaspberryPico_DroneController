@@ -16,6 +16,7 @@ private:
 	Ui_MaintenanceGui _ui;
 	Maint::Maintenance* _maintHandler;
 	const int _txDelayMillis = 100;
+	QMap<QString, int> _defaultPlotSpan;
 
 	void autoScanComPorts();
 	void checkPlot(QString expectedText, double value);
@@ -31,6 +32,7 @@ private slots:
 	void OnComboTrack3TextChanged(const QString& newText);
 	void OnHeaderChanged();
 	void OnBtnSendMaintenanceCommand();
+	void OnSpinSetMaintenanceValue(int newValue);
 
 	void OnRxRawData(bool valid, quint8* data, int size);
 	void OnTxRawData(quint8* data, int size);
@@ -61,6 +63,10 @@ private slots:
 	void OnReceivedCmdThr(float data);
 	void OnReceivedCmdPitch(float data);
 	void OnReceivedCmdRoll(float data);
+
+	void OnReceivedBodyRoll(float data);
+	void OnReceivedBodyPitch(float data);
+	void OnReceivedBodyYaw(float data);
 
 	void OnReceivedMotor1(uint32_t data);
 	void OnReceivedMotor2(uint32_t data);

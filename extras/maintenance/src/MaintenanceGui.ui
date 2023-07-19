@@ -394,7 +394,7 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>291</width>
+       <width>309</width>
        <height>41</height>
       </rect>
      </property>
@@ -424,12 +424,29 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineSetCommandValue"/>
+       <widget class="QSpinBox" name="spinSetMaintenanceValue">
+        <property name="maximum">
+         <number>20000</number>
+        </property>
+        <property name="singleStep">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>1000</number>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnSendMaintenanceCommand">
         <property name="text">
          <string>Send</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkSpinOnChange">
+        <property name="text">
+         <string>On change</string>
         </property>
        </widget>
       </item>

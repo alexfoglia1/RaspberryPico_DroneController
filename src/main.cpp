@@ -18,7 +18,7 @@ int main()
 {
     InitBoard();
 
-    //ATTITUDE_Init();
+    ATTITUDE_Init();
 
     JOYSTICK_Init(MIN_ROLL_DEGREES,
                   MAX_ROLL_DEGREES,

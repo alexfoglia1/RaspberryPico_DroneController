@@ -19,7 +19,7 @@ bool TIMER_Init(int frequency_hz)
 
 void TIMER_Loop()
 {
-    //ATTITUDE_Handler();
+    ATTITUDE_Handler();
     JOYSTICK_Handler();
     MOTORS_Handler();
 }

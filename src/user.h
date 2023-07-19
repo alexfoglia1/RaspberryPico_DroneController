@@ -17,10 +17,10 @@
 #define CHANNEL_THROTTLE 13
 #define CHANNEL_ARMED    12
 
-#define MOTOR_1 4
-#define MOTOR_2 5
-#define MOTOR_3 6
-#define MOTOR_4 7
+#define MOTOR_1 8
+#define MOTOR_2 9
+#define MOTOR_3 10
+#define MOTOR_4 11
 
 void InitBoard();
 

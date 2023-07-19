@@ -10,9 +10,64 @@ MaintenanceWindow::MaintenanceWindow()
 
 	_maintHandler = nullptr;
 
+	_defaultPlotSpan =
+	{
+		{"NONE", 16000},
+		{"RAW_ACC_X", 4},
+		{"RAW_ACC_Y", 4},
+		{"RAW_ACC_Z", 4},
+		{"RAW_GYRO_X", 360},
+		{"RAW_GYRO_Y", 360},
+		{"RAW_GYRO_Z", 360},
+		{"RAW_MAGN_X", 100},
+		{"RAW_MAGN_Y", 100},
+		{"RAW_MAGN_Z", 100},
+		{"FILTERED_ACC_X", 4},
+		{"FILTERED_ACC_Y", 4},
+		{"FILTERED_ACC_Z", 4},
+		{"FILTERED_GYRO_X", 360},
+		{"FILTERED_GYRO_Y", 360},
+		{"FILTERED_GYRO_Z", 360},
+		{"FILTERED_MAGN_X", 100},
+		{"FILTERED_MAGN_Y", 100},
+		{"FILTERED_MAGN_Z", 100},
+		{"THROTTLE_SIGNAL", 4000},
+		{"ROLL_SIGNAL", 4000},
+		{"PITCH_SIGNAL", 4000},
+		{"CMD_THROTTLE", 4000},
+		{"CMD_ROLL", 10},
+		{"CMD_PITCH", 10},
+		{"BODY_ROLL", 360},
+		{"BODY_PITCH", 360},
+		{"BODY_YAW", 360},
+		{"ROLL_PID_ERR", 16000},
+		{"ROLL_PID_P", 16000},
+		{"ROLL_PID_I", 16000},
+		{"ROLL_PID_D", 16000},
+		{"ROLL_PID_U", 16000},
+		{"PITCH_PID_ERR", 16000},
+		{"PITCH_PID_P", 16000},
+		{"PITCH_PID_I", 16000},
+		{"PITCH_PID_D", 16000},
+		{"PITCH_PID_U", 16000},
+		{"YAW_PID_ERR", 16000},
+		{"YAW_PID_P", 16000},
+		{"YAW_PID_I", 16000},
+		{"YAW_PID_D", 16000},
+		{"YAW_PID_U", 16000},
+		{"MOTOR_1", 4000},
+		{"MOTOR_2", 4000},
+		{"MOTOR_3", 4000},
+		{"MOTOR_4", 4000},
+		{"MOTORS_ARMED", 2}
+	};
+
 	autoScanComPorts();
 
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
+	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
+	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
+
 	connect(_ui.plotTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotSliderValueChanged(int)));
 	connect(_ui.plotTrack1Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack1ValueChanged(int)));
 	connect(_ui.plotTrack2Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack2ValueChanged(int)));
@@ -42,8 +97,6 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxFiltMagnY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxFiltMagnZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
-	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
-
 	connect(_ui.checkTxThrottleSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxRollSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxPitchSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
@@ -51,6 +104,10 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxCmdThrottle, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxCmdRoll, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxCmdPitch, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+
+	connect(_ui.checkTxBodyRoll, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxBodyPitch, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxBodyYaw, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
 	connect(_ui.checkTxMotor1Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotor2Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
@@ -132,6 +189,8 @@ void MaintenanceWindow::OnPlotTrack3ValueChanged(int newValue)
 
 void MaintenanceWindow::OnComboTrack1TextChanged(const QString& newText)
 {
+	_ui.plot->SetYSpan(0, _defaultPlotSpan[newText]);
+
 	if (newText.toUpper().contains("NONE"))
 	{
 		_ui.plot->ClearData(0);
@@ -141,6 +200,8 @@ void MaintenanceWindow::OnComboTrack1TextChanged(const QString& newText)
 
 void MaintenanceWindow::OnComboTrack2TextChanged(const QString& newText)
 {
+	_ui.plot->SetYSpan(1, _defaultPlotSpan[newText]);
+
 	if (newText.toUpper().contains("NONE"))
 	{
 		_ui.plot->ClearData(1);
@@ -149,6 +210,8 @@ void MaintenanceWindow::OnComboTrack2TextChanged(const QString& newText)
 
 void MaintenanceWindow::OnComboTrack3TextChanged(const QString& newText)
 {
+	_ui.plot->SetYSpan(2, _defaultPlotSpan[newText]);
+
 	if (newText.toUpper().contains("NONE"))
 	{
 		_ui.plot->ClearData(2);
@@ -188,6 +251,10 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 		connect(_maintHandler, SIGNAL(receivedCmdThr(float)), this, SLOT(OnReceivedCmdThr(float)));
 		connect(_maintHandler, SIGNAL(receivedCmdPitch(float)), this, SLOT(OnReceivedCmdPitch(float)));
 		connect(_maintHandler, SIGNAL(receivedCmdRoll(float)), this, SLOT(OnReceivedCmdRoll(float)));
+
+		connect(_maintHandler, SIGNAL(receivedBodyRoll(float)), this, SLOT(OnReceivedBodyRoll(float)));
+		connect(_maintHandler, SIGNAL(receivedBodyPitch(float)), this, SLOT(OnReceivedBodyPitch(float)));
+		connect(_maintHandler, SIGNAL(receivedBodyYaw(float)), this, SLOT(OnReceivedBodyYaw(float)));
 
 		connect(_maintHandler, SIGNAL(receivedMotor1(uint32_t)), this, SLOT(OnReceivedMotor1(uint32_t)));
 		connect(_maintHandler, SIGNAL(receivedMotor2(uint32_t)), this, SLOT(OnReceivedMotor2(uint32_t)));
@@ -483,6 +550,39 @@ void MaintenanceWindow::OnHeaderChanged()
 		_ui.lineRxCmdRoll->setText("");
 	}
 
+	if (_ui.checkTxBodyPitch->isChecked())
+	{
+		header.Bits.body_pitch = 1;
+	}
+	else
+	{
+		header.Bits.body_pitch = 0;
+		_ui.checkRxBodyPitch->setChecked(false);
+		_ui.lineRxBodyPitch->setText("");
+	}
+
+	if (_ui.checkTxBodyRoll->isChecked())
+	{
+		header.Bits.body_roll = 1;
+	}
+	else
+	{
+		header.Bits.body_roll = 0;
+		_ui.checkRxBodyRoll->setChecked(false);
+		_ui.lineRxBodyRoll->setText("");
+	}
+
+	if (_ui.checkTxBodyYaw->isChecked())
+	{
+		header.Bits.body_yaw = 1;
+	}
+	else
+	{
+		header.Bits.body_yaw = 0;
+		_ui.checkRxBodyYaw->setChecked(false);
+		_ui.lineRxBodyYaw->setText("");
+	}
+
 	if (_ui.checkTxMotor1Signal->isChecked())
 	{
 		header.Bits.motor1 = 1;
@@ -549,17 +649,25 @@ void MaintenanceWindow::OnBtnSendMaintenanceCommand()
 {
 	if (_maintHandler)
 	{
-		uint32_t data = _ui.lineSetCommandValue->text().toUInt();
-		_ui.lineSetCommandValue->setText(QString::number(data));
+		uint32_t data = _ui.spinSetMaintenanceValue->value();
 
 		_maintHandler->TxMaintenanceCommand(Maint::MAINT_CMD_ID(_ui.comboSetCommandId->currentIndex() + 1), data);
 	}
 }
 
 
+void MaintenanceWindow::OnSpinSetMaintenanceValue(int newValue)
+{
+	if (_maintHandler && _ui.checkSpinOnChange->isChecked())
+	{
+		_maintHandler->TxMaintenanceCommand(Maint::MAINT_CMD_ID(_ui.comboSetCommandId->currentIndex() + 1), newValue);
+	}
+}
+
+
 void MaintenanceWindow::OnRxRawData(bool valid, quint8* data, int size)
 {
-	QString dataString;
+	QString dataString("0xFF ");
 
 	for (int i = 0; i < size; i++)
 	{
@@ -842,6 +950,33 @@ void MaintenanceWindow::OnReceivedCmdPitch(float data)
 	_ui.lineRxCmdPitch->setText(QString::number(data));
 
 	checkPlot("CMD_PITCH", data);
+}
+
+
+void MaintenanceWindow::OnReceivedBodyRoll(float data)
+{
+	_ui.checkRxBodyRoll->setChecked(true);
+	_ui.lineRxBodyRoll->setText(QString::number(data));
+
+	checkPlot("BODY_ROLL", data);
+}
+
+
+void MaintenanceWindow::OnReceivedBodyPitch(float data)
+{
+	_ui.checkRxBodyPitch->setChecked(true);
+	_ui.lineRxBodyPitch->setText(QString::number(data));
+
+	checkPlot("BODY_PITCH", data);
+}
+
+
+void MaintenanceWindow::OnReceivedBodyYaw(float data)
+{
+	_ui.checkRxBodyYaw->setChecked(true);
+	_ui.lineRxBodyYaw->setText(QString::number(data));
+
+	checkPlot("BODY_YAW", data);
 }
 
 
