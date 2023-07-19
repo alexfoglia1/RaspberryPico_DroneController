@@ -145,8 +145,8 @@ bool ATTITUDE_Init()
 void ATTITUDE_Handler()
 {
     if (imu.accelAvailable()) imu.readAccel();
-    if (imu.gyroAvailable())  imu.readGyro();
-    if (imu.magAvailable())   imu.readMag();
+    if (imu.gyroAvailable()) imu.readGyro();
+    if (imu.magAvailable()) imu.readMag();
 
     float ax = imu.calcAccel(imu.ax);
     float ay = imu.calcAccel(imu.ay);

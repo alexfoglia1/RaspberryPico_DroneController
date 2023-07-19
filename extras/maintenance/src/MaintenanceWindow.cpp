@@ -133,6 +133,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxMotor3Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotor4Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotorsArmed, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxCbit, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 }
 
 
@@ -296,6 +297,8 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 		connect(_maintHandler, SIGNAL(receivedYawPidI(float)), this, SLOT(OnReceivedYawPidI(float)));
 		connect(_maintHandler, SIGNAL(receivedYawPidD(float)), this, SLOT(OnReceivedYawPidD(float)));
 		connect(_maintHandler, SIGNAL(receivedYawPidU(float)), this, SLOT(OnReceivedYawPidU(float)));
+
+		connect(_maintHandler, SIGNAL(receivedCbit(uint32_t)), this, SLOT(OnReceivedCbit(uint32_t)));
 
 		connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 		connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
@@ -838,6 +841,17 @@ void MaintenanceWindow::OnHeaderChanged()
 		_ui.lineRxMotorsArmed->setText("");
 	}
 
+	if (_ui.checkTxCbit->isChecked())
+	{
+		header.Bits.cbit = 1;
+	}
+	else
+	{
+		header.Bits.cbit = 0;
+		_ui.checkRxCbit->setChecked(false);
+		_ui.lineRxCbit->setText("");
+	}
+
 	if (_maintHandler)
 	{
 		_maintHandler->SetTxHeader(header);
@@ -1342,4 +1356,13 @@ void MaintenanceWindow::OnReceivedMotorsArmed(uint32_t data)
 	_ui.lineRxMotorsArmed->setText(QString::number(data));
 
 	checkPlot("MOTORS_ARMED", data);
+}
+
+
+void MaintenanceWindow::OnReceivedCbit(uint32_t data)
+{
+	Maint::CBIT_TAG* cbit = reinterpret_cast<Maint::CBIT_TAG*>(&data);
+
+	_ui.checkRxCbit->setChecked(true);
+	_ui.lineRxCbit->setText(QString::number(data));
 }

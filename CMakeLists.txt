@@ -43,4 +43,4 @@ pico_enable_stdio_uart(DroneController 1)
 
 pico_add_extra_outputs(DroneController)
  
-target_link_libraries(DroneController pico_stdlib hardware_i2c hardware_pwm) 
+target_link_libraries(DroneController pico_stdlib hardware_i2c hardware_pwm pico_multicore) 

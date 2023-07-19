@@ -58,7 +58,7 @@ typedef union
         uint64_t motor3           :1;     //44
         uint64_t motor4           :1;     //45
         uint64_t motors_armed     :1;     //46
-        uint64_t cbit             :1;
+        uint64_t cbit             :1;     //47
         uint64_t reserved         :12;    //48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59
         uint64_t maint_cmd_id     :4;     //60,61,62,63
     } Bits;

@@ -89,6 +89,7 @@ private slots:
 	void OnReceivedMotor3(uint32_t data);
 	void OnReceivedMotor4(uint32_t data);
 	void OnReceivedMotorsArmed(uint32_t data);
+	void OnReceivedCbit(uint32_t data);
 };
 
 #endif

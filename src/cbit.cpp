@@ -1,39 +1,38 @@
-#include "user.h"
-#include "timer.h"
-#include "attitude.h"
-#include "joystick.h"
-#include "motors.h"
+#include "cbit.h"
 #include "maint.h"
-#include <stdio.h>
+#include "joystick.h"
 
-const int MOTOR_ARM_THRESHOLD = 100;
-
-const float MIN_ROLL_DEGREES = -5.0f;
-const float MAX_ROLL_DEGREES = 5.0f;
-const float MIN_PITCH_DEGREES = -5.0f;
-const float MAX_PITCH_DEGREES = 5.0;
+CBIT_TAG cbit_status;
 
 
-int main()
+void CBIT_Init()
 {
-    InitBoard();
+    cbit_status.Dword = 0;
+}
 
-    ATTITUDE_Init();
 
-    JOYSTICK_Init(MIN_ROLL_DEGREES,
-                  MAX_ROLL_DEGREES,
-                  MIN_PITCH_DEGREES,
-                  MAX_PITCH_DEGREES,
-                  MOTOR_MIN_SIGNAL + MOTOR_ARM_THRESHOLD,
-                  MOTOR_MAX_SIGNAL);
+void CBIT_Handler()
+{
+    // Perform cbit checks here
+    cbit_status.Bits.js_timeout    = JOYSTICK_Timeout ? 1 : 0;
+    cbit_status.Bits.maint_timeout = !MAINT_IsPresent() ? 1 : 0;
+}
 
-    MOTORS_Init();
 
-    TIMER_Init(CTRL_LOOP_FREQUENCY_HZ);
-
-    while(1)
+void CBIT_Set_fail_code(uint32_t fail_code, bool active)
+{
+    if (active)
     {
-        MAINT_Handler();
+        cbit_status.Dword |= fail_code;
     }
-    return 0;
+    else
+    {
+        cbit_status.Dword &= ~fail_code;
+    }
+}
+
+
+bool CBIT_Fails_live(uint32_t fail_code)
+{
+    return (cbit_status.Dword & fail_code) != 0;
 }

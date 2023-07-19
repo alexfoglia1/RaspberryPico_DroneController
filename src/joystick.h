@@ -16,6 +16,7 @@ extern float JOYSTICK_Roll;
 extern float JOYSTICK_Pitch;
 extern float JOYSTICK_Throttle;
 extern bool  JOYSTICK_MotorsArmed;
+extern bool  JOYSTICK_Timeout;
 
 extern Pulse roll_signal;
 extern Pulse pitch_signal;

@@ -645,6 +645,14 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 
             pPayload += sizeof(uint32_t);
         }
+        if (rx_header->Bits.cbit)
+        {
+            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+
+            emit receivedCbit(idata);
+
+            pPayload += sizeof(uint32_t);
+        }
 
     }
 }

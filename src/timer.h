@@ -6,10 +6,11 @@
 
 #define SECONDS_TO_US 1000000
 
-bool TIMER_Init(int frequency_hz);
-void TIMER_Loop();
+bool CPU0_TIMER_Init(int frequency_hz);
+bool CPU0_TIMER_Loop(repeating_timer_t* timer);
 
-bool __TIMER_ISR__(repeating_timer_t* timer);
+bool CPU1_TIMER_Init(int frequency_hz);
+bool CPU1_TIMER_Loop(repeating_timer_t* timer);
 
 
 #endif //TIMER_H

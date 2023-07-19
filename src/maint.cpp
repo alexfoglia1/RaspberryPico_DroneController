@@ -2,6 +2,7 @@
 #include "motors.h"
 #include "attitude.h"
 #include "joystick.h"
+#include "cbit.h"
 #include "user.h"
 #include <pico/time.h>
 #include <string.h>
@@ -16,6 +17,7 @@ static uint32_t rx_payload_idx;
 static bool shall_tx;
 static bool shall_set;
 static uint64_t last_msg_us;
+
 
 static void put_packet(uint8_t* buf, uint32_t len)
 {
@@ -181,7 +183,6 @@ bool MAINT_IsPresent()
 void MAINT_Handler()
 {
     int byteIn = getchar();
-
     MAINT_OnByteReceived((uint8_t)byteIn & 0xFF);
     
     if (shall_set)
@@ -530,6 +531,12 @@ void MAINT_Handler()
         if (tx_message.header.Bits.motors_armed)
         {
             uint32_t idata = JOYSTICK_MotorsArmed;
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
+            tx_payload_idx += sizeof(uint32_t);
+        }
+        if (tx_message.header.Bits.cbit)
+        {
+            uint32_t idata = cbit_status.Dword;
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }

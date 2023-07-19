@@ -7,11 +7,10 @@ std::vector<Pulse*> pulse_in_vector;
 void gpio_irq_entry_point(uint gpio, uint32_t events)
 {
     uint64_t time_us = time_us_64();
-    bool state = gpio_get(gpio);
 
     for (Pulse* pulse : pulse_in_vector)
     {
-        if (state)
+        if (events == GPIO_IRQ_EDGE_RISE)
         {
             pulse->rise(gpio, time_us);
         }

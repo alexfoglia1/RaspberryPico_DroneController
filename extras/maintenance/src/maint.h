@@ -58,13 +58,31 @@ namespace Maint
             uint64_t motor3 : 1;     //44
             uint64_t motor4 : 1;     //45
             uint64_t motors_armed : 1;     //46
-            uint64_t reserved : 13;    //47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59
+            uint64_t cbit : 1; //47
+            uint64_t reserved : 12;    //48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59
             uint64_t maint_cmd_id : 4;     //60,61,62,63
         } Bits;
 
         uint8_t  Bytes[8];
         uint64_t All;
     } MAINT_HEADER_T;
+
+    typedef union
+    {
+        struct
+        {
+            uint32_t imu_failure : 1;
+            uint32_t js_timeout : 1;
+            uint32_t maint_timeout : 1;
+            uint32_t cpu0_launch_failure : 1;
+            uint32_t cpu1_launch_failure : 1;
+            uint32_t cpu0_timer_failure : 1;
+            uint32_t cpu1_timer_failure : 1;
+            uint32_t : 25;
+        } Bits;
+        uint8_t Bytes[4];
+        uint32_t Dword;
+    } CBIT_TAG;
 
     enum class MAINT_STATUS
     {
@@ -173,6 +191,7 @@ signals:
     void receivedMotor3(uint32_t data);
     void receivedMotor4(uint32_t data);
     void receivedMotorsArmed(uint32_t data);
+    void receivedCbit(uint32_t data);
 
 private:
 	QSerialPort* _serialPort;
