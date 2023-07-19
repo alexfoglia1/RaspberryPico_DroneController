@@ -6,11 +6,15 @@
 
 #include <stdint.h>
 #include "servo.h"
+#include "pid.h"
 
 extern Servo motor1;
 extern Servo motor2;
 extern Servo motor3;
 extern Servo motor4;
+extern PID_CONTROL_TAG pid_roll;
+extern PID_CONTROL_TAG pid_pitch;
+extern PID_CONTROL_TAG pid_yaw;
 
 void MOTORS_Init();
 void MOTORS_Handler();

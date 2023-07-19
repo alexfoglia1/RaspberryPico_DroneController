@@ -400,105 +400,105 @@ void MAINT_Handler()
         }
         if (tx_message.header.Bits.roll_pid_err)
         {
-            float fdata = 0.0f;
+            float fdata = pid_roll.error;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.roll_pid_p)
         {
-            float fdata = 0.0f;
+            float fdata = pid_roll.P;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.roll_pid_i)
         {
-            float fdata = 0.0f;
+            float fdata = pid_roll.I;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.roll_pid_d)
         {
-            float fdata = 0.0f;
+            float fdata = pid_roll.D;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.roll_pid_u)
         {
-            float fdata = 0.0f;
+            float fdata = pid_roll.u;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.pitch_pid_err)
         {
-            float fdata = 0.0f;
+            float fdata = pid_pitch.error;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.pitch_pid_p)
         {
-            float fdata = 0.0f;
+            float fdata = pid_pitch.P;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.pitch_pid_i)
         {
-            float fdata = 0.0f;
+            float fdata = pid_pitch.I;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.pitch_pid_d)
         {
-            float fdata = 0.0f;
+            float fdata = pid_pitch.D;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.pitch_pid_u)
         {
-            float fdata = 0.0f;
+            float fdata = pid_pitch.u;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.yaw_pid_err)
         {
-            float fdata = 0.0f;
+            float fdata = pid_yaw.error;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.yaw_pid_p)
         {
-            float fdata = 0.0f;
+            float fdata = pid_yaw.P;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.yaw_pid_i)
         {
-            float fdata = 0.0f;
+            float fdata = pid_yaw.I;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.yaw_pid_d)
         {
-            float fdata = 0.0f;
+            float fdata = pid_yaw.D;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.yaw_pid_u)
         {
-            float fdata = 0.0f;
+            float fdata = pid_yaw.u;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
