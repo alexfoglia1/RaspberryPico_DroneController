@@ -5,7 +5,9 @@
 #include "joystick.h"
 #include "motors.h"
 #include "cbit.h"
+#include "user.h"
 #include <stdio.h>
+#include <hardware/gpio.h>
 
 
 repeating_timer_t* cpu0_timer;
@@ -46,7 +48,9 @@ bool CPU0_TIMER_Loop(repeating_timer_t* timer)
 
 bool CPU1_TIMER_Loop(repeating_timer_t* timer)
 {
+    gpio_put(PROBE, 1);
     ATTITUDE_Handler();
-
+    gpio_put(PROBE, 0);
+    
     return true;
 }

@@ -22,6 +22,8 @@
 #define MOTOR_3 10
 #define MOTOR_4 11
 
+#define PROBE 16
+
 void InitBoard();
 
 #endif //USER_H

@@ -31,11 +31,11 @@ void MOTORS_Init()
     pid_reset(&pid_pitch);
     pid_reset(&pid_yaw);
 
-    pid_roll_gain[PID_KP] = 1.0f;
-    pid_roll_gain[PID_KI] = 0.0f;
-    pid_roll_gain[PID_KT] = 0.0f;
-    pid_roll_gain[PID_AD] = 0.0f;
-    pid_roll_gain[PID_BD] = 0.0f;
+    pid_roll_gain[PID_KP] = 1.0;
+    pid_roll_gain[PID_KI] = 0.0;
+    pid_roll_gain[PID_KT] = 0.0;
+    pid_roll_gain[PID_AD] = 0.0;
+    pid_roll_gain[PID_BD] = 0.0;
     pid_roll_gain[PID_SAT] = 50.0f;
 
     pid_pitch_gain[PID_KP] = 1.0f;
@@ -69,11 +69,11 @@ void MOTORS_Handler()
     if (JOYSTICK_MotorsArmed)
     {
         /** Position control loop **/
-        //pid_controller(&pid_roll, &pid_roll_gain[PID_KP], JOYSTICK_Roll, ATTITUDE_Roll);
-        //pid_controller(&pid_pitch, &pid_pitch_gain[PID_KP], JOYSTICK_Roll, ATTITUDE_Pitch);
+        pid_controller(&pid_roll, &pid_roll_gain[PID_KP], JOYSTICK_Roll, ATTITUDE_Roll);
+        pid_controller(&pid_pitch, &pid_pitch_gain[PID_KP], JOYSTICK_Pitch, ATTITUDE_Pitch);
 
         /** Velocity control loop **/
-        //pid_controller(&pid_yaw, &pid_yaw_gain[PID_KP], 0.0f, gz_flt_tag.filt_k);
+        pid_controller(&pid_yaw, &pid_yaw_gain[PID_KP], 0.0f, gz_flt_tag.filt_k);
 
         m1_signal = cmd_vel(JOYSTICK_Throttle + pid_roll.u + pid_pitch.u - pid_yaw.u);
         m2_signal = cmd_vel(JOYSTICK_Throttle + pid_roll.u + pid_pitch.u - pid_yaw.u);
@@ -88,11 +88,17 @@ void MOTORS_Handler()
         m2_signal = motor2.currentSignal();
         m3_signal = motor3.currentSignal();
         m4_signal = motor4.currentSignal();
+
+        pid_reset(&pid_roll);
+        pid_reset(&pid_pitch);
+        pid_reset(&pid_yaw);
     }
     else
     {
         /** m_signals = MOTOR_MIN_SIGNAL as initialized **/
-        ;
+        pid_reset(&pid_roll);
+        pid_reset(&pid_pitch);
+        pid_reset(&pid_yaw);
     }
 
     motor1.writeMicroseconds(m1_signal);
