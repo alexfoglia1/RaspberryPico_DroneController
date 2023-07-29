@@ -6,7 +6,7 @@
 
 float JOYSTICK_Roll;
 float JOYSTICK_Pitch;
-float JOYSTICK_Throttle;
+uint32_t JOYSTICK_Throttle;
 bool  JOYSTICK_MotorsArmed;
 bool  JOYSTICK_Timeout;
 
@@ -19,15 +19,6 @@ static float min_roll;
 static float max_roll;
 static float min_pitch;
 static float max_pitch;
-static float min_throttle;
-static float max_throttle;
-
-static float saturate(float val, float min, float max)
-{
-    return (val < min) ? min :
-           (val > max) ? max :
-           val;
-}
 
 static float dead_center(float val)
 {
@@ -41,15 +32,7 @@ static float dead_center(float val)
     }
 }
 
-static float to_range(float in, float in_min, float in_max, float out_min, float out_max)
-{
-    in = saturate(in, in_min, in_max);
-    float in_percentage = (in - in_min) / (in_max - in_min);
-    
-    return out_min + (in_percentage) * (out_max - out_min);
-}
-
-void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p, float min_t, float max_t)
+void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p)
 {
     JOYSTICK_Roll = 0.0f;
     JOYSTICK_Pitch = 0.0f;
@@ -61,13 +44,11 @@ void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p, float min
     max_roll = saturate(max_r, -360.f, 360.f);
     min_pitch = saturate(min_p, -360.f, 360.f);
     max_pitch = saturate(max_p, -360.f, 360.f);
-    min_throttle = saturate(min_t, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
-    max_throttle = saturate(max_t, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
 
-    roll_signal.attach();
-    pitch_signal.attach();
-    throttle_signal.attach();
-    armed_signal.attach();
+    roll_signal.attach(false);
+    pitch_signal.attach(false);
+    throttle_signal.attach(false);
+    armed_signal.attach(false);
 }
 
 
@@ -81,8 +62,8 @@ void JOYSTICK_Handler()
     uint32_t armed_signal_value = armed_signal.pulseIn();
 
     JOYSTICK_Roll = dead_center(to_range(roll_signal_value, RADIO_MIN_SIGNAL_ROLL, RADIO_MAX_SIGNAL_ROLL, min_roll, max_roll));
-    JOYSTICK_Pitch = dead_center(to_range(pitch_signal_value, RADIO_MIN_SIGNAL_PITCH, RADIO_MAX_SIGNAL_PITCH, min_pitch, max_pitch));
-    JOYSTICK_Throttle = dead_center(to_range(throttle_signal_value, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_throttle, max_throttle));
+    JOYSTICK_Pitch = -dead_center(to_range(pitch_signal_value, RADIO_MIN_SIGNAL_PITCH, RADIO_MAX_SIGNAL_PITCH, min_pitch, max_pitch));
+    JOYSTICK_Throttle = throttle_signal_value;
     JOYSTICK_MotorsArmed = (armed_signal_value > ((RADIO_MAX_SIGNAL + RADIO_MIN_SIGNAL) / 2));
 
     /** Check failure **/

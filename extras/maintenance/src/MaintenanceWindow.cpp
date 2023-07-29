@@ -63,11 +63,21 @@ MaintenanceWindow::MaintenanceWindow()
 	};
 
 	autoScanComPorts();
+	_ui.comboSelBaud->addItem("1200", QSerialPort::Baud1200);
+	_ui.comboSelBaud->addItem("2400", QSerialPort::Baud2400);
+	_ui.comboSelBaud->addItem("4800", QSerialPort::Baud4800);
+	_ui.comboSelBaud->addItem("9600", QSerialPort::Baud9600);
+	_ui.comboSelBaud->addItem("19200", QSerialPort::Baud19200);
+	_ui.comboSelBaud->addItem("38400", QSerialPort::Baud38400);
+	_ui.comboSelBaud->addItem("57600", QSerialPort::Baud57600);
+	_ui.comboSelBaud->addItem("115200", QSerialPort::Baud115200);
+	_ui.comboSelBaud->setCurrentIndex(5); // Default 38400
 
 	_maintHandler = new Maint::Maintenance();
 
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
 	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
+	connect(_ui.btnSendMaintenanceParams, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceParams()));
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
 
 	connect(_ui.plotTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotSliderValueChanged(int)));
@@ -302,13 +312,21 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 {
 	if (_ui.btnOpenSerialPort->text().toUpper() == "OPEN")
 	{
-		if (_maintHandler->Open(_ui.comboSelPort->currentText()))
+		int idx = _ui.comboSelBaud->currentIndex();
+		enum QSerialPort::BaudRate baud = QSerialPort::Baud38400;
+		if (idx != -1)
+		{
+			baud = enum QSerialPort::BaudRate(_ui.comboSelBaud->itemData(idx).toInt());
+		}
+
+		if (_maintHandler->Open(_ui.comboSelPort->currentText(), baud))
 		{
 			_maintHandler->EnableTx();
 
 			_ui.comboSelPort->setEnabled(false);
 			_ui.groupBoxTx->setEnabled(true);
 			_ui.TxMaintenanceGroup->setEnabled(true);
+			_ui.TxMaintenanceParamsGroup->setEnabled(true);
 
 			_ui.btnOpenSerialPort->setText("Close");
 		}
@@ -874,16 +892,28 @@ void MaintenanceWindow::OnBtnSendMaintenanceCommand()
 	{
 		uint32_t data = _ui.spinSetMaintenanceValue->value();
 
-		_maintHandler->TxMaintenanceCommand(Maint::MAINT_CMD_ID(_ui.comboSetCommandId->currentIndex() + 1), data);
+		_maintHandler->TxMaintenanceCommand(_ui.comboSetCommandId->currentIndex() + 1, data);
 	}
 }
 
+
+void MaintenanceWindow::OnBtnSendMaintenanceParams()
+{
+	if (_maintHandler)
+	{
+		bool enabledParam = _ui.checkSetEnabledParam->isChecked();
+		uint32_t minSignalParam = _ui.spinSetMinParam->value();
+		uint32_t maxSignalParam = _ui.spinSetMaxParam->value();
+		
+		_maintHandler->TxMaintenanceParams(_ui.comboSetParamId->currentIndex() + 1, enabledParam, minSignalParam, maxSignalParam);
+	}
+}
 
 void MaintenanceWindow::OnSpinSetMaintenanceValue(int newValue)
 {
 	if (_maintHandler && _ui.checkSpinOnChange->isChecked())
 	{
-		_maintHandler->TxMaintenanceCommand(Maint::MAINT_CMD_ID(_ui.comboSetCommandId->currentIndex() + 1), newValue);
+		_maintHandler->TxMaintenanceCommand(_ui.comboSetCommandId->currentIndex() + 1, newValue);
 	}
 }
 

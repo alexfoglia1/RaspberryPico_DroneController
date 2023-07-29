@@ -6,8 +6,8 @@
 
 PlotWidget::PlotWidget(QWidget* parent) : QLabel(parent)
 {
-	_xSpan = 100;
-	_samplesPerSecond = 10;
+	_xSpan = 250;
+	_samplesPerSecond = 50;
 
 	_ySpan[0] = 4000;
 	_ySpan[1] = 4000;

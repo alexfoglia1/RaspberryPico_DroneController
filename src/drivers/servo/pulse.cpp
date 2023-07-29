@@ -27,20 +27,45 @@ Pulse::Pulse(int gpio)
     _gpio = gpio;
     _t_rise_us = 0;
     _duration_us = 0;
+    _interrupt = true;
 }
 
 
-void Pulse::attach()
+void Pulse::attach(bool interrupt)
 {
-    pulse_in_vector.push_back(this);
-    
     gpio_set_dir(_gpio, GPIO_IN);
-    gpio_set_irq_enabled_with_callback(_gpio, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_irq_entry_point);
+
+    if (1)
+    {
+        pulse_in_vector.push_back(this);
+        gpio_set_irq_enabled_with_callback(_gpio, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_irq_entry_point);
+        _interrupt = true;
+    }
+    else
+    {
+        _interrupt = false;
+    }
 }
 
 
 uint64_t Pulse::pulseIn()
 {
+    #if 0
+    if (!_interrupt)
+    {
+        while (gpio_get(_gpio) == 0)
+        {
+            sleep_us(1);
+        }
+        _t_rise_us = time_us_64();
+        while (gpio_get(_gpio) == 1)
+        {
+            sleep_us(1);
+        }
+        _duration_us = time_us_64() - _t_rise_us;
+    }
+    #endif
+
     return _duration_us;
 }
 

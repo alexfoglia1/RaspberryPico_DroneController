@@ -24,6 +24,23 @@
 
 #define PROBE 16
 
+#define MOTOR_ARMED_THRESHOLD 100
+
+inline float saturate(float val, float min, float max)
+{
+    return (val < min) ? min :
+           (val > max) ? max :
+           val;
+}
+
+inline float to_range(float in, float in_min, float in_max, float out_min, float out_max)
+{
+    in = saturate(in, in_min, in_max);
+    float in_percentage = (in - in_min) / (in_max - in_min);
+    
+    return out_min + (in_percentage) * (out_max - out_min);
+}
+
 void InitBoard();
 
 #endif //USER_H

@@ -17,13 +17,16 @@ Maint::Maintenance::Maintenance()
     memset(&_rx_buf, 0x00, 1024);
 
     _tx_data = 0;
+    _tx_param_enabled = 1;
+    _tx_param_min_signal = 1000;
+    _tx_param_max_signal = 2000;
 
 }
 
-bool Maint::Maintenance::Open(QString serialPortName)
+bool Maint::Maintenance::Open(QString serialPortName, enum QSerialPort::BaudRate baud)
 {
     _serialPort->setPortName(serialPortName);
-	_serialPort->setBaudRate(QSerialPort::Baud115200);
+	_serialPort->setBaudRate(baud);
 	_serialPort->setParity(QSerialPort::NoParity);
 	_serialPort->setDataBits(QSerialPort::Data8);
 	_serialPort->setStopBits(QSerialPort::OneStop);
@@ -47,7 +50,7 @@ void Maint::Maintenance::Close()
 
 void Maint::Maintenance::EnableTx()
 {
-    _txTimer->setInterval(100);
+    _txTimer->setInterval(20);
     _txTimer->setSingleShot(false);
     _txTimer->setTimerType(Qt::PreciseTimer);
 
@@ -66,15 +69,36 @@ void Maint::Maintenance::SetTxHeader(MAINT_HEADER_T txHeader)
 }
 
 
-void Maint::Maintenance::TxMaintenanceCommand(MAINT_CMD_ID txCommand, uint32_t data)
+void Maint::Maintenance::TxMaintenanceCommand(uint32_t motorNo, uint32_t data)
 {
     _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = uint64_t(txCommand);
+    _txCommand.Bits.maint_cmd_id = uint64_t(motorNo);
     _tx_data = data;
 
     _txMutex.lock();
-    _txStatus = Maint::TX_STATUS::TX_SET;
+    _txStatus = Maint::TX_STATUS::TX_SET_CMD;
     _txMutex.unlock();
+}
+
+
+void Maint::Maintenance::TxMaintenanceParams(uint32_t motorNo, bool enabled, uint32_t minSignalParam, uint32_t maxSignalParam)
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS) :
+                                    (motorNo == 2) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS) :
+                                    (motorNo == 3) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS) :
+                                    (motorNo == 4) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS) : uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE);
+
+    if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    {
+        _tx_param_enabled = (enabled) ? 1 : 0;
+        _tx_param_min_signal = minSignalParam;
+        _tx_param_max_signal = maxSignalParam;
+
+        _txMutex.lock();
+        _txStatus = Maint::TX_STATUS::TX_SET_PARAMS;
+        _txMutex.unlock();
+    }
 }
 
 
@@ -105,7 +129,7 @@ void Maint::Maintenance::Tx()
         bytesWritten = _serialPort->write(qba);
         _serialPort->flush();
     }
-    else
+    else if (_txStatus == Maint::TX_STATUS::TX_SET_CMD)
     {
         qba.push_back(Maint::SYNC_CHAR);
         qba.push_back(_txCommand.Bytes[0]);
@@ -122,6 +146,48 @@ void Maint::Maintenance::Tx()
         qba.push_back(dataBytes[1]);
         qba.push_back(dataBytes[2]);
         qba.push_back(dataBytes[3]);
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
+    else // TX_SET_PARAMS
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* enabledParamBytes = reinterpret_cast<uint8_t*>(&_tx_param_enabled);
+        qba.push_back(enabledParamBytes[0]);
+        qba.push_back(enabledParamBytes[1]);
+        qba.push_back(enabledParamBytes[2]);
+        qba.push_back(enabledParamBytes[3]);
+
+        uint8_t* minSignalParamBytes = reinterpret_cast<uint8_t*>(&_tx_param_min_signal);
+        qba.push_back(minSignalParamBytes[0]);
+        qba.push_back(minSignalParamBytes[1]);
+        qba.push_back(minSignalParamBytes[2]);
+        qba.push_back(minSignalParamBytes[3]);
+
+        uint8_t* maxSignalParamBytes = reinterpret_cast<uint8_t*>(&_tx_param_max_signal);
+        qba.push_back(maxSignalParamBytes[0]);
+        qba.push_back(maxSignalParamBytes[1]);
+        qba.push_back(maxSignalParamBytes[2]);
+        qba.push_back(maxSignalParamBytes[3]);
 
         uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
 

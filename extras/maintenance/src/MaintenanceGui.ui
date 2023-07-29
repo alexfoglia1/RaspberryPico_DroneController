@@ -389,12 +389,12 @@
      <rect>
       <x>30</x>
       <y>320</y>
-      <width>971</width>
+      <width>341</width>
       <height>71</height>
      </rect>
     </property>
     <property name="title">
-     <string>Maintenance Set</string>
+     <string>Maintenance Set Motors</string>
     </property>
     <widget class="QWidget" name="horizontalLayoutWidget">
      <property name="geometry">
@@ -426,6 +426,16 @@
         <item>
          <property name="text">
           <string>Motor 4</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>All</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Control</string>
          </property>
         </item>
        </widget>
@@ -971,7 +981,7 @@
    <widget class="QPushButton" name="btnOpenSerialPort">
     <property name="geometry">
      <rect>
-      <x>220</x>
+      <x>380</x>
       <y>20</y>
       <width>75</width>
       <height>21</height>
@@ -1963,6 +1973,124 @@
     <property name="text">
      <string/>
     </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>220</x>
+      <y>20</y>
+      <width>31</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Baud</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="comboSelBaud">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>20</y>
+      <width>101</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="TxMaintenanceParamsGroup">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>640</x>
+      <y>320</y>
+      <width>361</width>
+      <height>71</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Maintenance Set Params</string>
+    </property>
+    <widget class="QWidget" name="horizontalLayoutWidget_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>327</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QComboBox" name="comboSetParamId">
+        <item>
+         <property name="text">
+          <string>Motor 1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Motor 2</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Motor 3</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Motor 4</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkSetEnabledParam">
+        <property name="text">
+         <string>Enabled</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinSetMinParam">
+        <property name="maximum">
+         <number>20000</number>
+        </property>
+        <property name="singleStep">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>1000</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinSetMaxParam">
+        <property name="maximum">
+         <number>20000</number>
+        </property>
+        <property name="singleStep">
+         <number>1</number>
+        </property>
+        <property name="value">
+         <number>2000</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSendMaintenanceParams">
+        <property name="text">
+         <string>Send</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

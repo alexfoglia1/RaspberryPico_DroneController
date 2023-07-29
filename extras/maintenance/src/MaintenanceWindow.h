@@ -15,7 +15,7 @@ public:
 private:
 	Ui_MaintenanceGui _ui;
 	Maint::Maintenance* _maintHandler;
-	const int _txDelayMillis = 100;
+	const int _txDelayMillis = 20;
 	QMap<QString, int> _defaultPlotSpan;
 
 	void autoScanComPorts();
@@ -32,6 +32,7 @@ private slots:
 	void OnComboTrack3TextChanged(const QString& newText);
 	void OnHeaderChanged();
 	void OnBtnSendMaintenanceCommand();
+	void OnBtnSendMaintenanceParams();
 	void OnSpinSetMaintenanceValue(int newValue);
 
 	void OnRxRawData(bool valid, quint8* data, int size);

@@ -8,8 +8,6 @@
 #include <stdio.h>
 #include <pico/multicore.h>
 
-const int MOTOR_ARM_THRESHOLD = 100;
-
 const float MIN_ROLL_DEGREES = -5.0f;
 const float MAX_ROLL_DEGREES = 5.0f;
 const float MIN_PITCH_DEGREES = -5.0f;
@@ -61,6 +59,10 @@ int main()
     /** Initialize gpio directions **/
     InitBoard();
 
+    MOTORS_Init();
+    MAINT_Init();
+    CBIT_Init();
+
     /** Initialize application **/
     if (!ATTITUDE_Init())
     {
@@ -75,11 +77,7 @@ int main()
     JOYSTICK_Init(MIN_ROLL_DEGREES,
                   MAX_ROLL_DEGREES,
                   MIN_PITCH_DEGREES,
-                  MAX_PITCH_DEGREES,
-                  MOTOR_MIN_SIGNAL + MOTOR_ARM_THRESHOLD,
-                  MOTOR_MAX_SIGNAL);
-
-    MOTORS_Init();
+                  MAX_PITCH_DEGREES);
 
     /** Launch attitude producer timer on CPU1 **/
     multicore_launch_core1(__cpu1_entry_point__);

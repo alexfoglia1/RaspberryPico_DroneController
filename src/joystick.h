@@ -14,7 +14,7 @@
 
 extern float JOYSTICK_Roll;
 extern float JOYSTICK_Pitch;
-extern float JOYSTICK_Throttle;
+extern uint32_t JOYSTICK_Throttle;
 extern bool  JOYSTICK_MotorsArmed;
 extern bool  JOYSTICK_Timeout;
 
@@ -23,7 +23,7 @@ extern Pulse pitch_signal;
 extern Pulse throttle_signal;
 extern Pulse armed_signal;
 
-void JOYSTICK_Init(float min_roll, float max_roll, float min_pitch, float max_pitch, float min_throttle, float max_throttle);
+void JOYSTICK_Init(float min_roll, float max_roll, float min_pitch, float max_pitch);
 void JOYSTICK_Handler();
 
 #endif //JOYSTICK_H

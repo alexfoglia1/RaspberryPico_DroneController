@@ -59,8 +59,7 @@ typedef union
         uint64_t motor4           :1;     //45
         uint64_t motors_armed     :1;     //46
         uint64_t cbit             :1;     //47
-        uint64_t reserved         :12;    //48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59
-        uint64_t maint_cmd_id     :4;     //60,61,62,63
+        uint64_t maint_cmd_id     :16;    //48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
     } Bits;
     
     uint8_t  Bytes[8];
@@ -95,12 +94,30 @@ enum class MAINT_CMD_ID
     MAINT_CMD_SET_M1,
     MAINT_CMD_SET_M2,
     MAINT_CMD_SET_M3,
-    MAINT_CMD_SET_M4
+    MAINT_CMD_SET_M4,
+    MAINT_CMD_SET_MALL,
+    MAINT_CMD_CTRL_MOTORS,
+    MAINT_CMD_SET_M1_PARAMS,
+    MAINT_CMD_SET_M2_PARAMS,
+    MAINT_CMD_SET_M3_PARAMS,
+    MAINT_CMD_SET_M4_PARAMS
 };
+
+enum class MAINT_MOTOR_PARAM
+{
+    FIRST = 0,
+    ENABLED = FIRST,
+    MIN_SIGNAL,
+    MAX_SIGNAL,
+    SIZE
+};
+
+extern uint32_t motor_parameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
 
 void MAINT_Init();
 void MAINT_OnByteReceived(uint8_t byte_rx);
 void MAINT_Handler();
 bool MAINT_IsPresent();
+bool MAINT_IsControllingMotors();
 
 #endif //MAINT_H

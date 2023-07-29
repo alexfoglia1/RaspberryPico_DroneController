@@ -5,6 +5,7 @@
 #include "joystick.h"
 #include "motors.h"
 #include "cbit.h"
+#include "maint.h"
 #include "user.h"
 #include <stdio.h>
 #include <hardware/gpio.h>
@@ -34,12 +35,15 @@ bool CPU1_TIMER_Init(int frequency_hz)
     return alarm_pool_add_repeating_timer_us(pool, -period_us, CPU1_TIMER_Loop, NULL, cpu1_timer);
 }
 
-
-
 bool CPU0_TIMER_Loop(repeating_timer_t* timer)
 {
     JOYSTICK_Handler();
-    MOTORS_Handler();
+
+    if (!MAINT_IsControllingMotors())
+    {
+        MOTORS_Handler();
+    }
+    
     CBIT_Handler();
 
     return true;
@@ -48,9 +52,7 @@ bool CPU0_TIMER_Loop(repeating_timer_t* timer)
 
 bool CPU1_TIMER_Loop(repeating_timer_t* timer)
 {
-    gpio_put(PROBE, 1);
     ATTITUDE_Handler();
-    gpio_put(PROBE, 0);
     
     return true;
 }

@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdio.h>
 
+uint32_t motor_parameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
+
 static MAINT_STATUS status;
 static uint8_t rx_buf[sizeof(MAINT_MESSAGE_TAG)];
 static MAINT_MESSAGE_TAG rx_message;
@@ -17,6 +19,7 @@ static uint32_t rx_payload_idx;
 static bool shall_tx;
 static bool shall_set;
 static uint64_t last_msg_us;
+static bool controlling_motors;
 
 
 static void put_packet(uint8_t* buf, uint32_t len)
@@ -66,7 +69,14 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
         case MAINT_CMD_ID::MAINT_CMD_SET_M2:
         case MAINT_CMD_ID::MAINT_CMD_SET_M3:
         case MAINT_CMD_ID::MAINT_CMD_SET_M4:
+        case MAINT_CMD_ID::MAINT_CMD_SET_MALL:
+        case MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS:
             return 5; /** 4 data bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS:
+        case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS:
+        case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS:
+        case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS:
+            return 13; /** 3 * 4 = 12 data bytes + checksum **/
     }
 
     return 0;
@@ -159,6 +169,13 @@ void MAINT_Init()
     memset(&rx_message, sizeof(MAINT_MESSAGE_TAG), 0x00);
     memset(&tx_message, sizeof(MAINT_MESSAGE_TAG), 0x00);
 
+    for (int i = 0; i < 4; i++)
+    {
+        motor_parameters[i][int(MAINT_MOTOR_PARAM::ENABLED)] = 1;
+        motor_parameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = MOTOR_MIN_SIGNAL;
+        motor_parameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = MOTOR_MAX_SIGNAL;
+    }
+
     expected_bytes = 0;
     rx_payload_idx = 0;
     shall_tx = false;
@@ -192,17 +209,50 @@ void MAINT_Handler()
             case MAINT_CMD_ID::MAINT_CMD_NONE:
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M1:
-                motor1.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                if (controlling_motors) motor1.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M2:
-                motor2.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                if (controlling_motors) motor2.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M3:
-                motor3.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                if (controlling_motors) motor3.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M4:
-                motor4.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                if (controlling_motors) motor4.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_MALL:
+                if (controlling_motors) 
+                {
+                    motor1.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                    motor2.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                    motor3.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                    motor4.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                }
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS:
+                controlling_motors = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 1);
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS:
+                motor_parameters[0][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                motor_parameters[0][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                motor_parameters[0][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS:
+                motor_parameters[1][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                motor_parameters[1][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                motor_parameters[1][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS:
+                motor_parameters[2][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                motor_parameters[2][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                motor_parameters[2][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS:
+                motor_parameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                motor_parameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                motor_parameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
+
         }
 
         shall_set = false;
@@ -547,4 +597,10 @@ void MAINT_Handler()
         shall_tx = false;
     }
 
+}
+
+
+bool MAINT_IsControllingMotors()
+{
+    return controlling_motors;
 }

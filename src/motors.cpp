@@ -1,8 +1,10 @@
 #include "motors.h"
 #include "user.h"
 #include "attitude.h"
-#include "maint.h"
 #include "joystick.h"
+#include "maint.h"
+
+#include <pico/time.h>
 
 
 Servo motor1(MOTOR_1);
@@ -17,13 +19,20 @@ static float pid_roll_gain[PID_PARAMS_SIZE];
 static float pid_pitch_gain[PID_PARAMS_SIZE];
 static float pid_yaw_gain[PID_PARAMS_SIZE];
 
-
-static uint32_t cmd_vel(float pid_u)
+static void calib()
 {
-    return pid_u < MOTOR_MIN_SIGNAL ? MOTOR_MIN_SIGNAL :
-           pid_u > MOTOR_MAX_SIGNAL ? MOTOR_MAX_SIGNAL : pid_u;
-}
+    motor1.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    motor2.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    motor3.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    motor4.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    
+    sleep_ms(2000);
 
+    motor1.writeMicroseconds(MOTOR_MIN_SIGNAL);
+    motor2.writeMicroseconds(MOTOR_MIN_SIGNAL);
+    motor3.writeMicroseconds(MOTOR_MIN_SIGNAL);
+    motor4.writeMicroseconds(MOTOR_MIN_SIGNAL);
+}
 
 void MOTORS_Init()
 {
@@ -31,14 +40,14 @@ void MOTORS_Init()
     pid_reset(&pid_pitch);
     pid_reset(&pid_yaw);
 
-    pid_roll_gain[PID_KP] = 1.0;
+    pid_roll_gain[PID_KP] = 5.0;
     pid_roll_gain[PID_KI] = 0.0;
     pid_roll_gain[PID_KT] = 0.0;
     pid_roll_gain[PID_AD] = 0.0;
     pid_roll_gain[PID_BD] = 0.0;
     pid_roll_gain[PID_SAT] = 50.0f;
 
-    pid_pitch_gain[PID_KP] = 1.0f;
+    pid_pitch_gain[PID_KP] = 5.0f;
     pid_pitch_gain[PID_KI] = 0.0f;
     pid_pitch_gain[PID_KT] = 0.0f;
     pid_pitch_gain[PID_AD] = 0.0f;
@@ -55,43 +64,39 @@ void MOTORS_Init()
     motor1.attach();
     motor2.attach();
     motor3.attach();
-    motor4.attach();    
+    motor4.attach();
+
+    calib();    
 }
 
 
 void MOTORS_Handler()
 {
-    uint32_t m1_signal = MOTOR_MIN_SIGNAL;
-    uint32_t m2_signal = MOTOR_MIN_SIGNAL;
-    uint32_t m3_signal = MOTOR_MIN_SIGNAL;
-    uint32_t m4_signal = MOTOR_MIN_SIGNAL;
+    uint32_t m1_signal = motor_parameters[0][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
+    uint32_t m2_signal = motor_parameters[1][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
+    uint32_t m3_signal = motor_parameters[2][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
+    uint32_t m4_signal = motor_parameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
 
     if (JOYSTICK_MotorsArmed)
     {
+        float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m1_signal + MOTOR_ARMED_THRESHOLD, motor_parameters[0][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m2_signal + MOTOR_ARMED_THRESHOLD, motor_parameters[1][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m3_signal + MOTOR_ARMED_THRESHOLD, motor_parameters[2][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m4_signal + MOTOR_ARMED_THRESHOLD, motor_parameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        
         /** Position control loop **/
-        pid_controller(&pid_roll, &pid_roll_gain[PID_KP], JOYSTICK_Roll, ATTITUDE_Roll);
-        pid_controller(&pid_pitch, &pid_pitch_gain[PID_KP], JOYSTICK_Pitch, ATTITUDE_Pitch);
+        pid_controller(&pid_roll, &pid_roll_gain[PID_KP], JOYSTICK_Roll, 0);//ATTITUDE_Roll);
+        pid_controller(&pid_pitch, &pid_pitch_gain[PID_KP], JOYSTICK_Pitch, 0);//ATTITUDE_Pitch);
 
         /** Velocity control loop **/
         pid_controller(&pid_yaw, &pid_yaw_gain[PID_KP], 0.0f, gz_flt_tag.filt_k);
 
-        m1_signal = cmd_vel(JOYSTICK_Throttle + pid_roll.u + pid_pitch.u - pid_yaw.u);
-        m2_signal = cmd_vel(JOYSTICK_Throttle + pid_roll.u + pid_pitch.u - pid_yaw.u);
-        m3_signal = cmd_vel(JOYSTICK_Throttle + pid_roll.u + pid_pitch.u - pid_yaw.u);
-        m4_signal = cmd_vel(JOYSTICK_Throttle + pid_roll.u + pid_pitch.u - pid_yaw.u);
+        pid_yaw.u = 0x00;
 
-
-    }
-    else if (MAINT_IsPresent())
-    {
-        m1_signal = motor1.currentSignal();
-        m2_signal = motor2.currentSignal();
-        m3_signal = motor3.currentSignal();
-        m4_signal = motor4.currentSignal();
-
-        pid_reset(&pid_roll);
-        pid_reset(&pid_pitch);
-        pid_reset(&pid_yaw);
+        if (motor_parameters[0][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_roll.u + pid_pitch.u - pid_yaw.u);
+        if (motor_parameters[1][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed - pid_roll.u + pid_pitch.u + pid_yaw.u);
+        if (motor_parameters[2][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed - pid_roll.u - pid_pitch.u - pid_yaw.u);
+        if (motor_parameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed + pid_roll.u - pid_pitch.u + pid_yaw.u);
     }
     else
     {

@@ -60,8 +60,7 @@ namespace Maint
             uint64_t motor4 : 1;     //45
             uint64_t motors_armed : 1;     //46
             uint64_t cbit : 1; //47
-            uint64_t reserved : 12;    //48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59
-            uint64_t maint_cmd_id : 4;     //60,61,62,63
+            uint64_t maint_cmd_id : 16;    //48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
         } Bits;
 
         uint8_t  Bytes[8];
@@ -102,7 +101,8 @@ namespace Maint
     enum class TX_STATUS
     {
         TX_GET = 0,
-        TX_SET
+        TX_SET_CMD,
+        TX_SET_PARAMS
     };
 
     enum class MAINT_CMD_ID
@@ -111,7 +111,13 @@ namespace Maint
         MAINT_CMD_SET_M1,
         MAINT_CMD_SET_M2,
         MAINT_CMD_SET_M3,
-        MAINT_CMD_SET_M4
+        MAINT_CMD_SET_M4,
+        MAINT_CMD_SET_MALL,
+        MAINT_CMD_CTRL_MOTORS,
+        MAINT_CMD_SET_M1_PARAMS,
+        MAINT_CMD_SET_M2_PARAMS,
+        MAINT_CMD_SET_M3_PARAMS,
+        MAINT_CMD_SET_M4_PARAMS
     };
 
     static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
@@ -132,11 +138,12 @@ class Maintenance : public QObject
 	Q_OBJECT
 public:
 	Maintenance();
-    bool Open(QString serialPortName);
+    bool Open(QString serialPortName, enum QSerialPort::BaudRate baud = QSerialPort::Baud38400);
     void Close();
     void EnableTx();
     void SetTxHeader(MAINT_HEADER_T txHeader);
-    void TxMaintenanceCommand(MAINT_CMD_ID txCommand, uint32_t data);
+    void TxMaintenanceCommand(uint32_t motorNo, uint32_t data);
+    void TxMaintenanceParams(uint32_t motorNo, bool enabled, uint32_t minParam, uint32_t maxParam);
 
 public slots:
     void Tx();
@@ -205,6 +212,9 @@ private:
     Maint::MAINT_HEADER_T _txHeader;
     Maint::MAINT_HEADER_T _txCommand;
     uint32_t _tx_data;
+    uint32_t _tx_param_enabled;
+    uint32_t _tx_param_min_signal;
+    uint32_t _tx_param_max_signal;
     QMutex _txMutex;
     QTimer* _txTimer;
 
