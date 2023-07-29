@@ -97,6 +97,7 @@ enum class MAINT_CMD_ID
     MAINT_CMD_SET_M4,
     MAINT_CMD_SET_MALL,
     MAINT_CMD_CTRL_MOTORS,
+    MAINT_CMD_FLASH_WRITE,
     MAINT_CMD_SET_M1_PARAMS,
     MAINT_CMD_SET_M2_PARAMS,
     MAINT_CMD_SET_M3_PARAMS,
@@ -113,6 +114,7 @@ enum class MAINT_MOTOR_PARAM
 };
 
 extern uint32_t motor_parameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
+extern bool MAINT_FlashWriteRequested;
 
 void MAINT_Init();
 void MAINT_OnByteReceived(uint8_t byte_rx);

@@ -2003,9 +2003,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>640</x>
+      <x>570</x>
       <y>320</y>
-      <width>361</width>
+      <width>431</width>
       <height>71</height>
      </rect>
     </property>
@@ -2017,7 +2017,7 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>327</width>
+       <width>408</width>
        <height>41</height>
       </rect>
      </property>
@@ -2086,6 +2086,13 @@
        <widget class="QPushButton" name="btnSendMaintenanceParams">
         <property name="text">
          <string>Send</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnFlashWrite">
+        <property name="text">
+         <string>Flash Write</string>
         </property>
        </widget>
       </item>

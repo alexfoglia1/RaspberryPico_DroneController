@@ -102,7 +102,8 @@ namespace Maint
     {
         TX_GET = 0,
         TX_SET_CMD,
-        TX_SET_PARAMS
+        TX_SET_PARAMS,
+        TX_WRITE_TO_FLASH
     };
 
     enum class MAINT_CMD_ID
@@ -114,6 +115,7 @@ namespace Maint
         MAINT_CMD_SET_M4,
         MAINT_CMD_SET_MALL,
         MAINT_CMD_CTRL_MOTORS,
+        MAINT_CMD_FLASH_WRITE,
         MAINT_CMD_SET_M1_PARAMS,
         MAINT_CMD_SET_M2_PARAMS,
         MAINT_CMD_SET_M3_PARAMS,
@@ -144,6 +146,7 @@ public:
     void SetTxHeader(MAINT_HEADER_T txHeader);
     void TxMaintenanceCommand(uint32_t motorNo, uint32_t data);
     void TxMaintenanceParams(uint32_t motorNo, bool enabled, uint32_t minParam, uint32_t maxParam);
+    void TxWriteToFlash();
 
 public slots:
     void Tx();

@@ -5,6 +5,7 @@ include(pico_sdk_import.cmake)
 project(DroneController C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+
 pico_sdk_init()
  
 add_executable(DroneController
@@ -43,4 +44,4 @@ pico_enable_stdio_uart(DroneController 1)
 
 pico_add_extra_outputs(DroneController)
  
-target_link_libraries(DroneController pico_stdlib hardware_i2c hardware_pwm pico_multicore) 
+target_link_libraries(DroneController pico_stdlib hardware_i2c hardware_pwm hardware_flash hardware_sync pico_multicore) 

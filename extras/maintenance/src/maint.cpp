@@ -72,12 +72,21 @@ void Maint::Maintenance::SetTxHeader(MAINT_HEADER_T txHeader)
 void Maint::Maintenance::TxMaintenanceCommand(uint32_t motorNo, uint32_t data)
 {
     _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = uint64_t(motorNo);
-    _tx_data = data;
+    _txCommand.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1) :
+                                    (motorNo == 2) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M2) :
+                                    (motorNo == 3) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M3) :
+                                    (motorNo == 4) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M4) :
+                                    (motorNo == uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_MALL)) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_MALL) :
+                                    (motorNo == uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS)) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS) : uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE);
+    
+    if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    {
+        _tx_data = data;
 
-    _txMutex.lock();
-    _txStatus = Maint::TX_STATUS::TX_SET_CMD;
-    _txMutex.unlock();
+        _txMutex.lock();
+        _txStatus = Maint::TX_STATUS::TX_SET_CMD;
+        _txMutex.unlock();
+    }
 }
 
 
@@ -99,6 +108,17 @@ void Maint::Maintenance::TxMaintenanceParams(uint32_t motorNo, bool enabled, uin
         _txStatus = Maint::TX_STATUS::TX_SET_PARAMS;
         _txMutex.unlock();
     }
+}
+
+void Maint::Maintenance::TxWriteToFlash()
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE);
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_WRITE_TO_FLASH;
+    _txMutex.unlock();
+
 }
 
 
@@ -159,7 +179,7 @@ void Maint::Maintenance::Tx()
         _txCommand.All = 0;
         _txStatus = Maint::TX_STATUS::TX_GET;
     }
-    else // TX_SET_PARAMS
+    else if (_txStatus == Maint::TX_STATUS::TX_SET_PARAMS)
     {
         qba.push_back(Maint::SYNC_CHAR);
         qba.push_back(_txCommand.Bytes[0]);
@@ -201,6 +221,29 @@ void Maint::Maintenance::Tx()
         _txCommand.All = 0;
         _txStatus = Maint::TX_STATUS::TX_GET;
     }
+    else // TX_WRITE_TO_FLASH
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
 
     emit txRawData(reinterpret_cast<quint8*>(qba.data()), bytesWritten);
 }
@@ -212,6 +255,7 @@ void Maint::Maintenance::OnRx()
 	
 	for (auto& byte : qba)
 	{
+        //printf("%c", byte);
 		update_fsm(byte);
 	}
 }

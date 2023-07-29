@@ -4,11 +4,24 @@
 #include "joystick.h"
 #include "cbit.h"
 #include "user.h"
+
 #include <pico/time.h>
+#include <hardware/flash.h>
+#include <hardware/sync.h>
 #include <string.h>
 #include <stdio.h>
 
+
+// We're going to erase and reprogram a region 256k from the start of flash.
+// Once done, we can access this at XIP_BASE + 256k.
+#define FLASH_TARGET_OFFSET (256 * 1024)
+#define FLASH_PARAMS_OFFSET 0
+#define FLASH_PARAMS_SIZE   48 // 4 blocks of 3 4-bytes length uint32_t
+
+const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
+
 uint32_t motor_parameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
+bool MAINT_FlashWriteRequested;
 
 static MAINT_STATUS status;
 static uint8_t rx_buf[sizeof(MAINT_MESSAGE_TAG)];
@@ -64,6 +77,7 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
     switch (static_cast<MAINT_CMD_ID>(cmd_id))
     {
         case MAINT_CMD_ID::MAINT_CMD_NONE:
+        case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE:
             return 1; /** Checksum only **/
         case MAINT_CMD_ID::MAINT_CMD_SET_M1: 
         case MAINT_CMD_ID::MAINT_CMD_SET_M2:
@@ -161,20 +175,72 @@ static void update_fsm(uint8_t byte_rx)
 }
 
 
+static void flash_write_params()
+{
+    uint32_t ints = save_and_disable_interrupts();
+
+    uint8_t eeprom_img[FLASH_PAGE_SIZE];
+    memset(&eeprom_img, 0x00, FLASH_PAGE_SIZE);
+
+    memcpy(eeprom_img, reinterpret_cast<uint8_t*>(motor_parameters), FLASH_PARAMS_SIZE);
+    eeprom_img[FLASH_PARAMS_SIZE] = checksum(reinterpret_cast<uint8_t*>(motor_parameters), FLASH_PARAMS_SIZE);
+
+    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+    flash_range_program(FLASH_TARGET_OFFSET, eeprom_img, FLASH_PAGE_SIZE);
+
+    restore_interrupts(ints);
+}
+
+
 void MAINT_Init()
 {
+    MAINT_FlashWriteRequested = false;
     last_msg_us = 0;
 
     memset(rx_buf, sizeof(MAINT_MESSAGE_TAG), 0x00);
     memset(&rx_message, sizeof(MAINT_MESSAGE_TAG), 0x00);
     memset(&tx_message, sizeof(MAINT_MESSAGE_TAG), 0x00);
 
+    /** Load actual params **/
+    uint32_t eeprom_offset = 0;
     for (int i = 0; i < 4; i++)
     {
-        motor_parameters[i][int(MAINT_MOTOR_PARAM::ENABLED)] = 1;
-        motor_parameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = MOTOR_MIN_SIGNAL;
-        motor_parameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = MOTOR_MAX_SIGNAL;
+        motor_parameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 0 * sizeof(uint32_t)]);
+        motor_parameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 1 * sizeof(uint32_t)]);
+        motor_parameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 2 * sizeof(uint32_t)]);
+        
+        eeprom_offset += (3 * sizeof(uint32_t));
     }
+
+    CBIT_TAG fail_code;
+    fail_code.Dword = 0;
+    fail_code.Bits.flash_error = 1;
+
+    /** Check actual params **/
+    const uint8_t eeprom_cks = *reinterpret_cast<const uint8_t*>(&flash_target_contents[FLASH_PARAMS_SIZE]);
+    uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(motor_parameters), FLASH_PARAMS_SIZE);
+    
+    if (eeprom_cks != current_cks)
+    {
+        /** Set fail code **/
+        CBIT_Set_fail_code(fail_code.Dword, true);
+
+        /** Flash not programmed, loading default **/
+        for (int i = 0; i < 4; i++)
+        {
+            motor_parameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = 1;
+            motor_parameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = MOTOR_MIN_SIGNAL;
+            motor_parameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = MOTOR_MAX_SIGNAL;
+        }
+
+        /** Storing default to flash **/
+        flash_write_params();
+    }
+    else
+    {
+        CBIT_Set_fail_code(fail_code.Dword, false);
+    }
+
 
     expected_bytes = 0;
     rx_payload_idx = 0;
@@ -251,6 +317,9 @@ void MAINT_Handler()
                 motor_parameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 motor_parameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
                 motor_parameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE:
+                MAINT_FlashWriteRequested = true;
                 break;
 
         }
@@ -597,6 +666,14 @@ void MAINT_Handler()
         shall_tx = false;
     }
 
+
+    if (MAINT_FlashWriteRequested)
+    {
+        flash_write_params();
+        MAINT_FlashWriteRequested = false;
+    }
+
+    printf(".");
 }
 
 

@@ -14,7 +14,8 @@ typedef union
        uint32_t cpu1_launch_failure  :1;
        uint32_t cpu0_timer_failure   :1;
        uint32_t cpu1_timer_failure   :1;
-       uint32_t                      :25;
+       uint32_t flash_error          :1;
+       uint32_t                      :24;
     } Bits;
     uint8_t Bytes[4];
     uint32_t Dword;

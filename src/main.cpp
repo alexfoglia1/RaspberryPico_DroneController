@@ -47,6 +47,11 @@ void __cpu1_entry_point__()
             CBIT_Set_fail_code(fail_code.Dword, false);
         }
     }
+
+    while (1)
+    {
+        tight_loop_contents();
+    }
 }
 
 

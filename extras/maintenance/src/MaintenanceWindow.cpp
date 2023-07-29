@@ -78,6 +78,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
 	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
 	connect(_ui.btnSendMaintenanceParams, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceParams()));
+	connect(_ui.btnFlashWrite, SIGNAL(clicked()), this, SLOT(OnBtnFlashWrite()));
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
 
 	connect(_ui.plotTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotSliderValueChanged(int)));
@@ -908,6 +909,16 @@ void MaintenanceWindow::OnBtnSendMaintenanceParams()
 		_maintHandler->TxMaintenanceParams(_ui.comboSetParamId->currentIndex() + 1, enabledParam, minSignalParam, maxSignalParam);
 	}
 }
+
+
+void MaintenanceWindow::OnBtnFlashWrite()
+{
+	if (_maintHandler)
+	{
+		_maintHandler->TxWriteToFlash();
+	}
+}
+
 
 void MaintenanceWindow::OnSpinSetMaintenanceValue(int newValue)
 {

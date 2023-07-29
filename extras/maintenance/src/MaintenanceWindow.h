@@ -31,8 +31,10 @@ private slots:
 	void OnComboTrack2TextChanged(const QString& newText);
 	void OnComboTrack3TextChanged(const QString& newText);
 	void OnHeaderChanged();
+
 	void OnBtnSendMaintenanceCommand();
 	void OnBtnSendMaintenanceParams();
+	void OnBtnFlashWrite();
 	void OnSpinSetMaintenanceValue(int newValue);
 
 	void OnRxRawData(bool valid, quint8* data, int size);
