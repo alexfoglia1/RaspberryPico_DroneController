@@ -113,7 +113,7 @@ enum class MAINT_MOTOR_PARAM
     SIZE
 };
 
-extern uint32_t motor_parameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
+extern uint32_t MAINT_MotorsParameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
 extern bool MAINT_FlashWriteRequested;
 
 void MAINT_Init();

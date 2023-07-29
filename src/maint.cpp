@@ -1,6 +1,7 @@
 #include "maint.h"
 #include "motors.h"
 #include "attitude.h"
+#include "timer.h"
 #include "joystick.h"
 #include "cbit.h"
 #include "user.h"
@@ -20,7 +21,7 @@
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
-uint32_t motor_parameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
+uint32_t MAINT_MotorsParameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
 bool MAINT_FlashWriteRequested;
 
 static MAINT_STATUS status;
@@ -182,8 +183,8 @@ static void flash_write_params()
     uint8_t eeprom_img[FLASH_PAGE_SIZE];
     memset(&eeprom_img, 0x00, FLASH_PAGE_SIZE);
 
-    memcpy(eeprom_img, reinterpret_cast<uint8_t*>(motor_parameters), FLASH_PARAMS_SIZE);
-    eeprom_img[FLASH_PARAMS_SIZE] = checksum(reinterpret_cast<uint8_t*>(motor_parameters), FLASH_PARAMS_SIZE);
+    memcpy(eeprom_img, reinterpret_cast<uint8_t*>(MAINT_MotorsParameters), FLASH_PARAMS_SIZE);
+    eeprom_img[FLASH_PARAMS_SIZE] = checksum(reinterpret_cast<uint8_t*>(MAINT_MotorsParameters), FLASH_PARAMS_SIZE);
 
     flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
     flash_range_program(FLASH_TARGET_OFFSET, eeprom_img, FLASH_PAGE_SIZE);
@@ -205,9 +206,9 @@ void MAINT_Init()
     uint32_t eeprom_offset = 0;
     for (int i = 0; i < 4; i++)
     {
-        motor_parameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 0 * sizeof(uint32_t)]);
-        motor_parameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 1 * sizeof(uint32_t)]);
-        motor_parameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 2 * sizeof(uint32_t)]);
+        MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 0 * sizeof(uint32_t)]);
+        MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 1 * sizeof(uint32_t)]);
+        MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 2 * sizeof(uint32_t)]);
         
         eeprom_offset += (3 * sizeof(uint32_t));
     }
@@ -218,7 +219,7 @@ void MAINT_Init()
 
     /** Check actual params **/
     const uint8_t eeprom_cks = *reinterpret_cast<const uint8_t*>(&flash_target_contents[FLASH_PARAMS_SIZE]);
-    uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(motor_parameters), FLASH_PARAMS_SIZE);
+    uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(MAINT_MotorsParameters), FLASH_PARAMS_SIZE);
     
     if (eeprom_cks != current_cks)
     {
@@ -228,9 +229,9 @@ void MAINT_Init()
         /** Flash not programmed, loading default **/
         for (int i = 0; i < 4; i++)
         {
-            motor_parameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = 1;
-            motor_parameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = MOTOR_MIN_SIGNAL;
-            motor_parameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = MOTOR_MAX_SIGNAL;
+            MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = 1;
+            MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = MOTOR_MIN_SIGNAL;
+            MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = MOTOR_MAX_SIGNAL;
         }
 
         /** Storing default to flash **/
@@ -299,24 +300,24 @@ void MAINT_Handler()
                 controlling_motors = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 1);
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS:
-                motor_parameters[0][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                motor_parameters[0][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                motor_parameters[0][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS:
-                motor_parameters[1][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                motor_parameters[1][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                motor_parameters[1][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS:
-                motor_parameters[2][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                motor_parameters[2][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                motor_parameters[2][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS:
-                motor_parameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                motor_parameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                motor_parameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE:
                 MAINT_FlashWriteRequested = true;
@@ -666,14 +667,24 @@ void MAINT_Handler()
         shall_tx = false;
     }
 
-
     if (MAINT_FlashWriteRequested)
     {
+        /** Wait for CPU1 to disable interrupts **/
+        while (CPU1_WaitFlashWritten == false)
+        {
+            sleep_ms(1000);
+        }
+        /** CPU1 has disabled interrupts **/
+
         flash_write_params();
+
         MAINT_FlashWriteRequested = false;
+        
+        /** Notify CPU1 write terminated **/
+        CPU1_WaitFlashWritten = false;
     }
 
-    printf(".");
+    
 }
 
 

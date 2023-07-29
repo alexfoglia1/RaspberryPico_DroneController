@@ -72,17 +72,17 @@ void MOTORS_Init()
 
 void MOTORS_Handler()
 {
-    uint32_t m1_signal = motor_parameters[0][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
-    uint32_t m2_signal = motor_parameters[1][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
-    uint32_t m3_signal = motor_parameters[2][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
-    uint32_t m4_signal = motor_parameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
+    uint32_t m1_signal = MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
+    uint32_t m2_signal = MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
+    uint32_t m3_signal = MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
+    uint32_t m4_signal = MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)];
 
     if (JOYSTICK_MotorsArmed)
     {
-        float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m1_signal + MOTOR_ARMED_THRESHOLD, motor_parameters[0][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
-        float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m2_signal + MOTOR_ARMED_THRESHOLD, motor_parameters[1][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
-        float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m3_signal + MOTOR_ARMED_THRESHOLD, motor_parameters[2][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
-        float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m4_signal + MOTOR_ARMED_THRESHOLD, motor_parameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m1_signal + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m2_signal + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m3_signal + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, m4_signal + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         
         /** Position control loop **/
         pid_controller(&pid_roll, &pid_roll_gain[PID_KP], JOYSTICK_Roll, 0);//ATTITUDE_Roll);
@@ -93,10 +93,10 @@ void MOTORS_Handler()
 
         pid_yaw.u = 0x00;
 
-        if (motor_parameters[0][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_roll.u + pid_pitch.u - pid_yaw.u);
-        if (motor_parameters[1][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed - pid_roll.u + pid_pitch.u + pid_yaw.u);
-        if (motor_parameters[2][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed - pid_roll.u - pid_pitch.u - pid_yaw.u);
-        if (motor_parameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed + pid_roll.u - pid_pitch.u + pid_yaw.u);
+        if (MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_roll.u + pid_pitch.u - pid_yaw.u);
+        if (MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed - pid_roll.u + pid_pitch.u + pid_yaw.u);
+        if (MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed - pid_roll.u - pid_pitch.u - pid_yaw.u);
+        if (MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed + pid_roll.u - pid_pitch.u + pid_yaw.u);
     }
     else
     {
