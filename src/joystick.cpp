@@ -89,13 +89,13 @@ void JOYSTICK_Handler()
     /** Check failure **/
     uint64_t lastRollRise_t_us = roll_signal.lastRise_us();
     uint64_t lastPitchRise_t_us = pitch_signal.lastRise_us();
-    uint64_t lastThrottleise_t_us = throttle_signal.lastRise_us();
+    uint64_t lastThrottleRise_t_us = throttle_signal.lastRise_us();
     uint64_t lastArmedRise_t_us = armed_signal.lastRise_us();
 
     JOYSTICK_Timeout =  ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
-                        ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
-                        ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
-                        ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS));
+                        ((cur_t_us - lastPitchRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
+                        ((cur_t_us - lastThrottleRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
+                        ((cur_t_us - lastArmedRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS));
                         
     if (JOYSTICK_Timeout)
     {
