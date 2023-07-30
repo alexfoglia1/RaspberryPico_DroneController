@@ -12,7 +12,7 @@ class Pulse
 {
 public:
     Pulse(int gpio);
-    void attach(bool interrupt);
+    void attach();
     uint64_t pulseIn();
     uint64_t lastRise_us();
 
@@ -21,7 +21,6 @@ public:
     
 private:
     int _gpio;
-    bool _interrupt;
     uint64_t _t_rise_us;
     uint64_t _duration_us;
 };

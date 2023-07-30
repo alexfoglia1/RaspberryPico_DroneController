@@ -45,10 +45,10 @@ void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p)
     min_pitch = saturate(min_p, -360.f, 360.f);
     max_pitch = saturate(max_p, -360.f, 360.f);
 
-    roll_signal.attach(false);
-    pitch_signal.attach(false);
-    throttle_signal.attach(false);
-    armed_signal.attach(false);
+    roll_signal.attach();
+    pitch_signal.attach();
+    throttle_signal.attach();
+    armed_signal.attach();
 }
 
 
