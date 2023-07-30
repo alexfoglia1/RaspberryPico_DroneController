@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1651</width>
-    <height>916</height>
+    <width>1779</width>
+    <height>959</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,9 +24,9 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>50</y>
+      <y>40</y>
       <width>971</width>
-      <height>251</height>
+      <height>241</height>
      </rect>
     </property>
     <property name="title">
@@ -378,6 +378,34 @@
         </property>
        </widget>
       </item>
+      <item row="3" column="5">
+       <widget class="QCheckBox" name="checkTxMotorParams">
+        <property name="text">
+         <string>Motor Params</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="5">
+       <widget class="QCheckBox" name="checkTxJsParams">
+        <property name="text">
+         <string>Joystick Params</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="5">
+       <widget class="QCheckBox" name="checkTxPidParams">
+        <property name="text">
+         <string>Pid Params</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="5">
+       <widget class="QCheckBox" name="checkTxPtf1Params">
+        <property name="text">
+         <string>PTF1 Params</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </widget>
@@ -388,7 +416,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>320</y>
+      <y>290</y>
       <width>341</width>
       <height>71</height>
      </rect>
@@ -477,7 +505,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>410</y>
+      <y>490</y>
       <width>971</width>
       <height>271</height>
      </rect>
@@ -982,7 +1010,7 @@
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>20</y>
+      <y>10</y>
       <width>75</width>
       <height>21</height>
      </rect>
@@ -995,7 +1023,7 @@
     <property name="geometry">
      <rect>
       <x>100</x>
-      <y>20</y>
+      <y>10</y>
       <width>101</width>
       <height>20</height>
      </rect>
@@ -1005,7 +1033,7 @@
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>20</y>
+      <y>10</y>
       <width>61</width>
       <height>16</height>
      </rect>
@@ -1019,8 +1047,8 @@
      <rect>
       <x>1050</x>
       <y>70</y>
-      <width>570</width>
-      <height>570</height>
+      <width>691</width>
+      <height>671</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -1035,7 +1063,7 @@
      <rect>
       <x>1050</x>
       <y>10</y>
-      <width>171</width>
+      <width>201</width>
       <height>20</height>
      </rect>
     </property>
@@ -1286,9 +1314,9 @@
    <widget class="QComboBox" name="comboSelTrack3">
     <property name="geometry">
      <rect>
-      <x>1450</x>
+      <x>1530</x>
       <y>10</y>
-      <width>171</width>
+      <width>211</width>
       <height>20</height>
      </rect>
     </property>
@@ -1539,9 +1567,9 @@
    <widget class="QComboBox" name="comboSelTrack2">
     <property name="geometry">
      <rect>
-      <x>1250</x>
+      <x>1290</x>
       <y>10</y>
-      <width>171</width>
+      <width>201</width>
       <height>20</height>
      </rect>
     </property>
@@ -1794,7 +1822,7 @@
      <rect>
       <x>1050</x>
       <y>40</y>
-      <width>171</width>
+      <width>191</width>
       <height>22</height>
      </rect>
     </property>
@@ -1814,9 +1842,9 @@
    <widget class="QSlider" name="plotTrack2Slider">
     <property name="geometry">
      <rect>
-      <x>1250</x>
+      <x>1290</x>
       <y>40</y>
-      <width>171</width>
+      <width>201</width>
       <height>22</height>
      </rect>
     </property>
@@ -1836,9 +1864,9 @@
    <widget class="QSlider" name="plotTrack3Slider">
     <property name="geometry">
      <rect>
-      <x>1450</x>
+      <x>1530</x>
       <y>40</y>
-      <width>171</width>
+      <width>211</width>
       <height>22</height>
      </rect>
     </property>
@@ -1859,8 +1887,8 @@
     <property name="geometry">
      <rect>
       <x>1050</x>
-      <y>650</y>
-      <width>571</width>
+      <y>750</y>
+      <width>691</width>
       <height>22</height>
      </rect>
     </property>
@@ -1880,8 +1908,8 @@
    <widget class="QLabel" name="lblTimeSpan">
     <property name="geometry">
      <rect>
-      <x>1560</x>
-      <y>670</y>
+      <x>1680</x>
+      <y>770</y>
       <width>47</width>
       <height>13</height>
      </rect>
@@ -1894,7 +1922,7 @@
     <property name="geometry">
      <rect>
       <x>710</x>
-      <y>720</y>
+      <y>780</y>
       <width>16</width>
       <height>16</height>
      </rect>
@@ -1910,7 +1938,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>720</y>
+      <y>780</y>
       <width>41</width>
       <height>16</height>
      </rect>
@@ -1923,7 +1951,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>740</y>
+      <y>800</y>
       <width>351</width>
       <height>111</height>
      </rect>
@@ -1936,7 +1964,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>740</y>
+      <y>800</y>
       <width>361</width>
       <height>111</height>
      </rect>
@@ -1949,7 +1977,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>720</y>
+      <y>780</y>
       <width>41</width>
       <height>16</height>
      </rect>
@@ -1962,7 +1990,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>720</y>
+      <y>780</y>
       <width>16</width>
       <height>16</height>
      </rect>
@@ -1978,7 +2006,7 @@
     <property name="geometry">
      <rect>
       <x>220</x>
-      <y>20</y>
+      <y>10</y>
       <width>31</width>
       <height>16</height>
      </rect>
@@ -1991,7 +2019,7 @@
     <property name="geometry">
      <rect>
       <x>260</x>
-      <y>20</y>
+      <y>10</y>
       <width>101</width>
       <height>20</height>
      </rect>
@@ -2003,10 +2031,10 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>570</x>
-      <y>320</y>
-      <width>431</width>
-      <height>71</height>
+      <x>430</x>
+      <y>290</y>
+      <width>571</width>
+      <height>191</height>
      </rect>
     </property>
     <property name="title">
@@ -2017,7 +2045,7 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>408</width>
+       <width>541</width>
        <height>41</height>
       </rect>
      </property>
@@ -2089,10 +2117,188 @@
         </property>
        </widget>
       </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_3">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>60</y>
+       <width>541</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QComboBox" name="comboSetJsParam">
+        <item>
+         <property name="text">
+          <string>JS Throttle</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>JS Roll</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>JS Pitch</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetJsAlpha"/>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetJsBeta">
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSendMaintenanceJsParams">
+        <property name="text">
+         <string>Send</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>100</y>
+       <width>541</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <item>
+       <widget class="QComboBox" name="comboSetPidParam">
+        <item>
+         <property name="text">
+          <string>PID Roll</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>PID Pitch</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>PID Yaw</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetKp">
+        <property name="value">
+         <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetKi"/>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetKt"/>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetSat">
+        <property name="value">
+         <double>50.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetAd"/>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetBd"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSendPidParams">
+        <property name="text">
+         <string>Send</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_5">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>140</y>
+       <width>541</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_5">
+      <item>
+       <widget class="QComboBox" name="comboSetPtf1Param">
+        <item>
+         <property name="text">
+          <string>PTF1 Acc</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>PTF1 Gyro</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>PTF1 Magn</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetPtf1X">
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetPtf1Y">
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetPtf1Z">
+        <property name="value">
+         <double>0.100000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSendPtf1Params">
+        <property name="text">
+         <string>Send</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QPushButton" name="btnFlashWrite">
         <property name="text">
          <string>Flash Write</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnRefreshParams">
+        <property name="text">
+         <string>Refresh</string>
         </property>
        </widget>
       </item>
@@ -2105,7 +2311,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1651</width>
+     <width>1779</width>
      <height>21</height>
     </rect>
    </property>

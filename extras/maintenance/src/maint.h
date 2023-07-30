@@ -59,8 +59,12 @@ namespace Maint
             uint64_t motor3 : 1;     //44
             uint64_t motor4 : 1;     //45
             uint64_t motors_armed : 1;     //46
-            uint64_t cbit : 1; //47
-            uint64_t maint_cmd_id : 16;    //48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+            uint64_t cbit : 1;     //47
+            uint64_t motor_params : 1;     //48
+            uint64_t js_params : 1;     //49
+            uint64_t pid_params : 1;     //50
+            uint64_t ptf1_params : 1;     //51
+            uint64_t maint_cmd_id : 12;    //52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
         } Bits;
 
         uint8_t  Bytes[8];
@@ -103,6 +107,9 @@ namespace Maint
         TX_GET = 0,
         TX_SET_CMD,
         TX_SET_PARAMS,
+        TX_SET_JS_PARAMS,
+        TX_SET_PID_PARAMS,
+        TX_SET_PTF1_PARAMS,
         TX_WRITE_TO_FLASH
     };
 
@@ -119,7 +126,16 @@ namespace Maint
         MAINT_CMD_SET_M1_PARAMS,
         MAINT_CMD_SET_M2_PARAMS,
         MAINT_CMD_SET_M3_PARAMS,
-        MAINT_CMD_SET_M4_PARAMS
+        MAINT_CMD_SET_M4_PARAMS,
+        MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA,
+        MAINT_CMD_SET_JS_ROLL_ALPHA_BETA,
+        MAINT_CMD_SET_JS_PITCH_ALPHA_BETA,
+        MAINT_CMD_SET_ROLL_PID_PARAMS,
+        MAINT_CMD_SET_PITCH_PID_PARAMS,
+        MAINT_CMD_SET_YAW_PID_PARAMS,
+        MAINT_CMD_SET_PTF1_ACC_PARAMS,
+        MAINT_CMD_SET_PTF1_GYRO_PARAMS,
+        MAINT_CMD_SET_PTF1_MAGN_PARAMS
     };
 
     static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
@@ -146,6 +162,9 @@ public:
     void SetTxHeader(MAINT_HEADER_T txHeader);
     void TxMaintenanceCommand(uint32_t motorNo, uint32_t data);
     void TxMaintenanceParams(uint32_t motorNo, bool enabled, uint32_t minParam, uint32_t maxParam);
+    void TxJoystickParams(uint32_t jsChannel, float alpha, float beta);
+    void TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd);
+    void TxPtf1params(uint32_t sensorSource, float x, float y, float z);
     void TxWriteToFlash();
 
 public slots:
@@ -204,6 +223,10 @@ signals:
     void receivedMotor4(uint32_t data);
     void receivedMotorsArmed(uint32_t data);
     void receivedCbit(uint32_t data);
+    void receivedMotorsParams(uint32_t motor_no, bool enabled, uint32_t min_signal, uint32_t max_signal);
+    void receivedJsParams(uint32_t channel_no, float alpha, float beta);
+    void receivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
+    void receivedPtf1Params(uint32_t source_no, float x, float y, float z);
 
 private:
 	QSerialPort* _serialPort;
@@ -218,6 +241,17 @@ private:
     uint32_t _tx_param_enabled;
     uint32_t _tx_param_min_signal;
     uint32_t _tx_param_max_signal;
+    uint32_t _tx_param_js_alpha;
+    uint32_t _tx_param_js_beta;
+    uint32_t _tx_param_kp;
+    uint32_t _tx_param_ki;
+    uint32_t _tx_param_kt;
+    uint32_t _tx_param_sat;
+    uint32_t _tx_param_ad;
+    uint32_t _tx_param_bd;
+    uint32_t _tx_param_x;
+    uint32_t _tx_param_y;
+    uint32_t _tx_param_z;
     QMutex _txMutex;
     QTimer* _txTimer;
 

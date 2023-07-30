@@ -1,6 +1,8 @@
 #include "attitude.h"
 #include "LSM9DS1.h"
 #include "user.h"
+#include "maint.h"
+
 #include <stdio.h>
 #include <pico/float.h>
 
@@ -61,17 +63,17 @@ static void pt1f_update(float ax, float ay, float az, float gx, float gy, float 
     my_flt_tag.raw_k = my;
     mz_flt_tag.raw_k = mz;
 
-    ax_flt_tag.filt_k = pt1f(ax_flt_tag.raw_k, ax_flt_tag.raw_km1, ax_flt_tag.filt_km1, 0.1f);
-    ay_flt_tag.filt_k = pt1f(ay_flt_tag.raw_k, ay_flt_tag.raw_km1, ay_flt_tag.filt_km1, 0.1f);
-    az_flt_tag.filt_k = pt1f(az_flt_tag.raw_k, az_flt_tag.raw_km1, az_flt_tag.filt_km1, 0.1f);
+    ax_flt_tag.filt_k = pt1f(ax_flt_tag.raw_k, ax_flt_tag.raw_km1, ax_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::ACCELEROMETER)][int(EUCLIDEAN_AXES::X)]));
+    ay_flt_tag.filt_k = pt1f(ay_flt_tag.raw_k, ay_flt_tag.raw_km1, ay_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::ACCELEROMETER)][int(EUCLIDEAN_AXES::Y)]));
+    az_flt_tag.filt_k = pt1f(az_flt_tag.raw_k, az_flt_tag.raw_km1, az_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::ACCELEROMETER)][int(EUCLIDEAN_AXES::Z)]));
 
-    gx_flt_tag.filt_k = pt1f(gx_flt_tag.raw_k, gx_flt_tag.raw_km1, gx_flt_tag.filt_km1, 0.1f);
-    gy_flt_tag.filt_k = pt1f(gy_flt_tag.raw_k, gy_flt_tag.raw_km1, gy_flt_tag.filt_km1, 0.1f);
-    gz_flt_tag.filt_k = pt1f(gz_flt_tag.raw_k, gz_flt_tag.raw_km1, gz_flt_tag.filt_km1, 0.1f);
+    gx_flt_tag.filt_k = pt1f(gx_flt_tag.raw_k, gx_flt_tag.raw_km1, gx_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::GYROSCOPE)][int(EUCLIDEAN_AXES::X)]));
+    gy_flt_tag.filt_k = pt1f(gy_flt_tag.raw_k, gy_flt_tag.raw_km1, gy_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::GYROSCOPE)][int(EUCLIDEAN_AXES::Y)]));
+    gz_flt_tag.filt_k = pt1f(gz_flt_tag.raw_k, gz_flt_tag.raw_km1, gz_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::GYROSCOPE)][int(EUCLIDEAN_AXES::Z)]));
 
-    mx_flt_tag.filt_k = pt1f(mx_flt_tag.raw_k, mx_flt_tag.raw_km1, mx_flt_tag.filt_km1, 0.1f);
-    my_flt_tag.filt_k = pt1f(my_flt_tag.raw_k, my_flt_tag.raw_km1, my_flt_tag.filt_km1, 0.1f);
-    mz_flt_tag.filt_k = pt1f(mz_flt_tag.raw_k, mz_flt_tag.raw_km1, mz_flt_tag.filt_km1, 0.1f);
+    mx_flt_tag.filt_k = pt1f(mx_flt_tag.raw_k, mx_flt_tag.raw_km1, mx_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::X)]));
+    my_flt_tag.filt_k = pt1f(my_flt_tag.raw_k, my_flt_tag.raw_km1, my_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::Y)]));
+    mz_flt_tag.filt_k = pt1f(mz_flt_tag.raw_k, mz_flt_tag.raw_km1, mz_flt_tag.filt_km1, *reinterpret_cast<float*>(&MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::Z)]));
 
     ax_flt_tag.raw_km1 = ax_flt_tag.raw_k;
     ay_flt_tag.raw_km1 = ay_flt_tag.raw_k;

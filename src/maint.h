@@ -59,7 +59,11 @@ typedef union
         uint64_t motor4           :1;     //45
         uint64_t motors_armed     :1;     //46
         uint64_t cbit             :1;     //47
-        uint64_t maint_cmd_id     :16;    //48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+        uint64_t motor_params     :1;     //48
+        uint64_t js_params        :1;     //49
+        uint64_t pid_params       :1;     //50
+        uint64_t ptf1_params      :1;     //51
+        uint64_t maint_cmd_id     :12;    //52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
     } Bits;
     
     uint8_t  Bytes[8];
@@ -101,7 +105,16 @@ enum class MAINT_CMD_ID
     MAINT_CMD_SET_M1_PARAMS,
     MAINT_CMD_SET_M2_PARAMS,
     MAINT_CMD_SET_M3_PARAMS,
-    MAINT_CMD_SET_M4_PARAMS
+    MAINT_CMD_SET_M4_PARAMS,
+    MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA,
+    MAINT_CMD_SET_JS_ROLL_ALPHA_BETA,
+    MAINT_CMD_SET_JS_PITCH_ALPHA_BETA,
+    MAINT_CMD_SET_ROLL_PID_PARAMS,
+    MAINT_CMD_SET_PITCH_PID_PARAMS,
+    MAINT_CMD_SET_YAW_PID_PARAMS,
+    MAINT_CMD_SET_PTF1_ACC_PARAMS,
+    MAINT_CMD_SET_PTF1_GYRO_PARAMS,
+    MAINT_CMD_SET_PTF1_MAGN_PARAMS
 };
 
 enum class MAINT_MOTOR_PARAM
@@ -113,7 +126,84 @@ enum class MAINT_MOTOR_PARAM
     SIZE
 };
 
-extern uint32_t MAINT_MotorsParameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
+enum class MAINT_JS_PARAM
+{
+    FIRST = 0,
+    ALPHA = FIRST,
+    BETA,
+    SIZE
+};
+
+enum class MAINT_PID_PARAM
+{
+    FIRST = 0,
+    PID_KP = FIRST,
+    PID_KI,
+    PID_KT,
+    PID_SAT,
+    PID_AD,
+    PID_BD,
+    SIZE
+};
+
+enum class JOYSTICK_CHANNEL
+{
+    FIRST = 0,
+    THROTTLE = FIRST,
+    ROLL,
+    PITCH,
+    ARMED,
+    SIZE
+};
+
+enum class MOTORS
+{
+    FIRST = 0,
+    M1 = FIRST,
+    M2,
+    M3,
+    M4,
+    SIZE
+};
+
+enum class EULER_ANGLES
+{
+    FIRST = 0,
+    ROLL = FIRST,
+    PITCH,
+    YAW,
+    SIZE
+};
+
+enum class SENSOR_SOURCE
+{
+    FIRST = 0,
+    ACCELEROMETER = FIRST,
+    GYROSCOPE,
+    MAGNETOMETER,
+    SIZE
+};
+
+enum class EUCLIDEAN_AXES
+{
+    FIRST = 0,
+    X = FIRST,
+    Y,
+    Z,
+    SIZE
+};
+
+typedef union 
+{
+    uint32_t ival;
+    float    fval;
+} maint_float_t;
+
+extern uint32_t MAINT_MotorsParameters[int(MOTORS::SIZE)][int(MAINT_MOTOR_PARAM::SIZE)];
+extern uint32_t MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::SIZE)][int(MAINT_JS_PARAM::SIZE)];
+extern uint32_t MAINT_PidParameters[int(EULER_ANGLES::SIZE)][int(MAINT_PID_PARAM::SIZE)];
+extern uint32_t MAINT_Ptf1Parameters[int(SENSOR_SOURCE::SIZE)][int(EUCLIDEAN_AXES::SIZE)];
+
 extern bool MAINT_FlashWriteRequested;
 
 void MAINT_Init();

@@ -62,6 +62,35 @@ MaintenanceWindow::MaintenanceWindow()
 		{"MOTORS_ARMED", 2}
 	};
 
+	_rxMotorParams =
+	{
+		{1, {true, 1000, 2000}}, //M1
+		{2, {true, 1000, 2000}}, //M2
+		{3, {true, 1000, 2000}}, //M3
+		{4, {true, 1000, 2000}}, //M4
+	};
+
+	_rxJsParams =
+	{
+		{1, {0.0f, 1.0f}}, //THROTTLE
+		{2, {0.0f, 1.0f}}, //ROLL
+		{3, {0.0f, 1.0f}}, //PITCH
+	};
+
+	_rxPidParams =
+	{
+		{1, {1.0f, 0.0f, 0.0f, 50.0f, 0.0f, 0.0f}}, //ROLL
+		{2, {1.0f, 0.0f, 0.0f, 50.0f, 0.0f, 0.0f}}, //PITCH
+		{3, {1.0f, 0.0f, 0.0f, 50.0f, 0.0f, 0.0f}}, //YAW
+	};
+
+	_rxPtf1Params =
+	{
+		{1, {0.1f, 0.1f, 0.1f}}, //ACCELEROMETER
+		{2, {0.1f, 0.1f, 0.1f}}, //GYROSCOPE
+		{3, {0.1f, 0.1f, 0.1f}}, //MAGNETOMETER
+	};
+
 	autoScanComPorts();
 	_ui.comboSelBaud->addItem("1200", QSerialPort::Baud1200);
 	_ui.comboSelBaud->addItem("2400", QSerialPort::Baud2400);
@@ -78,7 +107,11 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
 	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
 	connect(_ui.btnSendMaintenanceParams, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceParams()));
+	connect(_ui.btnSendMaintenanceJsParams, SIGNAL(clicked()), this, SLOT(OnBtnSendJsParams()));
+	connect(_ui.btnSendPidParams, SIGNAL(clicked()), this, SLOT(OnBtnSendPidParams()));
+	connect(_ui.btnSendPtf1Params, SIGNAL(clicked()), this, SLOT(OnBtnSendPtf1Params()));
 	connect(_ui.btnFlashWrite, SIGNAL(clicked()), this, SLOT(OnBtnFlashWrite()));
+	connect(_ui.btnRefreshParams, SIGNAL(clicked()), this, SLOT(OnBtnRefreshParams()));
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
 
 	connect(_ui.plotTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotSliderValueChanged(int)));
@@ -146,6 +179,10 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxMotor4Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxMotorsArmed, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxCbit, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxMotorParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxJsParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxPidParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxPtf1Params, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
@@ -201,6 +238,11 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedYawPidU(float)), this, SLOT(OnReceivedYawPidU(float)));
 
 	connect(_maintHandler, SIGNAL(receivedCbit(uint32_t)), this, SLOT(OnReceivedCbit(uint32_t)));
+
+	connect(_maintHandler, SIGNAL(receivedMotorsParams(uint32_t, bool, uint32_t, uint32_t)), this, SLOT(OnReceivedMotorsParams(uint32_t, bool, uint32_t, uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedJsParams(uint32_t, float, float)), this, SLOT(OnReceivedJsParams(uint32_t, float, float)));
+	connect(_maintHandler, SIGNAL(receivedPidParams(uint32_t, float, float, float, float, float, float)), this, SLOT(OnReceivedPidParams(uint32_t, float, float, float, float, float, float)));
+	connect(_maintHandler, SIGNAL(receivedPtf1Params(uint32_t, float, float, float)), this, SLOT(OnReceivedPtf1Params(uint32_t, float, float, float)));
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
@@ -880,6 +922,43 @@ void MaintenanceWindow::OnHeaderChanged()
 		_ui.lineRxCbit->setText("");
 	}
 
+	if (_ui.checkTxMotorParams->isChecked())
+	{
+		header.Bits.motor_params = 1;
+	}
+	else
+	{
+		header.Bits.motor_params = 0;
+	}
+
+	if (_ui.checkTxJsParams->isChecked())
+	{
+		header.Bits.js_params = 1;
+	}
+	else
+	{
+		header.Bits.js_params = 0;
+	}
+
+	if (_ui.checkTxPidParams->isChecked())
+	{
+		header.Bits.pid_params = 1;
+	}
+	else
+	{
+		header.Bits.pid_params = 0;
+	}
+
+	if (_ui.checkTxPtf1Params->isChecked())
+	{
+		header.Bits.ptf1_params = 1;
+	}
+	else
+	{
+		header.Bits.ptf1_params = 0;
+	}
+
+
 	if (_maintHandler)
 	{
 		_maintHandler->SetTxHeader(header);
@@ -910,6 +989,45 @@ void MaintenanceWindow::OnBtnSendMaintenanceParams()
 	}
 }
 
+void MaintenanceWindow::OnBtnSendJsParams()
+{
+	if (_maintHandler)
+	{
+		float alpha = _ui.spinSetJsAlpha->value();
+		float beta = _ui.spinSetJsBeta->value();
+
+		_maintHandler->TxJoystickParams(_ui.comboSetJsParam->currentIndex() + 1, alpha, beta);
+	}
+}
+
+
+void MaintenanceWindow::OnBtnSendPidParams()
+{
+	if (_maintHandler)
+	{
+		float kp = _ui.spinSetKp->value();
+		float ki = _ui.spinSetKi->value();
+		float kt = _ui.spinSetKt->value();
+		float sat = _ui.spinSetSat->value();
+		float ad = _ui.spinSetAd->value();
+		float bd = _ui.spinSetBd->value();
+
+		_maintHandler->TxPidParams(_ui.comboSetPidParam->currentIndex() + 1, kp, ki, kt, sat, ad, bd);
+	}
+}
+
+void MaintenanceWindow::OnBtnSendPtf1Params()
+{
+	if (_maintHandler)
+	{
+		float x = _ui.spinSetPtf1X->value();
+		float y = _ui.spinSetPtf1Y->value();
+		float z = _ui.spinSetPtf1Z->value();
+
+		_maintHandler->TxPtf1params(_ui.comboSetPtf1Param->currentIndex() + 1, x, y, z);
+	}
+}
+
 
 void MaintenanceWindow::OnBtnFlashWrite()
 {
@@ -917,6 +1035,33 @@ void MaintenanceWindow::OnBtnFlashWrite()
 	{
 		_maintHandler->TxWriteToFlash();
 	}
+}
+
+
+void MaintenanceWindow::OnBtnRefreshParams()
+{
+	int currentMotor = _ui.comboSetParamId->currentIndex() + 1;
+	int currentJsChan = _ui.comboSetJsParam->currentIndex() + 1;
+	int currentPidAngle = _ui.comboSetPidParam->currentIndex() + 1;
+	int currentPtf1Source = _ui.comboSetPtf1Param->currentIndex() + 1;
+
+	_ui.checkSetEnabledParam->setChecked(_rxMotorParams[currentMotor].enabled);
+	_ui.spinSetMinParam->setValue(_rxMotorParams[currentMotor].min_signal);
+	_ui.spinSetMaxParam->setValue(_rxMotorParams[currentMotor].max_signal);
+
+	_ui.spinSetJsAlpha->setValue(_rxJsParams[currentJsChan].alpha);
+	_ui.spinSetJsBeta->setValue(_rxJsParams[currentJsChan].beta);
+
+	_ui.spinSetKp->setValue(_rxPidParams[currentPidAngle].kp);
+	_ui.spinSetKi->setValue(_rxPidParams[currentPidAngle].ki);
+	_ui.spinSetKt->setValue(_rxPidParams[currentPidAngle].kt);
+	_ui.spinSetSat->setValue(_rxPidParams[currentPidAngle].sat);
+	_ui.spinSetAd->setValue(_rxPidParams[currentPidAngle].ad);
+	_ui.spinSetBd->setValue(_rxPidParams[currentPidAngle].bd);
+
+	_ui.spinSetPtf1X->setValue(_rxPtf1Params[currentPtf1Source].x);
+	_ui.spinSetPtf1Y->setValue(_rxPtf1Params[currentPtf1Source].y);
+	_ui.spinSetPtf1Z->setValue(_rxPtf1Params[currentPtf1Source].z);
 }
 
 
@@ -1415,4 +1560,38 @@ void MaintenanceWindow::OnReceivedCbit(uint32_t data)
 
 	_ui.checkRxCbit->setChecked(true);
 	_ui.lineRxCbit->setText(QString::number(data));
+}
+
+
+
+void MaintenanceWindow::OnReceivedMotorsParams(uint32_t motor_no, bool enabled, uint32_t min_signal, uint32_t max_signal)
+{
+	if (_rxMotorParams.keys().indexOf(motor_no) != -1)
+	{
+		_rxMotorParams[motor_no] = { enabled, min_signal, max_signal };
+	}
+}
+
+void MaintenanceWindow::OnReceivedJsParams(uint32_t channel_no, float alpha, float beta)
+{
+	if (_rxJsParams.keys().indexOf(channel_no) != -1)
+	{
+		_rxJsParams[channel_no] = { alpha, beta };
+	}
+}
+
+void MaintenanceWindow::OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd)
+{
+	if (_rxPidParams.keys().indexOf(angle_no) != -1)
+	{
+		_rxPidParams[angle_no] = { kp, ki, kt, sat, ad, bd };
+	}
+}
+
+void MaintenanceWindow::OnReceivedPtf1Params(uint32_t source_no, float x, float y, float z)
+{
+	if (_rxPtf1Params.keys().indexOf(source_no) != -1)
+	{
+		_rxPtf1Params[source_no] = { x, y, z };
+	}
 }

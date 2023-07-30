@@ -16,6 +16,6 @@ void InitBoard()
     gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
     gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
 
-    gpio_init(PROBE);
-    gpio_set_dir(PROBE, GPIO_OUT);
+    gpio_init(PROBE_GPIO);
+    gpio_set_dir(PROBE_GPIO, GPIO_OUT);
 }

@@ -5,6 +5,35 @@
 #include "maint.h"
 #include "ui_MaintenanceGui.h"
 
+typedef struct
+{
+	bool enabled;
+	uint32_t min_signal;
+	uint32_t max_signal;
+} motors_params_format;
+
+typedef struct
+{
+	float alpha;
+	float beta;
+} js_params_format;
+
+typedef struct
+{
+	float kp;
+	float ki;
+	float kt;
+	float sat;
+	float ad;
+	float bd;
+} pid_params_format;
+
+typedef struct
+{
+	float x;
+	float y;
+	float z;
+} ptf1_params_format;
 
 class MaintenanceWindow : public QMainWindow
 {
@@ -17,11 +46,16 @@ private:
 	Maint::Maintenance* _maintHandler;
 	const int _txDelayMillis = 20;
 	QMap<QString, int> _defaultPlotSpan;
+	QMap<int, motors_params_format> _rxMotorParams;
+	QMap<int, js_params_format> _rxJsParams;
+	QMap<int, pid_params_format> _rxPidParams;
+	QMap<int, ptf1_params_format> _rxPtf1Params;
 
 	void autoScanComPorts();
 	void checkPlot(QString expectedText, double value);
 
 private slots:
+
 	void OnBtnOpenSerialPort();
 	void OnPlotSliderValueChanged(int newValue);
 	void OnPlotTrack1ValueChanged(int newValue);
@@ -34,7 +68,11 @@ private slots:
 
 	void OnBtnSendMaintenanceCommand();
 	void OnBtnSendMaintenanceParams();
+	void OnBtnSendJsParams();
+	void OnBtnSendPidParams();
+	void OnBtnSendPtf1Params();
 	void OnBtnFlashWrite();
+	void OnBtnRefreshParams();
 	void OnSpinSetMaintenanceValue(int newValue);
 
 	void OnRxRawData(bool valid, quint8* data, int size);
@@ -93,6 +131,11 @@ private slots:
 	void OnReceivedMotor4(uint32_t data);
 	void OnReceivedMotorsArmed(uint32_t data);
 	void OnReceivedCbit(uint32_t data);
+
+	void OnReceivedMotorsParams(uint32_t motor_no, bool enabled, uint32_t min_signal, uint32_t max_signal);
+	void OnReceivedJsParams(uint32_t channel_no, float alpha, float beta);
+	void OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
+	void OnReceivedPtf1Params(uint32_t source_no, float x, float y, float z);
 };
 
 #endif

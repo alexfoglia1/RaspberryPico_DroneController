@@ -1,5 +1,5 @@
 #include "pid.h"
-
+#include "maint.h"
 
 static float minMax(float val, float min, float max)
 {
@@ -18,13 +18,13 @@ float pid_controller(PID_CONTROL_TAG* pid, float* gain, float ysp, float y)
     pid->y = y;
     pid->error = pid->ysp - pid->y;
     //
-    pid->P = pid->error * gain[PID_KP];
-    pid->D = pid->D * gain[PID_AD] - (pid->y - pid->ykm1) * gain[PID_BD];
+    pid->P = pid->error * gain[int(MAINT_PID_PARAM::PID_KP)];
+    pid->D = pid->D * gain[int(MAINT_PID_PARAM::PID_AD)] - (pid->y - pid->ykm1) * gain[int(MAINT_PID_PARAM::PID_BD)];
     ftmp = pid->P + pid->I + pid->D;
-    pid->u = minMax(ftmp, -gain[PID_SAT], gain[PID_SAT]);
+    pid->u = minMax(ftmp, -gain[int(MAINT_PID_PARAM::PID_SAT)], gain[int(MAINT_PID_PARAM::PID_SAT)]);
     //
-    pid->I += pid->error * gain[PID_KI];
-    pid->I += (pid->u - ftmp) * gain[PID_KT];
+    pid->I += pid->error * gain[int(MAINT_PID_PARAM::PID_KI)];
+    pid->I += (pid->u - ftmp) * gain[int(MAINT_PID_PARAM::PID_KT)];
     //
     pid->ykm1 = pid->y;
     //

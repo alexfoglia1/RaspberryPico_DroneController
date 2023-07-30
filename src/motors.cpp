@@ -7,17 +7,14 @@
 #include <pico/time.h>
 
 
-Servo motor1(MOTOR_1);
-Servo motor2(MOTOR_2);
-Servo motor3(MOTOR_3);
-Servo motor4(MOTOR_4);
+Servo motor1(MOTOR_1_GPIO);
+Servo motor2(MOTOR_2_GPIO);
+Servo motor3(MOTOR_3_GPIO);
+Servo motor4(MOTOR_4_GPIO);
+
 PID_CONTROL_TAG pid_roll;
 PID_CONTROL_TAG pid_pitch;
 PID_CONTROL_TAG pid_yaw;
-
-static float pid_roll_gain[PID_PARAMS_SIZE];
-static float pid_pitch_gain[PID_PARAMS_SIZE];
-static float pid_yaw_gain[PID_PARAMS_SIZE];
 
 static void calib()
 {
@@ -40,27 +37,6 @@ void MOTORS_Init()
     pid_reset(&pid_pitch);
     pid_reset(&pid_yaw);
 
-    pid_roll_gain[PID_KP] = 5.0;
-    pid_roll_gain[PID_KI] = 0.0;
-    pid_roll_gain[PID_KT] = 0.0;
-    pid_roll_gain[PID_AD] = 0.0;
-    pid_roll_gain[PID_BD] = 0.0;
-    pid_roll_gain[PID_SAT] = 50.0f;
-
-    pid_pitch_gain[PID_KP] = 5.0f;
-    pid_pitch_gain[PID_KI] = 0.0f;
-    pid_pitch_gain[PID_KT] = 0.0f;
-    pid_pitch_gain[PID_AD] = 0.0f;
-    pid_pitch_gain[PID_BD] = 0.0f;
-    pid_pitch_gain[PID_SAT] = 50.0f;
-
-    pid_yaw_gain[PID_KP] = 1.0f;
-    pid_yaw_gain[PID_KI] = 0.0f;
-    pid_yaw_gain[PID_KT] = 0.0f;
-    pid_yaw_gain[PID_AD] = 0.0f;
-    pid_yaw_gain[PID_BD] = 0.0f;
-    pid_yaw_gain[PID_SAT] = 50.0f;
-
     motor1.attach();
     motor2.attach();
     motor3.attach();
@@ -77,26 +53,51 @@ void MOTORS_Handler()
     uint32_t m3_signal = MOTOR_MIN_SIGNAL;
     uint32_t m4_signal = MOTOR_MIN_SIGNAL;
 
+    float pid_roll_gain[int(MAINT_PID_PARAM::SIZE)];
+    float pid_pitch_gain[int(MAINT_PID_PARAM::SIZE)];
+    float pid_yaw_gain[int(MAINT_PID_PARAM::SIZE)];
+
+    pid_roll_gain[int(MAINT_PID_PARAM::PID_KP)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KP)]);
+    pid_roll_gain[int(MAINT_PID_PARAM::PID_KI)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KI)]);
+    pid_roll_gain[int(MAINT_PID_PARAM::PID_KT)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KT)]);
+    pid_roll_gain[int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_SAT)]);
+    pid_roll_gain[int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_AD)]);
+    pid_roll_gain[int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_BD)]);
+
+    pid_pitch_gain[int(MAINT_PID_PARAM::PID_KP)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KP)]);
+    pid_pitch_gain[int(MAINT_PID_PARAM::PID_KI)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KI)]);
+    pid_pitch_gain[int(MAINT_PID_PARAM::PID_KT)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KT)]);
+    pid_pitch_gain[int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_SAT)]);
+    pid_pitch_gain[int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_AD)]);
+    pid_pitch_gain[int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_BD)]);
+
+    pid_yaw_gain[int(MAINT_PID_PARAM::PID_KP)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KP)]);
+    pid_yaw_gain[int(MAINT_PID_PARAM::PID_KI)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KI)]);
+    pid_yaw_gain[int(MAINT_PID_PARAM::PID_KT)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KT)]);
+    pid_yaw_gain[int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_SAT)]);
+    pid_yaw_gain[int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_AD)]);
+    pid_yaw_gain[int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_BD)]);
+
     if (JOYSTICK_MotorsArmed)
     {
-        float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
-        float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
-        float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
-        float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         
         /** Position control loop **/
-        pid_controller(&pid_roll, &pid_roll_gain[PID_KP], JOYSTICK_Roll, 0);//ATTITUDE_Roll);
-        pid_controller(&pid_pitch, &pid_pitch_gain[PID_KP], JOYSTICK_Pitch, 0);//ATTITUDE_Pitch);
+        pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, 0);//ATTITUDE_Roll);
+        pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, 0);//ATTITUDE_Pitch);
 
         /** Velocity control loop **/
-        pid_controller(&pid_yaw, &pid_yaw_gain[PID_KP], 0.0f, gz_flt_tag.filt_k);
+        pid_controller(&pid_yaw, pid_yaw_gain, 0.0f, gz_flt_tag.filt_k);
 
         pid_yaw.u = 0x00;
 
-        if (MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_roll.u + pid_pitch.u - pid_yaw.u);
-        if (MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed - pid_roll.u + pid_pitch.u + pid_yaw.u);
-        if (MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed - pid_roll.u - pid_pitch.u - pid_yaw.u);
-        if (MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed + pid_roll.u - pid_pitch.u + pid_yaw.u);
+        if (MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_roll.u + pid_pitch.u - pid_yaw.u);
+        if (MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed - pid_roll.u + pid_pitch.u + pid_yaw.u);
+        if (MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed - pid_roll.u - pid_pitch.u - pid_yaw.u);
+        if (MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed + pid_roll.u - pid_pitch.u + pid_yaw.u);
     }
     else
     {

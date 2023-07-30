@@ -17,11 +17,22 @@
 // Once done, we can access this at XIP_BASE + 256k.
 #define FLASH_TARGET_OFFSET (256 * 1024)
 #define FLASH_PARAMS_OFFSET 0
-#define FLASH_PARAMS_SIZE   48 // 4 blocks of 3 4-bytes length uint32_t
+#define FLASH_PARAMS_SIZE   188 // 4 blocks of 3 4-bytes length uint32_t + 
+                                // 4 blocks of 2 4-bytes length uint32_t +
+                                // 3 blocks of 6 4-bytes length uint32_t +
+                                // 3 blocks of 3 4 bytes length uint32_t = 188
+#define FLASH_MOTORS_PARAMS_SIZE   48
+#define FLASH_JOYSTICK_PARAMS_SIZE 32
+#define FLASH_PID_PARAMS_SIZE      72
+#define FLASH_PTF1_PARAMS_SIZE     36
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
-uint32_t MAINT_MotorsParameters[4][int(MAINT_MOTOR_PARAM::SIZE)];
+uint32_t MAINT_MotorsParameters[int(MOTORS::SIZE)][int(MAINT_MOTOR_PARAM::SIZE)];
+uint32_t MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::SIZE)][int(MAINT_JS_PARAM::SIZE)];
+uint32_t MAINT_PidParameters[int(EULER_ANGLES::SIZE)][int(MAINT_PID_PARAM::SIZE)];
+uint32_t MAINT_Ptf1Parameters[int(SENSOR_SOURCE::SIZE)][int(EUCLIDEAN_AXES::SIZE)];
+
 bool MAINT_FlashWriteRequested;
 
 static MAINT_STATUS status;
@@ -92,6 +103,18 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
         case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS:
             return 13; /** 3 * 4 = 12 data bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA:
+        case MAINT_CMD_ID::MAINT_CMD_SET_JS_ROLL_ALPHA_BETA:
+        case MAINT_CMD_ID::MAINT_CMD_SET_JS_PITCH_ALPHA_BETA:
+            return 9; /** 2 * 4 = 8 data bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS:
+        case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS:
+        case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS:
+            return 25; /** 6 * 4 = 24 data bytes + checksum*/
+        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS:
+        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS:
+        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS:
+            return 13; /** 3 * 4 = 12 bytes + checksum **/
     }
 
     return 0;
@@ -183,8 +206,12 @@ static void flash_write_params()
     uint8_t eeprom_img[FLASH_PAGE_SIZE];
     memset(&eeprom_img, 0x00, FLASH_PAGE_SIZE);
 
-    memcpy(eeprom_img, reinterpret_cast<uint8_t*>(MAINT_MotorsParameters), FLASH_PARAMS_SIZE);
-    eeprom_img[FLASH_PARAMS_SIZE] = checksum(reinterpret_cast<uint8_t*>(MAINT_MotorsParameters), FLASH_PARAMS_SIZE);
+    memcpy(&eeprom_img[0], reinterpret_cast<uint8_t*>(MAINT_MotorsParameters), FLASH_MOTORS_PARAMS_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_JoystickParameters), FLASH_JOYSTICK_PARAMS_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_PidParameters), FLASH_PID_PARAMS_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_Ptf1Parameters), FLASH_PTF1_PARAMS_SIZE);
+    
+    eeprom_img[FLASH_PARAMS_SIZE] = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
 
     flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
     flash_range_program(FLASH_TARGET_OFFSET, eeprom_img, FLASH_PAGE_SIZE);
@@ -204,13 +231,43 @@ void MAINT_Init()
 
     /** Load actual params **/
     uint32_t eeprom_offset = 0;
-    for (int i = 0; i < 4; i++)
+
+    for (int i = int(MOTORS::FIRST); i < int(MOTORS::SIZE); i++)
     {
         MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 0 * sizeof(uint32_t)]);
         MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 1 * sizeof(uint32_t)]);
         MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 2 * sizeof(uint32_t)]);
         
-        eeprom_offset += (3 * sizeof(uint32_t));
+        eeprom_offset += (int(MAINT_MOTOR_PARAM::SIZE) * sizeof(uint32_t));
+    }
+    
+    for (int i = int(JOYSTICK_CHANNEL::FIRST); i < int(JOYSTICK_CHANNEL::SIZE); i++)
+    {
+        MAINT_JoystickParameters[i][int(MAINT_JS_PARAM::ALPHA)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 0 * sizeof(uint32_t)]);
+        MAINT_JoystickParameters[i][int(MAINT_JS_PARAM::BETA)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 1 * sizeof(uint32_t)]);
+        
+        eeprom_offset += (int(MAINT_JS_PARAM::SIZE) * sizeof(uint32_t));
+    }
+
+    for (int i = int(EULER_ANGLES::FIRST); i < int(EULER_ANGLES::SIZE); i++)
+    {
+        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KP)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 0 * sizeof(uint32_t)]);
+        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KI)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 1 * sizeof(uint32_t)]);
+        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KT)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 2 * sizeof(uint32_t)]);
+        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 3 * sizeof(uint32_t)]);
+        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 4 * sizeof(uint32_t)]);
+        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 5 * sizeof(uint32_t)]);
+        
+        eeprom_offset += (int(MAINT_PID_PARAM::SIZE) * sizeof(uint32_t));
+    }
+
+    for (int i = int(SENSOR_SOURCE::FIRST); i < int(SENSOR_SOURCE::SIZE); i++)
+    {
+        MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::X)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 0 * sizeof(uint32_t)]);
+        MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::Y)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 1 * sizeof(uint32_t)]);
+        MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::Z)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 2 * sizeof(uint32_t)]);
+        
+        eeprom_offset += (int(EUCLIDEAN_AXES::SIZE) * sizeof(uint32_t));
     }
 
     CBIT_TAG fail_code;
@@ -219,7 +276,15 @@ void MAINT_Init()
 
     /** Check actual params **/
     const uint8_t eeprom_cks = *reinterpret_cast<const uint8_t*>(&flash_target_contents[FLASH_PARAMS_SIZE]);
-    uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(MAINT_MotorsParameters), FLASH_PARAMS_SIZE);
+
+    uint8_t eeprom_img[FLASH_PAGE_SIZE];
+    memset(&eeprom_img, 0x00, FLASH_PAGE_SIZE);
+
+    memcpy(&eeprom_img[0], reinterpret_cast<uint8_t*>(MAINT_MotorsParameters), FLASH_MOTORS_PARAMS_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_JoystickParameters), FLASH_JOYSTICK_PARAMS_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_PidParameters), FLASH_PID_PARAMS_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_Ptf1Parameters), FLASH_PTF1_PARAMS_SIZE);
+    uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
     
     if (eeprom_cks != current_cks)
     {
@@ -227,11 +292,58 @@ void MAINT_Init()
         CBIT_Set_fail_code(fail_code.Dword, true);
 
         /** Flash not programmed, loading default **/
-        for (int i = 0; i < 4; i++)
+        for (int i = int(MOTORS::FIRST); i < int(MOTORS::SIZE); i++)
         {
             MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = 1;
             MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = MOTOR_MIN_SIGNAL;
             MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = MOTOR_MAX_SIGNAL;
+            
+            eeprom_offset += (int(MAINT_MOTOR_PARAM::SIZE) * sizeof(uint32_t));
+        }
+        
+        for (int i = int(JOYSTICK_CHANNEL::FIRST); i < int(JOYSTICK_CHANNEL::SIZE); i++)
+        {
+            maint_float_t alpha, beta;
+
+            alpha.fval = 0.0f;
+            beta.fval = 1.0f;
+
+            MAINT_JoystickParameters[i][int(MAINT_JS_PARAM::ALPHA)] = alpha.ival;
+            MAINT_JoystickParameters[i][int(MAINT_JS_PARAM::BETA)]  = beta.ival;
+            
+            eeprom_offset += (int(MAINT_JS_PARAM::SIZE) * sizeof(uint32_t));
+        }
+
+        for (int i = int(EULER_ANGLES::FIRST); i < int(EULER_ANGLES::SIZE); i++)
+        {
+            maint_float_t kp, ki, kt, sat, ad, bd;
+            kp.fval = 1.0f;
+            ki.fval = 0.0f;
+            kt.fval = 0.0f;
+            sat.fval = 50.0f;
+            ad.fval = 0.0f;
+            bd.fval = 0.0f;
+
+            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KP)]  = kp.ival;
+            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KI)]  = ki.ival;
+            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KT)]  = kt.ival;
+            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_SAT)] = sat.ival;
+            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_AD)]  = ad.ival;
+            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_BD)]  = bd.ival;
+            
+            eeprom_offset += (int(MAINT_PID_PARAM::SIZE) * sizeof(uint32_t));
+        }
+
+        for (int i = int(SENSOR_SOURCE::FIRST); i < int(SENSOR_SOURCE::SIZE); i++)
+        {
+            maint_float_t t_ptf1_s;
+            t_ptf1_s.fval = 0.1f;
+
+            MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::X)] = t_ptf1_s.ival;
+            MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::Y)] = t_ptf1_s.ival;
+            MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::Z)] = t_ptf1_s.ival;
+            
+            eeprom_offset += (int(EUCLIDEAN_AXES::SIZE) * sizeof(uint32_t));
         }
 
         /** Storing default to flash **/
@@ -300,29 +412,79 @@ void MAINT_Handler()
                 controlling_motors = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 1);
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS:
-                MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_MotorsParameters[0][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS:
-                MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_MotorsParameters[1][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS:
-                MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_MotorsParameters[2][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS:
-                MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_MotorsParameters[3][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE:
                 MAINT_FlashWriteRequested = true;
                 break;
-
+            case MAINT_CMD_ID::MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA:
+                MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::THROTTLE)][int(MAINT_JS_PARAM::ALPHA)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::THROTTLE)][int(MAINT_JS_PARAM::BETA)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_JS_ROLL_ALPHA_BETA:
+                MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::ROLL)][int(MAINT_JS_PARAM::ALPHA)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::ROLL)][int(MAINT_JS_PARAM::BETA)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_JS_PITCH_ALPHA_BETA:
+                MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::PITCH)][int(MAINT_JS_PARAM::ALPHA)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::PITCH)][int(MAINT_JS_PARAM::BETA)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS:
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KI)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));       
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_AD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[16]));   
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_BD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[20]));       
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS:
+                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KI)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));       
+                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_AD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[16]));   
+                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_BD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[20]));  
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS:
+                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KI)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));       
+                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_AD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[16]));   
+                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_BD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[20]));  
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS:
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::ACCELEROMETER)][int(EUCLIDEAN_AXES::X)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::ACCELEROMETER)][int(EUCLIDEAN_AXES::Y)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::ACCELEROMETER)][int(EUCLIDEAN_AXES::Z)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS:
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::GYROSCOPE)][int(EUCLIDEAN_AXES::X)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::GYROSCOPE)][int(EUCLIDEAN_AXES::Y)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::GYROSCOPE)][int(EUCLIDEAN_AXES::Z)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS:
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::X)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::Y)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
+                MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::Z)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
         }
 
         shall_set = false;
@@ -659,6 +821,26 @@ void MAINT_Handler()
             uint32_t idata = cbit_status.Dword;
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
+        }
+        if (tx_message.header.Bits.motor_params)
+        {
+            memcpy(&tx_message.payload[tx_payload_idx], MAINT_MotorsParameters, FLASH_MOTORS_PARAMS_SIZE);
+            tx_payload_idx += FLASH_MOTORS_PARAMS_SIZE;
+        }
+        if (tx_message.header.Bits.js_params)
+        {
+            memcpy(&tx_message.payload[tx_payload_idx], MAINT_JoystickParameters, FLASH_JOYSTICK_PARAMS_SIZE);
+            tx_payload_idx += FLASH_JOYSTICK_PARAMS_SIZE;
+        }
+        if (tx_message.header.Bits.pid_params)
+        {
+            memcpy(&tx_message.payload[tx_payload_idx], MAINT_PidParameters, FLASH_PID_PARAMS_SIZE);
+            tx_payload_idx += FLASH_PID_PARAMS_SIZE;
+        }
+        if (tx_message.header.Bits.ptf1_params)
+        {
+            memcpy(&tx_message.payload[tx_payload_idx], MAINT_Ptf1Parameters, FLASH_PTF1_PARAMS_SIZE);
+            tx_payload_idx += FLASH_PTF1_PARAMS_SIZE;
         }
 
         tx_message.payload[tx_payload_idx] = checksum(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx);
