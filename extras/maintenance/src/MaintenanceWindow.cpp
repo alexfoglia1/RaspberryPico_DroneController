@@ -253,7 +253,11 @@ void MaintenanceWindow::autoScanComPorts()
 {
 	for (int i = 0; i < 100; i++)
 	{
+#ifdef __linux__
+        QString portName = QString("/dev/ttyUSB%1").arg(i);
+#else
 		QString portName = QString("COM%1").arg(i);
+#endif
 		QSerialPort* serialPort = new QSerialPort(portName);
 		if (serialPort->open(QSerialPort::ReadWrite))
 		{
@@ -359,7 +363,11 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 		enum QSerialPort::BaudRate baud = QSerialPort::Baud38400;
 		if (idx != -1)
 		{
-			baud = enum QSerialPort::BaudRate(_ui.comboSelBaud->itemData(idx).toInt());
+#ifdef __linux__
+            baud = QSerialPort::BaudRate(_ui.comboSelBaud->itemData(idx).toInt());
+#else
+            baud = enum QSerialPort::BaudRate(_ui.comboSelBaud->itemData(idx).toInt());
+#endif
 		}
 
 		if (_maintHandler->Open(_ui.comboSelPort->currentText(), baud))

@@ -3,6 +3,10 @@
 #include <qpainter.h>
 #include <qdatetime.h>
 
+#ifdef __linux__
+#include <math.h>
+#endif
+
 
 PlotWidget::PlotWidget(QWidget* parent) : QLabel(parent)
 {

@@ -26,4 +26,6 @@ ${CMAKE_SOURCE_DIR}/src/main.cpp
 
 find_package(Qt5 COMPONENTS Core Gui Widgets SerialPort REQUIRED)
 
+target_include_directories(DroneMaintenance PUBLIC ${CMAKE_SOURCE_DIR}/src/)
+
 target_link_libraries(DroneMaintenance Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort)
