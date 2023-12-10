@@ -1062,7 +1062,7 @@ void LSM9DS1::xgWriteByte(uint8_t subAddress, uint8_t data)
 	// Whether we're using I2C or SPI, write a byte using the
 	// gyro-specific I2C address or SPI CS pin.
 	if (settings.device.commInterface == IMU_MODE_I2C)
-		I2CwriteByte(_xgAddress, subAddress, data);
+		i2cWriteDataToRegister(i2c_default, _xgAddress, subAddress, data);
 	// else if (settings.device.commInterface == IMU_MODE_SPI)
 	// 	SPIwriteByte(_xgAddress, subAddress, data);
 }
@@ -1072,7 +1072,7 @@ void LSM9DS1::mWriteByte(uint8_t subAddress, uint8_t data)
 	// Whether we're using I2C or SPI, write a byte using the
 	// accelerometer-specific I2C address or SPI CS pin.
 	if (settings.device.commInterface == IMU_MODE_I2C)
-		return I2CwriteByte(_mAddress, subAddress, data);
+		i2cWriteDataToRegister(i2c_default, _mAddress, subAddress, data);
 	// else if (settings.device.commInterface == IMU_MODE_SPI)
 	// 	return SPIwriteByte(_mAddress, subAddress, data);
 }
@@ -1082,7 +1082,7 @@ uint8_t LSM9DS1::xgReadByte(uint8_t subAddress)
 	// Whether we're using I2C or SPI, read a byte using the
 	// gyro-specific I2C address or SPI CS pin.
 	if (settings.device.commInterface == IMU_MODE_I2C)
-		return I2CreadByte(_xgAddress, subAddress);
+		return i2cReadByteFromRegister(i2c_default, _xgAddress, subAddress);
 	// else if (settings.device.commInterface == IMU_MODE_SPI)
 	// 	return SPIreadByte(_xgAddress, subAddress);
 	return -1;
@@ -1093,10 +1093,10 @@ uint8_t LSM9DS1::xgReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
 	// Whether we're using I2C or SPI, read multiple bytes using the
 	// gyro-specific I2C address or SPI CS pin.
 	if (settings.device.commInterface == IMU_MODE_I2C)
-		return I2CreadBytes(_xgAddress, subAddress, dest, count);
+		i2cReadDataFromRegister(i2c_default, _xgAddress, subAddress, dest, count);
 	// else if (settings.device.commInterface == IMU_MODE_SPI)
 	// 	return SPIreadBytes(_xgAddress, subAddress, dest, count);
-	return -1;
+	return count;
 }
 
 uint8_t LSM9DS1::mReadByte(uint8_t subAddress)
@@ -1104,7 +1104,7 @@ uint8_t LSM9DS1::mReadByte(uint8_t subAddress)
 	// Whether we're using I2C or SPI, read a byte using the
 	// accelerometer-specific I2C address or SPI CS pin.
 	if (settings.device.commInterface == IMU_MODE_I2C)
-		return I2CreadByte(_mAddress, subAddress);
+		return i2cReadByteFromRegister(i2c_default, _mAddress, subAddress);
 	// else if (settings.device.commInterface == IMU_MODE_SPI)
 	// 	return SPIreadByte(_mAddress, subAddress);
 	return -1;
@@ -1115,10 +1115,10 @@ uint8_t LSM9DS1::mReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
 	// Whether we're using I2C or SPI, read multiple bytes using the
 	// accelerometer-specific I2C address or SPI CS pin.
 	if (settings.device.commInterface == IMU_MODE_I2C)
-		return I2CreadBytes(_mAddress, subAddress, dest, count);
+		i2cReadDataFromRegister(i2c_default, _mAddress, subAddress, dest, count);
 	// else if (settings.device.commInterface == IMU_MODE_SPI)
 	// 	return SPIreadBytes(_mAddress, subAddress, dest, count);
-	return -1;
+	return count;
 }
 
 // void LSM9DS1::initSPI()
@@ -1178,37 +1178,3 @@ uint8_t LSM9DS1::mReadBytes(uint8_t subAddress, uint8_t * dest, uint8_t count)
 	
 // 	return count;
 // }
-
-// Wire.h read and write protocols
-void LSM9DS1::I2CwriteByte(uint8_t address, uint8_t subAddress, uint8_t data)
-{
-	uint8_t buf[2];
-	buf[0] = subAddress;
-	buf[1] = data;
-
-	i2c_write_blocking(settings.device.i2c, address, buf, 2, false);
-}
-
-uint8_t LSM9DS1::I2CreadByte(uint8_t address, uint8_t subAddress){
-	uint8_t data; // `data` will store the register data
-
-	i2c_write_blocking(settings.device.i2c, address, &subAddress, 1, true); //Send the data request @subAddress, but send a restart to keep connection alive
-	i2c_read_blocking(settings.device.i2c, address, &data, 1, false); 		// Read one byte from slave register address
-	return data;  
-}
-
-uint8_t LSM9DS1::I2CreadBytes(uint8_t address, uint8_t subAddress, uint8_t * dest, uint8_t count)
-{
-	int retVal;
-	subAddress = subAddress | 0x80;
-
-	retVal = i2c_write_blocking(settings.device.i2c, address, &subAddress, 1, true);
-	if (retVal == PICO_ERROR_GENERIC) // i2c_write_blocking should return number of byte written on success
-		return 0;
-
-	retVal = i2c_read_blocking(settings.device.i2c, address, dest, count, false);
-	if (retVal != count || retVal == PICO_ERROR_GENERIC) // i2c_write_blocking should return number of byte read on success
-		return 0;
-
-	return count;
-}
