@@ -7,14 +7,15 @@
 #include "maint.h"
 
 #include <stdio.h>
-#include <list>
 #include <pico/float.h>
 
 static const float DEGREES_TO_RADIANS = PI/180.f;
 static const float RADIANS_TO_DEGREES = 180.0f/PI;
 static const float CTRL_LOOP_PERIOD_S = 1.0f/CTRL_LOOP_FREQUENCY_HZ;
 static const int   N_SAMPLE_SKIP = 500;
+
 static int nSample = 0;
+static int nGyroZ = 0;
 static bool wasArmed = false;
 
 static ImuInterface* imu;
@@ -135,13 +136,8 @@ static void estimate_attitude()
             {
                 /** Integrate over gyro_z **/
                 float dGz = -gz_flt_tag.filt_k;
-                double noiseThreshold = 0.25f;
-                
-                if (fabs(dGz) > noiseThreshold)
-                {
-                    ATTITUDE_Yaw += dGz * CTRL_LOOP_PERIOD_S;
-                    ATTITUDE_Yaw = atan2(sin(ATTITUDE_Yaw * DEGREES_TO_RADIANS), cos(ATTITUDE_Yaw * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
-                }
+                ATTITUDE_Yaw += dGz * CTRL_LOOP_PERIOD_S;
+                ATTITUDE_Yaw = atan2(sin(ATTITUDE_Yaw * DEGREES_TO_RADIANS), cos(ATTITUDE_Yaw * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
             }
         }
     }
