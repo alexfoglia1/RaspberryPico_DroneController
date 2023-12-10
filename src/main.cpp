@@ -64,6 +64,9 @@ int main()
     /** Initialize gpio directions **/
     InitBoard();
 
+    /** Turn on LED **/
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
+
     MOTORS_Init();
     MAINT_Init();
     CBIT_Init();
@@ -72,12 +75,19 @@ int main()
     if (!ATTITUDE_Init())
     {
         CBIT_Set_fail_code(fail_code.Dword, true);
+
+        for (int i = 0; i < 4; i++)
+        {
+            gpio_put(PICO_DEFAULT_LED_PIN, 0);
+            sleep_ms(250);
+            gpio_put(PICO_DEFAULT_LED_PIN, 1);
+            sleep_ms(250);
+        }
     }
     else
     {
         CBIT_Set_fail_code(fail_code.Dword, false);
     }
-
 
     JOYSTICK_Init(MIN_ROLL_DEGREES,
                   MAX_ROLL_DEGREES,

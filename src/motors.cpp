@@ -84,20 +84,20 @@ void MOTORS_Handler()
         float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
-        
+
         /** Position control loop **/
-        pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, 0);//ATTITUDE_Roll);
-        pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, 0);//ATTITUDE_Pitch);
+        pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, ATTITUDE_Roll);
+        pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, ATTITUDE_Pitch);
 
         /** Velocity control loop **/
-        pid_controller(&pid_yaw, pid_yaw_gain, 0.0f, gz_flt_tag.filt_k);
+        //pid_controller(&pid_yaw, pid_yaw_gain, 0.0f, gz_flt_tag.filt_k);
 
         pid_yaw.u = 0x00;
 
-        if (MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_roll.u + pid_pitch.u - pid_yaw.u);
-        if (MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed - pid_roll.u + pid_pitch.u + pid_yaw.u);
-        if (MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed - pid_roll.u - pid_pitch.u - pid_yaw.u);
-        if (MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed + pid_roll.u - pid_pitch.u + pid_yaw.u);
+        if (MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_roll.u - pid_pitch.u - pid_yaw.u);
+        if (MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed - pid_roll.u - pid_pitch.u + pid_yaw.u);
+        if (MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed - pid_roll.u + pid_pitch.u - pid_yaw.u);
+        if (MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed + pid_roll.u + pid_pitch.u + pid_yaw.u);
     }
     else
     {
@@ -106,6 +106,11 @@ void MOTORS_Handler()
         pid_reset(&pid_pitch);
         pid_reset(&pid_yaw);
     }
+
+    m1_signal = saturate(m1_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL);
+    m2_signal = saturate(m2_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL);
+    m3_signal = saturate(m3_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL);
+    m4_signal = saturate(m4_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL);
 
     motor1.writeMicroseconds(m1_signal);
     motor2.writeMicroseconds(m2_signal);

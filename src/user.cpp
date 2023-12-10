@@ -2,20 +2,17 @@
 #include <stdio.h>
 #include <pico/stdlib.h>
 #include <hardware/gpio.h>
-#include <hardware/i2c.h>
 
 
 void InitBoard()
 {
     stdio_init_all();
 
-    i2c_init(i2c_default, I2C_FREQUENCY_HZ);
-
-    gpio_set_function(PICO_DEFAULT_I2C_SDA_PIN, GPIO_FUNC_I2C);
-    gpio_set_function(PICO_DEFAULT_I2C_SCL_PIN, GPIO_FUNC_I2C);
-    gpio_pull_up(PICO_DEFAULT_I2C_SDA_PIN);
-    gpio_pull_up(PICO_DEFAULT_I2C_SCL_PIN);
-
     gpio_init(PROBE_GPIO);
     gpio_set_dir(PROBE_GPIO, GPIO_OUT);
+
+    gpio_init(PICO_DEFAULT_LED_PIN);
+    gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
+
+    irq_set_priority(IO_IRQ_BANK0, 0x40);
 }

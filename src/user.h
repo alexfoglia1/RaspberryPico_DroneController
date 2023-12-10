@@ -1,9 +1,6 @@
 #ifndef USER_H
 #define USER_H
 
-#define I2C_PORT i2c0
-#define I2C_SDA 8
-#define I2C_SCL 9
 #define I2C_FREQUENCY_HZ 400000
 
 #define JS_TIMEOUT_S 2
@@ -12,19 +9,26 @@
 
 #define CTRL_LOOP_FREQUENCY_HZ 500
 
-#define CHANNEL_ROLL_GPIO     15 // RADIO CHANNEL 1
-#define CHANNEL_PITCH_GPIO    14 // RADIO CHANNEL 2
-#define CHANNEL_THROTTLE_GPIO 13 // RADIO CHANNEL 3
-#define CHANNEL_ARMED_GPIO    12 // RADIO CHANNEL 5
+#define CHANNEL_ROLL_GPIO     13 // RADIO CHANNEL 1
+#define CHANNEL_PITCH_GPIO    12 // RADIO CHANNEL 2
+#define CHANNEL_THROTTLE_GPIO 11 // RADIO CHANNEL 3
+#define CHANNEL_ARMED_GPIO    10 // RADIO CHANNEL 5
 
 #define MOTOR_1_GPIO 8
-#define MOTOR_2_GPIO 9
-#define MOTOR_3_GPIO 10
-#define MOTOR_4_GPIO 11
+#define MOTOR_2_GPIO 7
+#define MOTOR_3_GPIO 6
+#define MOTOR_4_GPIO 9
+
+#define BNO055_SDA_PIN 4
+#define BNO055_SCL_PIN 5
+#define LSM9DS1_SDA_PIN 4
+#define LSM9DS1_SCL_PIN 5
+#define MPU6050_SDA_PIN 18
+#define MPU6050_SCL_PIN 19
 
 #define PROBE_GPIO 16
 
-#define MOTOR_ARMED_THRESHOLD 100
+#define MOTOR_ARMED_THRESHOLD 200
 
 inline float saturate(float val, float min, float max)
 {
