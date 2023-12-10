@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1779</width>
-    <height>959</height>
+    <height>982</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,7 +26,7 @@
       <x>30</x>
       <y>40</y>
       <width>971</width>
-      <height>241</height>
+      <height>261</height>
      </rect>
     </property>
     <property name="title">
@@ -38,119 +38,14 @@
        <x>10</x>
        <y>20</y>
        <width>951</width>
-       <height>211</height>
+       <height>232</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="6" column="1">
-       <widget class="QCheckBox" name="checkTxFiltMagnX">
-        <property name="text">
-         <string>Filtered Magn X</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <widget class="QCheckBox" name="checkTxCmdRoll">
-        <property name="text">
-         <string>Cmd Roll</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="3">
-       <widget class="QCheckBox" name="checkTxPitchPidD">
-        <property name="text">
-         <string>Pitch Pid D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="5">
-       <widget class="QCheckBox" name="checkTxMotor4Signal">
-        <property name="text">
-         <string>Motor 4 Signal</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="0">
-       <widget class="QCheckBox" name="checkTxRawGyroZ">
-        <property name="text">
-         <string>Raw Gyro Z</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="3">
-       <widget class="QCheckBox" name="checkTxPitchPidP">
-        <property name="text">
-         <string>Pitch Pid P</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QCheckBox" name="checkTxThrottleSignal">
-        <property name="text">
-         <string>Throttle Signal</string>
-        </property>
-       </widget>
-      </item>
       <item row="5" column="2">
        <widget class="QCheckBox" name="checkTxCmdPitch">
         <property name="text">
          <string>Cmd Pitch</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="3">
-       <widget class="QCheckBox" name="checkTxRollPidD">
-        <property name="text">
-         <string>Roll Pid D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QCheckBox" name="checkTxFiltAccY">
-        <property name="text">
-         <string>Filtered Accel Y</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QCheckBox" name="checkTxPitchSignal">
-        <property name="text">
-         <string>Pitch Signal</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="1">
-       <widget class="QCheckBox" name="checkTxFiltMagnZ">
-        <property name="text">
-         <string>Filtered Magn Z</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QCheckBox" name="checkTxCmdThrottle">
-        <property name="text">
-         <string>Cmd Throttle</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QCheckBox" name="checkTxRawMagnY">
-        <property name="text">
-         <string>Raw Magn Y</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QCheckBox" name="checkTxFiltAccX">
-        <property name="text">
-         <string>Filtered Accel X</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QCheckBox" name="checkTxFiltAccZ">
-        <property name="text">
-         <string>Filtered Accel Z</string>
         </property>
        </widget>
       </item>
@@ -161,101 +56,24 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="4">
-       <widget class="QCheckBox" name="checkTxYawPidU">
+      <item row="6" column="1">
+       <widget class="QCheckBox" name="checkTxFiltMagnX">
         <property name="text">
-         <string>Yaw Pid U</string>
+         <string>Filtered Magn X</string>
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
-       <widget class="QCheckBox" name="checkTxFiltMagnY">
+      <item row="0" column="2">
+       <widget class="QCheckBox" name="checkTxThrottleSignal">
         <property name="text">
-         <string>Filtered Magn Y</string>
+         <string>Throttle Signal</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QCheckBox" name="checkTxRawAccY">
+      <item row="6" column="5">
+       <widget class="QCheckBox" name="checkTxPtf1Params">
         <property name="text">
-         <string>Raw Accel Y</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="4">
-       <widget class="QCheckBox" name="checkTxYawPidP">
-        <property name="text">
-         <string>Yaw Pid P</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QCheckBox" name="checkTxFiltGyroY">
-        <property name="text">
-         <string>Filtered Gyro Y</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="4">
-       <widget class="QCheckBox" name="checkTxYawPidErr">
-        <property name="text">
-         <string>Yaw Pid Err</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="4">
-       <widget class="QCheckBox" name="checkTxYawPidI">
-        <property name="text">
-         <string>Yaw Pid I</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="3">
-       <widget class="QCheckBox" name="checkTxRollPidErr">
-        <property name="text">
-         <string>Roll Pid Err</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="3">
-       <widget class="QCheckBox" name="checkTxPitchPidErr">
-        <property name="text">
-         <string>Pitch Pid Err</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="0">
-       <widget class="QCheckBox" name="checkTxRawGyroY">
-        <property name="text">
-         <string>Raw Gyro Y</string>
-        </property>
-       </widget>
-      </item>
-      <item row="6" column="4">
-       <widget class="QCheckBox" name="checkTxMotor1Signal">
-        <property name="text">
-         <string>Motor 1 Signal</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="2">
-       <widget class="QCheckBox" name="checkTxBodyPitch">
-        <property name="text">
-         <string>Body Pitch</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="3">
-       <widget class="QCheckBox" name="checkTxRollPidI">
-        <property name="text">
-         <string>Roll Pid I</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QCheckBox" name="checkTxFiltGyroX">
-        <property name="text">
-         <string>Filtered Gyro X</string>
+         <string>PTF1 Params</string>
         </property>
        </widget>
       </item>
@@ -266,52 +84,17 @@
         </property>
        </widget>
       </item>
-      <item row="1" column="5">
-       <widget class="QCheckBox" name="checkTxMotorsArmed">
+      <item row="6" column="4">
+       <widget class="QCheckBox" name="checkTxMotor1Signal">
         <property name="text">
-         <string>Motors Armed</string>
+         <string>Motor 1 Signal</string>
         </property>
        </widget>
       </item>
-      <item row="6" column="0">
-       <widget class="QCheckBox" name="checkTxRawMagnX">
+      <item row="5" column="0">
+       <widget class="QCheckBox" name="checkTxRawGyroZ">
         <property name="text">
-         <string>Raw Magn X</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QCheckBox" name="checkTxRawAccZ">
-        <property name="text">
-         <string>Raw Accel Z</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QCheckBox" name="checkTxRollSignal">
-        <property name="text">
-         <string>Roll Signal</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QCheckBox" name="checkTxRawAccX">
-        <property name="text">
-         <string>Raw Accel X</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="2">
-       <widget class="QCheckBox" name="checkTxBodyYaw">
-        <property name="text">
-         <string>Body Yaw</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="4">
-       <widget class="QCheckBox" name="checkTxPitchPidU">
-        <property name="text">
-         <string>Pitch Pid U</string>
+         <string>Raw Gyro Z</string>
         </property>
        </widget>
       </item>
@@ -322,38 +105,10 @@
         </property>
        </widget>
       </item>
-      <item row="5" column="1">
-       <widget class="QCheckBox" name="checkTxFiltGyroZ">
+      <item row="2" column="1">
+       <widget class="QCheckBox" name="checkTxFiltAccZ">
         <property name="text">
-         <string>Filtered Gyro Z</string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QCheckBox" name="checkTxRawMagnZ">
-        <property name="text">
-         <string>Raw Magn Z</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="3">
-       <widget class="QCheckBox" name="checkTxRollPidU">
-        <property name="text">
-         <string>Roll Pid U</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="4">
-       <widget class="QCheckBox" name="checkTxYawPidD">
-        <property name="text">
-         <string>Yaw Pid D</string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="3">
-       <widget class="QCheckBox" name="checkTxPitchPidI">
-        <property name="text">
-         <string>Pitch Pid I</string>
+         <string>Filtered Accel Z</string>
         </property>
        </widget>
       </item>
@@ -364,31 +119,38 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="4">
-       <widget class="QCheckBox" name="checkTxMotor2Signal">
+      <item row="7" column="3">
+       <widget class="QCheckBox" name="checkTxPitchPidI">
         <property name="text">
-         <string>Motor 2 Signal</string>
+         <string>Pitch Pid I</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="5">
-       <widget class="QCheckBox" name="checkTxCbit">
+      <item row="7" column="0">
+       <widget class="QCheckBox" name="checkTxRawMagnY">
         <property name="text">
-         <string>Cbit</string>
+         <string>Raw Magn Y</string>
         </property>
        </widget>
       </item>
-      <item row="3" column="5">
-       <widget class="QCheckBox" name="checkTxMotorParams">
+      <item row="0" column="4">
+       <widget class="QCheckBox" name="checkTxPitchPidU">
         <property name="text">
-         <string>Motor Params</string>
+         <string>Pitch Pid U</string>
         </property>
        </widget>
       </item>
-      <item row="4" column="5">
-       <widget class="QCheckBox" name="checkTxJsParams">
+      <item row="7" column="2">
+       <widget class="QCheckBox" name="checkTxBodyPitch">
         <property name="text">
-         <string>Joystick Params</string>
+         <string>Body Pitch</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="3">
+       <widget class="QCheckBox" name="checkTxPitchPidErr">
+        <property name="text">
+         <string>Pitch Pid Err</string>
         </property>
        </widget>
       </item>
@@ -399,10 +161,248 @@
         </property>
        </widget>
       </item>
-      <item row="6" column="5">
-       <widget class="QCheckBox" name="checkTxPtf1Params">
+      <item row="4" column="1">
+       <widget class="QCheckBox" name="checkTxFiltGyroY">
         <property name="text">
-         <string>PTF1 Params</string>
+         <string>Filtered Gyro Y</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="3">
+       <widget class="QCheckBox" name="checkTxRollPidErr">
+        <property name="text">
+         <string>Roll Pid Err</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <widget class="QCheckBox" name="checkTxRollPidI">
+        <property name="text">
+         <string>Roll Pid I</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="4">
+       <widget class="QCheckBox" name="checkTxYawPidD">
+        <property name="text">
+         <string>Yaw Pid D</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="5">
+       <widget class="QCheckBox" name="checkTxMotorParams">
+        <property name="text">
+         <string>Motor Params</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="2">
+       <widget class="QCheckBox" name="checkTxBodyYaw">
+        <property name="text">
+         <string>Body Yaw</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QCheckBox" name="checkTxFiltGyroX">
+        <property name="text">
+         <string>Filtered Gyro X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QCheckBox" name="checkTxYawPidI">
+        <property name="text">
+         <string>Yaw Pid I</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="5">
+       <widget class="QCheckBox" name="checkTxCbit">
+        <property name="text">
+         <string>Cbit</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="QCheckBox" name="checkTxRollPidD">
+        <property name="text">
+         <string>Roll Pid D</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
+       <widget class="QCheckBox" name="checkTxCmdRoll">
+        <property name="text">
+         <string>Cmd Roll</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="4">
+       <widget class="QCheckBox" name="checkTxYawPidErr">
+        <property name="text">
+         <string>Yaw Pid Err</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QCheckBox" name="checkTxFiltGyroZ">
+        <property name="text">
+         <string>Filtered Gyro Z</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QCheckBox" name="checkTxYawPidP">
+        <property name="text">
+         <string>Yaw Pid P</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="3">
+       <widget class="QCheckBox" name="checkTxPitchPidD">
+        <property name="text">
+         <string>Pitch Pid D</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QCheckBox" name="checkTxFiltMagnZ">
+        <property name="text">
+         <string>Filtered Magn Z</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="4">
+       <widget class="QCheckBox" name="checkTxYawPidU">
+        <property name="text">
+         <string>Yaw Pid U</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QCheckBox" name="checkTxRawAccY">
+        <property name="text">
+         <string>Raw Accel Y</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QCheckBox" name="checkTxRollSignal">
+        <property name="text">
+         <string>Roll Signal</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="checkTxFiltAccX">
+        <property name="text">
+         <string>Filtered Accel X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QCheckBox" name="checkTxRawAccX">
+        <property name="text">
+         <string>Raw Accel X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="5">
+       <widget class="QCheckBox" name="checkTxJsParams">
+        <property name="text">
+         <string>Joystick Params</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QCheckBox" name="checkTxFiltMagnY">
+        <property name="text">
+         <string>Filtered Magn Y</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QCheckBox" name="checkTxRawGyroY">
+        <property name="text">
+         <string>Raw Gyro Y</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="5">
+       <widget class="QCheckBox" name="checkTxMotor4Signal">
+        <property name="text">
+         <string>Motor 4 Signal</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="5">
+       <widget class="QCheckBox" name="checkTxMotorsArmed">
+        <property name="text">
+         <string>Motors Armed</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QCheckBox" name="checkTxRawMagnZ">
+        <property name="text">
+         <string>Raw Magn Z</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="2">
+       <widget class="QCheckBox" name="checkTxCmdThrottle">
+        <property name="text">
+         <string>Cmd Throttle</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="checkTxRawAccZ">
+        <property name="text">
+         <string>Raw Accel Z</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="3">
+       <widget class="QCheckBox" name="checkTxPitchPidP">
+        <property name="text">
+         <string>Pitch Pid P</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QCheckBox" name="checkTxFiltAccY">
+        <property name="text">
+         <string>Filtered Accel Y</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="4">
+       <widget class="QCheckBox" name="checkTxMotor2Signal">
+        <property name="text">
+         <string>Motor 2 Signal</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <widget class="QCheckBox" name="checkTxPitchSignal">
+        <property name="text">
+         <string>Pitch Signal</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QCheckBox" name="checkTxRawMagnX">
+        <property name="text">
+         <string>Raw Magn X</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="QCheckBox" name="checkTxRollPidU">
+        <property name="text">
+         <string>Roll Pid U</string>
         </property>
        </widget>
       </item>
@@ -416,7 +416,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>290</y>
+      <y>320</y>
       <width>341</width>
       <height>71</height>
      </rect>
@@ -505,7 +505,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>490</y>
+      <y>520</y>
       <width>971</width>
       <height>271</height>
      </rect>
@@ -1048,7 +1048,7 @@
       <x>1050</x>
       <y>70</y>
       <width>691</width>
-      <height>671</height>
+      <height>701</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -1887,7 +1887,7 @@
     <property name="geometry">
      <rect>
       <x>1050</x>
-      <y>750</y>
+      <y>780</y>
       <width>691</width>
       <height>22</height>
      </rect>
@@ -1909,7 +1909,7 @@
     <property name="geometry">
      <rect>
       <x>1680</x>
-      <y>770</y>
+      <y>790</y>
       <width>47</width>
       <height>13</height>
      </rect>
@@ -1922,7 +1922,7 @@
     <property name="geometry">
      <rect>
       <x>710</x>
-      <y>780</y>
+      <y>810</y>
       <width>16</width>
       <height>16</height>
      </rect>
@@ -1938,7 +1938,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>780</y>
+      <y>810</y>
       <width>41</width>
       <height>16</height>
      </rect>
@@ -1951,7 +1951,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>800</y>
+      <y>830</y>
       <width>351</width>
       <height>111</height>
      </rect>
@@ -1964,7 +1964,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>800</y>
+      <y>830</y>
       <width>361</width>
       <height>111</height>
      </rect>
@@ -1977,7 +1977,7 @@
     <property name="geometry">
      <rect>
       <x>650</x>
-      <y>780</y>
+      <y>810</y>
       <width>41</width>
       <height>16</height>
      </rect>
@@ -1990,7 +1990,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>780</y>
+      <y>810</y>
       <width>16</width>
       <height>16</height>
      </rect>
@@ -2032,7 +2032,7 @@
     <property name="geometry">
      <rect>
       <x>390</x>
-      <y>290</y>
+      <y>320</y>
       <width>611</width>
       <height>191</height>
      </rect>
@@ -2326,6 +2326,19 @@
       </item>
      </layout>
     </widget>
+   </widget>
+   <widget class="QPushButton" name="btnOpenBoot">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>10</y>
+      <width>75</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Boot</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

@@ -105,6 +105,7 @@ MaintenanceWindow::MaintenanceWindow()
 	_maintHandler = new Maint::Maintenance();
 
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
+	connect(_ui.btnOpenBoot, SIGNAL(clicked()), this, SLOT(OnBtnOpenBoot()));
 	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
 	connect(_ui.btnSendMaintenanceParams, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceParams()));
 	connect(_ui.btnSendMaintenanceJsParams, SIGNAL(clicked()), this, SLOT(OnBtnSendJsParams()));
@@ -357,6 +358,12 @@ void MaintenanceWindow::OnComboTrack3TextChanged(const QString& newText)
 
 void MaintenanceWindow::OnBtnOpenSerialPort()
 {
+	if (_ui.comboSelPort->count() == 0)
+	{
+		autoScanComPorts();
+		return;
+	}
+
 	if (_ui.btnOpenSerialPort->text().toUpper() == "OPEN")
 	{
 		int idx = _ui.comboSelBaud->currentIndex();
@@ -394,6 +401,17 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 		_ui.lblRxData->setStyleSheet("background-color:#FF0000");
 		_ui.lblTxData->setStyleSheet("background-color:#FF0000");
 	}
+}
+
+
+void MaintenanceWindow::OnBtnOpenBoot()
+{
+	_maintHandler->Open(_ui.comboSelPort->currentText(), QSerialPort::Baud1200);
+	_maintHandler->Close();
+	_ui.comboSelPort->setEnabled(true);
+	_ui.btnOpenSerialPort->setText("Open");
+	_ui.lblRxData->setStyleSheet("background-color:#FF0000");
+	_ui.lblTxData->setStyleSheet("background-color:#FF0000");
 }
 
 
