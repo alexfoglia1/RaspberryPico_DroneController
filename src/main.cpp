@@ -57,21 +57,20 @@ void __cpu1_entry_point__()
 
 int main()
 {
-    CBIT_TAG fail_code;
-    fail_code.Dword = 0;
-    fail_code.Bits.imu_failure = 1;
-
     /** Initialize gpio directions **/
     InitBoard();
 
-    /** Turn on LED **/
-    gpio_put(PICO_DEFAULT_LED_PIN, 1);
-
+    /** Initialize application **/
     MOTORS_Init();
     MAINT_Init();
     CBIT_Init();
 
-    /** Initialize application **/
+    /** Turn on LED **/
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
+
+    CBIT_TAG fail_code;
+    fail_code.Dword = 0;
+    fail_code.Bits.imu_failure = 1;
     if (!ATTITUDE_Init())
     {
         CBIT_Set_fail_code(fail_code.Dword, true);

@@ -19,20 +19,20 @@ MPU6050::MPU6050()
 bool MPU6050::init()
 {
     /** Set sample rate 8 kHz **/
-    bool res = (i2cWriteDataToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::SMPLRT_DIV), 0) != PICO_ERROR_GENERIC);
+    bool res = (i2cWriteByteToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::SMPLRT_DIV), 0) != PICO_ERROR_GENERIC);
 
     /** Reset all sensors **/
-    res &= (i2cWriteDataToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::PWR_MGMT_1), 0) != PICO_ERROR_GENERIC);
+    res &= (i2cWriteByteToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::PWR_MGMT_1), 0) != PICO_ERROR_GENERIC);
 
-    res &= (i2cWriteDataToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::PWR_MGMT_1), 1) != PICO_ERROR_GENERIC);
+    res &= (i2cWriteByteToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::PWR_MGMT_1), 1) != PICO_ERROR_GENERIC);
 
     /** Reset configuration **/
-    res &= (i2cWriteDataToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::CONFIG), 0)  != PICO_ERROR_GENERIC);
+    res &= (i2cWriteByteToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::CONFIG), 0)  != PICO_ERROR_GENERIC);
     res &= (setGyroResolution(_gyroResolution) != PICO_ERROR_GENERIC);
     res &= (setAccelResolution(_accelResolution) != PICO_ERROR_GENERIC);
 
     /** Enable interrupts **/
-    res &= (i2cWriteDataToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::INT_ENABLE), 0) != PICO_ERROR_GENERIC);
+    res &= (i2cWriteByteToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::INT_ENABLE), 0) != PICO_ERROR_GENERIC);
 
     calcGyroBias();
 
@@ -45,7 +45,7 @@ int MPU6050::setGyroResolution(MPU6050::GyroResolution gyroResolution)
     _gyroResolution = gyroResolution;
 
     uint8_t byte = static_cast<uint8_t>(_gyroResolution);
-    return i2cWriteDataToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::GYRO_CONFIG), byte);
+    return i2cWriteByteToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::GYRO_CONFIG), byte);
 }
 
 
@@ -54,7 +54,7 @@ int MPU6050::setAccelResolution(MPU6050::AccelResolution accelResolution)
     _accelResolution = accelResolution;
 
     uint8_t byte = static_cast<uint8_t>(_accelResolution);
-    return i2cWriteDataToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::ACCEL_CONFIG), byte);
+    return i2cWriteByteToRegister(i2c1, MPU6050::I2C_ADDR, static_cast<uint8_t>(MPU6050::Register::ACCEL_CONFIG), byte);
 }
 
 

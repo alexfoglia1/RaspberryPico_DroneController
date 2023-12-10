@@ -266,17 +266,17 @@ namespace equipment_handlers {
 
         // Select register map page zero:
         success = success &&
-                  (i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR, 0U) != PICO_ERROR_GENERIC);
+                  (i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR, 0U) != PICO_ERROR_GENERIC);
         delayMilliSecs(10);
 
         success = success &&
-                  (i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_PWR_MODE_ADDR, powerMode) != PICO_ERROR_GENERIC);
+                  (i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PWR_MODE_ADDR, powerMode) != PICO_ERROR_GENERIC);
         delayMilliSecs(10);
 
         // An External clock can be selected by setting bit CLK_SEL in the SYSTEM_TRIGGER
         // register.
         uint8_t clkSel = useExternalCrystal ? 0x80U : 0x00U;
-        success = success && (i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_SYS_TRIGGER_ADDR, clkSel) != PICO_ERROR_GENERIC);
+        success = success && (i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_SYS_TRIGGER_ADDR, clkSel) != PICO_ERROR_GENERIC);
         delayMilliSecs(10);
 
         return success;
@@ -406,7 +406,7 @@ namespace equipment_handlers {
                     | remapping.y << 2U
                     | remapping.z << 4U;
 
-        success = success && i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_AXIS_MAP_CONFIG_ADDR, new_mapping);
+        success = success && i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_AXIS_MAP_CONFIG_ADDR, new_mapping);
         success = success && setMode(previous_mode);
 
         return success;
@@ -424,7 +424,7 @@ namespace equipment_handlers {
                     | remapping.y << 1U
                     | remapping.x << 2U;
 
-        success = success && i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_AXIS_MAP_SIGN_ADDR, new_mapping);
+        success = success && i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_AXIS_MAP_SIGN_ADDR, new_mapping);
         success = success && setMode(previous_mode);
 
         return success;
@@ -473,11 +473,11 @@ namespace equipment_handlers {
 
     bool BNO055_IMU::setMode(PowerModes mode) const {
         // Select register map page zero:
-        bool success = i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR, 0U);
+        bool success = i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR, 0U);
         delayMilliSecs(10);
 
         success = success &&
-                  i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_PWR_MODE_ADDR, mode);
+                  i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PWR_MODE_ADDR, mode);
 
         return success;
     }
@@ -493,13 +493,13 @@ namespace equipment_handlers {
         bool success;
 
         if (this->mode == OperatingModes::CONFIG) {
-            success = i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, operatingMode);
+            success = i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, operatingMode);
             delayMilliSecs(switchingFromConfigMode);
         } else {
-            success = i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, OperatingModes::CONFIG);
+            success = i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, OperatingModes::CONFIG);
             delayMilliSecs(switchingToConfigMode);
             success = success &&
-                      i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, operatingMode);
+                      i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, operatingMode);
             delayMilliSecs(switchingFromConfigMode);
         }
 
@@ -659,7 +659,7 @@ namespace equipment_handlers {
     }
 
     int8_t BNO055_IMU::readTemperatureFrom(BNO055_IMU::TemperatureSource source) {
-        (void) i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_TEMP_SOURCE_ADDR, source);
+        (void) i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_TEMP_SOURCE_ADDR, source);
         uint8_t buff = i2cReadByteFromRegister(i2cBusID, i2cAddress, BNO055_TEMP_ADDR);
 
         int8_t result = static_cast<int8_t>(buff);
@@ -687,7 +687,7 @@ namespace equipment_handlers {
             value = value & (~mask);  // Clear bits
             value = value | newValue; // Set new bits
 
-            i2cWriteDataToRegister(i2cBusID, i2cAddress, BNO055_UNIT_SEL_ADDR, value);
+            i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_UNIT_SEL_ADDR, value);
             delayMilliSecs(10);
 
             if (previousMode != OperatingModes::CONFIG) {

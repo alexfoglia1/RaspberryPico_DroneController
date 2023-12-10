@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <hardware/i2c.h>
 
-int i2cWriteDataToRegister(i2c_inst_t* i2c_bus, uint8_t addr, uint8_t reg, uint8_t byte);
+int i2cWriteByteToRegister(i2c_inst_t* i2c_bus, uint8_t addr, uint8_t reg, uint8_t byte);
 int i2cWriteWordToRegister(i2c_inst_t* i2c_bus, uint8_t addr, uint8_t reg, int16_t word, bool littleEndian=true);
 int i2cWriteDataToRegister(i2c_inst_t* i2c_bus, uint8_t addr, uint8_t reg, uint8_t* data, uint32_t data_len);
 

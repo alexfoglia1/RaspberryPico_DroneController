@@ -13,7 +13,7 @@ int i2cWriteDataToRegister(i2c_inst_t* i2c_bus, uint8_t addr, uint8_t reg, uint8
 }
 
 
-int i2cWriteDataToRegister(i2c_inst_t* i2c_bus, uint8_t addr, uint8_t reg, uint8_t byte)
+int i2cWriteByteToRegister(i2c_inst_t* i2c_bus, uint8_t addr, uint8_t reg, uint8_t byte)
 {
     return i2cWriteDataToRegister(i2c_bus, addr, reg, &byte, 1);
 }
