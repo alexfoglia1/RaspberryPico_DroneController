@@ -1,16 +1,23 @@
 #include "attitude.h"
-#include "LSM9DS1.h"
+#include "lsm9ds1_interface.h"
+#include "mpu6050_interface.h"
+#include "bno055_interface.h"
+#include "joystick.h"
 #include "user.h"
 #include "maint.h"
 
 #include <stdio.h>
+#include <list>
 #include <pico/float.h>
 
 static const float DEGREES_TO_RADIANS = PI/180.f;
 static const float RADIANS_TO_DEGREES = 180.0f/PI;
-static const float CTRL_LOOP_PERIOD = 1.0f/CTRL_LOOP_FREQUENCY_HZ;
+static const float CTRL_LOOP_PERIOD_S = 1.0f/CTRL_LOOP_FREQUENCY_HZ;
+static const int   N_SAMPLE_SKIP = 500;
+static int nSample = 0;
+static bool wasArmed = false;
 
-static LSM9DS1 imu;
+static ImuInterface* imu;
 
 pt1_flt_tag ax_flt_tag;
 pt1_flt_tag ay_flt_tag;
@@ -27,6 +34,7 @@ static bool filter_on;
 float ATTITUDE_Roll;
 float ATTITUDE_Pitch;
 float ATTITUDE_Yaw;
+
 
 static float pt1f(float raw_k, float raw_km1, float filt_km1, float T_PTF1_S)
 {
@@ -48,6 +56,7 @@ static void pt1f_init(float ax, float ay, float az, float gx, float gy, float gz
     my_flt_tag = {my, my, my, my};
     mz_flt_tag = {mz, mz, mz, mz};
 }
+
 
 static void pt1f_update(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
 {
@@ -100,26 +109,61 @@ static void pt1f_update(float ax, float ay, float az, float gx, float gy, float 
     mz_flt_tag.filt_km1 = mz_flt_tag.filt_k;
 }
 
+
 static void estimate_attitude()
 {
     ATTITUDE_Roll = atan2(ay_flt_tag.filt_k, az_flt_tag.filt_k) * RADIANS_TO_DEGREES;
     ATTITUDE_Pitch = atan2(-ax_flt_tag.filt_k, sqrt(ay_flt_tag.filt_k * ay_flt_tag.filt_k + az_flt_tag.filt_k * az_flt_tag.filt_k)) * RADIANS_TO_DEGREES;
 
     float heading;
-    if (my_flt_tag.filt_k == 0)
-        heading = (mx_flt_tag.filt_k < 0) ? PI : 0;
+
+    if (!imu->haveMagneticField())
+    {
+        if (nSample < N_SAMPLE_SKIP)
+        {
+            nSample += 1;
+        }
+        else
+        {
+            /** Check if became disarmed **/
+            if (!JOYSTICK_MotorsArmed && wasArmed)
+            {
+                ATTITUDE_Yaw = 0;
+                nSample = 0;
+            }
+            else
+            {
+                /** Integrate over gyro_z **/
+                float dGz = -gz_flt_tag.filt_k;
+                double noiseThreshold = 0.25f;
+                
+                if (fabs(dGz) > noiseThreshold)
+                {
+                    ATTITUDE_Yaw += dGz * CTRL_LOOP_PERIOD_S;
+                    ATTITUDE_Yaw = atan2(sin(ATTITUDE_Yaw * DEGREES_TO_RADIANS), cos(ATTITUDE_Yaw * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+                }
+            }
+        }
+    }
     else
-        heading = atan2(mx_flt_tag.filt_k, my_flt_tag.filt_k);
+    {
+        if (my_flt_tag.filt_k == 0)
+            heading = (mx_flt_tag.filt_k < 0) ? PI : 0;
+        else
+            heading = atan2(mx_flt_tag.filt_k, my_flt_tag.filt_k);
 
-    /** Florence declination = 3.75 degrees **/
-    heading -= 3.75f * DEGREES_TO_RADIANS;
+        /** Florence declination = 3.75 degrees **/
+        heading -= 3.75f * DEGREES_TO_RADIANS;
 
-    if (heading > PI)
-        heading -= (2 * PI);
-    else if (heading < -PI)
-        heading += (2 * PI);
+        if (heading > PI)
+            heading -= (2 * PI);
+        else if (heading < -PI)
+            heading += (2 * PI);
 
-    ATTITUDE_Yaw = heading * RADIANS_TO_DEGREES;
+        ATTITUDE_Yaw = heading * RADIANS_TO_DEGREES;
+    }
+
+    wasArmed = JOYSTICK_MotorsArmed;
 }
 
 bool ATTITUDE_Init()
@@ -140,37 +184,39 @@ bool ATTITUDE_Init()
 
     filter_on = false;
 
-    return imu.begin();
+    imu = new MPU6050Interface();
+    return imu->begin(i2c1, MPU6050_SDA_PIN, MPU6050_SCL_PIN);
 }
 
 
 void ATTITUDE_Handler()
 {
-    if (imu.accelAvailable()) imu.readAccel();
-    if (imu.gyroAvailable()) imu.readGyro();
-    if (imu.magAvailable()) imu.readMag();
-
-    float ax = imu.calcAccel(imu.ax);
-    float ay = imu.calcAccel(imu.ay);
-    float az = imu.calcAccel(imu.az);
-
-    float gx = imu.calcGyro(imu.gx);
-    float gy = imu.calcGyro(imu.gy);
-    float gz = imu.calcGyro(imu.gz);
-
-    float mx = -1 * imu.calcMag(imu.mx); // X/Y inverted
-    float my = -1 * imu.calcMag(imu.my);
-    float mz = imu.calcMag(imu.mz);
-
-    if (filter_on == false)
+    float ax, ay, az;
+    float gx, gy, gz;
+    float mx, my, mz;
+    
+    //MPU6050 inverted x/y
+    imu->getAccel(&ay, &ax, &az);
+    imu->getGyro(&gy, &gx, &gz);
+    imu->getMagneticField(&mx, &my, &mz);
+    
+    if (imu->haveAbsoluteOrientation())
     {
         pt1f_init(ax, ay, az, gx, gy, gz, mx, my, mz);
-        filter_on = true;
+        imu->getAbsoluteOrientation(&ATTITUDE_Roll, &ATTITUDE_Pitch, &ATTITUDE_Yaw);
     }
     else
     {
-        pt1f_update(ax, ay, az, gx, gy, gz, mx, my, mz);
-    }
+        if (filter_on == false)
+        {
+            pt1f_init(ax, ay, az, gx, gy, gz, mx, my, mz);
+            filter_on = true;
+        }
+        else
+        {
+            pt1f_update(ax, ay, az, gx, gy, gz, mx, my, mz);
+        }
 
-    estimate_attitude();
+        estimate_attitude();
+    }
 }
