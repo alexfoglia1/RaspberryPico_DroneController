@@ -2031,9 +2031,9 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>430</x>
+      <x>390</x>
       <y>290</y>
-      <width>571</width>
+      <width>611</width>
       <height>191</height>
      </rect>
     </property>
@@ -2045,7 +2045,7 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>541</width>
+       <width>581</width>
        <height>41</height>
       </rect>
      </property>
@@ -2124,7 +2124,7 @@
       <rect>
        <x>10</x>
        <y>60</y>
-       <width>541</width>
+       <width>581</width>
        <height>41</height>
       </rect>
      </property>
@@ -2172,7 +2172,7 @@
       <rect>
        <x>10</x>
        <y>100</y>
-       <width>541</width>
+       <width>581</width>
        <height>41</height>
       </rect>
      </property>
@@ -2198,29 +2198,51 @@
       </item>
       <item>
        <widget class="QDoubleSpinBox" name="spinSetKp">
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
         <property name="value">
          <double>1.000000000000000</double>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="spinSetKi"/>
+       <widget class="QDoubleSpinBox" name="spinSetKi">
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="spinSetKt"/>
+       <widget class="QDoubleSpinBox" name="spinSetKt">
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QDoubleSpinBox" name="spinSetSat">
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
         <property name="value">
          <double>50.000000000000000</double>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="spinSetAd"/>
+       <widget class="QDoubleSpinBox" name="spinSetAd">
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="spinSetBd"/>
+       <widget class="QDoubleSpinBox" name="spinSetBd">
+        <property name="maximum">
+         <double>1000.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnSendPidParams">
@@ -2236,7 +2258,7 @@
       <rect>
        <x>10</x>
        <y>140</y>
-       <width>541</width>
+       <width>581</width>
        <height>41</height>
       </rect>
      </property>
