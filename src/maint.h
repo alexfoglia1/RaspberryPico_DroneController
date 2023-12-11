@@ -63,7 +63,8 @@ typedef union
         uint64_t js_params        :1;     //49
         uint64_t pid_params       :1;     //50
         uint64_t ptf1_params      :1;     //51
-        uint64_t maint_cmd_id     :12;    //52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+        uint64_t imu_type         :1;     //52
+        uint64_t maint_cmd_id     :11;    //53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
     } Bits;
     
     uint8_t  Bytes[8];
@@ -114,7 +115,8 @@ enum class MAINT_CMD_ID
     MAINT_CMD_SET_YAW_PID_PARAMS,
     MAINT_CMD_SET_PTF1_ACC_PARAMS,
     MAINT_CMD_SET_PTF1_GYRO_PARAMS,
-    MAINT_CMD_SET_PTF1_MAGN_PARAMS
+    MAINT_CMD_SET_PTF1_MAGN_PARAMS,
+    MAINT_CMD_SET_IMU_TYPE
 };
 
 enum class MAINT_MOTOR_PARAM
@@ -193,6 +195,15 @@ enum class EUCLIDEAN_AXES
     SIZE
 };
 
+enum class IMU_TYPE : uint32_t
+{
+    FIRST = 0,
+    LSM9DS1 = FIRST,
+    MPU6050,
+    BNO055,
+    SIZE
+};
+
 typedef union 
 {
     uint32_t ival;
@@ -203,6 +214,7 @@ extern uint32_t MAINT_MotorsParameters[int(MOTORS::SIZE)][int(MAINT_MOTOR_PARAM:
 extern uint32_t MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::SIZE)][int(MAINT_JS_PARAM::SIZE)];
 extern uint32_t MAINT_PidParameters[int(EULER_ANGLES::SIZE)][int(MAINT_PID_PARAM::SIZE)];
 extern uint32_t MAINT_Ptf1Parameters[int(SENSOR_SOURCE::SIZE)][int(EUCLIDEAN_AXES::SIZE)];
+extern IMU_TYPE MAINT_ImuType;
 
 extern bool MAINT_FlashWriteRequested;
 

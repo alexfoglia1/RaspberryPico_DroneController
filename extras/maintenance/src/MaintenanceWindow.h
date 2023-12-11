@@ -46,10 +46,12 @@ private:
 	Maint::Maintenance* _maintHandler;
 	const int _txDelayMillis = 20;
 	QMap<QString, int> _defaultPlotSpan;
+	QMap<Maint::IMU_TYPE, QString> _imuTypeToString;
 	QMap<int, motors_params_format> _rxMotorParams;
 	QMap<int, js_params_format> _rxJsParams;
 	QMap<int, pid_params_format> _rxPidParams;
 	QMap<int, ptf1_params_format> _rxPtf1Params;
+	Maint::IMU_TYPE _rxImuType;
 
 	void autoScanComPorts();
 	void checkPlot(QString expectedText, double value);
@@ -72,6 +74,7 @@ private slots:
 	void OnBtnSendJsParams();
 	void OnBtnSendPidParams();
 	void OnBtnSendPtf1Params();
+	void OnBtnSendImuType();
 	void OnBtnFlashWrite();
 	void OnBtnRefreshParams();
 	void OnSpinSetMaintenanceValue(int newValue);
@@ -137,6 +140,7 @@ private slots:
 	void OnReceivedJsParams(uint32_t channel_no, float alpha, float beta);
 	void OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
 	void OnReceivedPtf1Params(uint32_t source_no, float x, float y, float z);
+	void OnReceivedImuType(uint32_t imu_type);
 };
 
 #endif

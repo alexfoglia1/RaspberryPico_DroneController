@@ -10,6 +10,13 @@ MaintenanceWindow::MaintenanceWindow()
 
 	_maintHandler = nullptr;
 
+	_imuTypeToString =
+	{
+		{Maint::IMU_TYPE::LSM9DS1, "LSM9DS1"},
+		{Maint::IMU_TYPE::MPU6050, "MPU6050"},
+		{Maint::IMU_TYPE::BNO055,  "BNO055"}
+	};
+
 	_defaultPlotSpan =
 	{
 		{"NONE", 16000},
@@ -91,6 +98,16 @@ MaintenanceWindow::MaintenanceWindow()
 		{3, {0.1f, 0.1f, 0.1f}}, //MAGNETOMETER
 	};
 
+
+	_rxImuType = Maint::IMU_TYPE::LSM9DS1;
+	for (uint32_t i = uint32_t(Maint::IMU_TYPE::FIRST); i < uint32_t(Maint::IMU_TYPE::SIZE); i++)
+	{
+		QString text = _imuTypeToString[Maint::IMU_TYPE(i)];
+		QVariant userData(i);
+
+		_ui.comboSetImuType->addItem(text, userData);
+	}
+
 	autoScanComPorts();
 	_ui.comboSelBaud->addItem("1200", QSerialPort::Baud1200);
 	_ui.comboSelBaud->addItem("2400", QSerialPort::Baud2400);
@@ -111,8 +128,10 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnSendMaintenanceJsParams, SIGNAL(clicked()), this, SLOT(OnBtnSendJsParams()));
 	connect(_ui.btnSendPidParams, SIGNAL(clicked()), this, SLOT(OnBtnSendPidParams()));
 	connect(_ui.btnSendPtf1Params, SIGNAL(clicked()), this, SLOT(OnBtnSendPtf1Params()));
+	connect(_ui.btnSendImuType, SIGNAL(clicked()), this, SLOT(OnBtnSendImuType()));
 	connect(_ui.btnFlashWrite, SIGNAL(clicked()), this, SLOT(OnBtnFlashWrite()));
 	connect(_ui.btnRefreshParams, SIGNAL(clicked()), this, SLOT(OnBtnRefreshParams()));
+
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
 
 	connect(_ui.plotTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotSliderValueChanged(int)));
@@ -184,6 +203,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxJsParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxPidParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxPtf1Params, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxImuType, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
@@ -244,6 +264,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedJsParams(uint32_t, float, float)), this, SLOT(OnReceivedJsParams(uint32_t, float, float)));
 	connect(_maintHandler, SIGNAL(receivedPidParams(uint32_t, float, float, float, float, float, float)), this, SLOT(OnReceivedPidParams(uint32_t, float, float, float, float, float, float)));
 	connect(_maintHandler, SIGNAL(receivedPtf1Params(uint32_t, float, float, float)), this, SLOT(OnReceivedPtf1Params(uint32_t, float, float, float)));
+	connect(_maintHandler, SIGNAL(receivedImuType(uint32_t)), this, SLOT(OnReceivedImuType(uint32_t)));
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
@@ -984,6 +1005,15 @@ void MaintenanceWindow::OnHeaderChanged()
 		header.Bits.ptf1_params = 0;
 	}
 
+	if (_ui.checkTxImuType->isChecked())
+	{
+		header.Bits.imu_type = 1;
+	}
+	else
+	{
+		header.Bits.imu_type = 0;
+	}
+
 
 	if (_maintHandler)
 	{
@@ -1055,6 +1085,17 @@ void MaintenanceWindow::OnBtnSendPtf1Params()
 }
 
 
+void MaintenanceWindow::OnBtnSendImuType()
+{
+	if (_maintHandler)
+	{
+		Maint::IMU_TYPE imuType = Maint::IMU_TYPE(_ui.comboSetImuType->currentData().toInt());
+
+		_maintHandler->TxImuType(imuType);
+	}
+}
+
+
 void MaintenanceWindow::OnBtnFlashWrite()
 {
 	if (_maintHandler)
@@ -1088,6 +1129,16 @@ void MaintenanceWindow::OnBtnRefreshParams()
 	_ui.spinSetPtf1X->setValue(_rxPtf1Params[currentPtf1Source].x);
 	_ui.spinSetPtf1Y->setValue(_rxPtf1Params[currentPtf1Source].y);
 	_ui.spinSetPtf1Z->setValue(_rxPtf1Params[currentPtf1Source].z);
+
+	for (int i = 0; i < _ui.comboSetImuType->count(); i++)
+	{
+		if (Maint::IMU_TYPE(_ui.comboSetImuType->itemData(i).toInt()) == _rxImuType)
+		{
+			_ui.comboSetImuType->setCurrentIndex(i);
+			break;
+		}
+	}
+	
 }
 
 
@@ -1620,4 +1671,10 @@ void MaintenanceWindow::OnReceivedPtf1Params(uint32_t source_no, float x, float 
 	{
 		_rxPtf1Params[source_no] = { x, y, z };
 	}
+}
+
+
+void MaintenanceWindow::OnReceivedImuType(uint32_t imu_type)
+{
+	_rxImuType = Maint::IMU_TYPE(imu_type);
 }

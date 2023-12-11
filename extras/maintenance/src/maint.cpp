@@ -183,6 +183,19 @@ void Maint::Maintenance::TxPtf1params(uint32_t sensorSource, float x, float y, f
 }
 
 
+void Maint::Maintenance::TxImuType(IMU_TYPE imuType)
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE);
+
+    _tx_param_imu = uint32_t(imuType);
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_SET_IMU_TYPE;
+    _txMutex.unlock();
+}
+
+
 void Maint::Maintenance::TxWriteToFlash()
 {
     _txCommand.All = 0;
@@ -432,6 +445,38 @@ void Maint::Maintenance::Tx()
         _txCommand.All = 0;
         _txStatus = Maint::TX_STATUS::TX_GET;
     }
+    else if (_txStatus == Maint::TX_STATUS::TX_SET_IMU_TYPE)
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* imuTypeBytes = reinterpret_cast<uint8_t*>(&_tx_param_imu);
+
+        qba.push_back(imuTypeBytes[0]);
+        qba.push_back(imuTypeBytes[1]);
+        qba.push_back(imuTypeBytes[2]);
+        qba.push_back(imuTypeBytes[3]);
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+
+    }
     else // TX_WRITE_TO_FLASH
     {
         qba.push_back(Maint::SYNC_CHAR);
@@ -452,6 +497,7 @@ void Maint::Maintenance::Tx()
         bytesWritten = _serialPort->write(qba);
         _serialPort->flush();
 
+        _tx_data = 0;
         _txCommand.All = 0;
         _txStatus = Maint::TX_STATUS::TX_GET;
     }
@@ -1071,7 +1117,14 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 
             pPayload += 9 * sizeof(uint32_t);
         }
+        if (rx_header->Bits.imu_type)
+        {
+            uint32_t imu_type = *(reinterpret_cast<uint32_t*>(pPayload));
 
+            emit receivedImuType(imu_type);
+
+            pPayload += sizeof(uint32_t);
+        }
 
     }
 }

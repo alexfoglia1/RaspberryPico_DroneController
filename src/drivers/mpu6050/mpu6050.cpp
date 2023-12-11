@@ -98,7 +98,7 @@ float MPU6050::toG(int16_t accelRaw)
 
 void MPU6050::calcGyroBias()
 {
-    const int N = 1000;
+    const int N = 10000;
 
     _gyroBiasX = 0;
     _gyroBiasY = 0;

@@ -17,14 +17,16 @@
 // Once done, we can access this at XIP_BASE + 256k.
 #define FLASH_TARGET_OFFSET (256 * 1024)
 #define FLASH_PARAMS_OFFSET 0
-#define FLASH_PARAMS_SIZE   188 // 4 blocks of 3 4-bytes length uint32_t + 
+#define FLASH_PARAMS_SIZE   192 // 4 blocks of 3 4-bytes length uint32_t + 
                                 // 4 blocks of 2 4-bytes length uint32_t +
                                 // 3 blocks of 6 4-bytes length uint32_t +
-                                // 3 blocks of 3 4 bytes length uint32_t = 188
+                                // 3 blocks of 3 4 bytes length uint32_t +
+                                // 1 block of  1 4 bytes length uint32_t = 192
 #define FLASH_MOTORS_PARAMS_SIZE   48
 #define FLASH_JOYSTICK_PARAMS_SIZE 32
 #define FLASH_PID_PARAMS_SIZE      72
 #define FLASH_PTF1_PARAMS_SIZE     36
+#define FLASH_IMU_TYPE_SIZE         4
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
@@ -32,6 +34,7 @@ uint32_t MAINT_MotorsParameters[int(MOTORS::SIZE)][int(MAINT_MOTOR_PARAM::SIZE)]
 uint32_t MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::SIZE)][int(MAINT_JS_PARAM::SIZE)];
 uint32_t MAINT_PidParameters[int(EULER_ANGLES::SIZE)][int(MAINT_PID_PARAM::SIZE)];
 uint32_t MAINT_Ptf1Parameters[int(SENSOR_SOURCE::SIZE)][int(EUCLIDEAN_AXES::SIZE)];
+IMU_TYPE MAINT_ImuType;
 
 bool MAINT_FlashWriteRequested;
 
@@ -115,6 +118,8 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS:
             return 13; /** 3 * 4 = 12 bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE:
+            return 5;  /** 1 * 4 = 4  bytes + checksum **/
     }
 
     return 0;
@@ -210,6 +215,7 @@ static void flash_write_params()
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_JoystickParameters), FLASH_JOYSTICK_PARAMS_SIZE);
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_PidParameters), FLASH_PID_PARAMS_SIZE);
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_Ptf1Parameters), FLASH_PTF1_PARAMS_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE + FLASH_PTF1_PARAMS_SIZE], reinterpret_cast<uint8_t*>(&MAINT_ImuType), FLASH_IMU_TYPE_SIZE);
     
     eeprom_img[FLASH_PARAMS_SIZE] = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
 
@@ -270,6 +276,9 @@ void MAINT_Init()
         eeprom_offset += (int(EUCLIDEAN_AXES::SIZE) * sizeof(uint32_t));
     }
 
+    MAINT_ImuType = IMU_TYPE(*reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset]));
+    eeprom_offset += sizeof(uint32_t);
+
     CBIT_TAG fail_code;
     fail_code.Dword = 0;
     fail_code.Bits.flash_error = 1;
@@ -284,12 +293,20 @@ void MAINT_Init()
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_JoystickParameters), FLASH_JOYSTICK_PARAMS_SIZE);
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_PidParameters), FLASH_PID_PARAMS_SIZE);
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_Ptf1Parameters), FLASH_PTF1_PARAMS_SIZE);
-    uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE + FLASH_PTF1_PARAMS_SIZE], reinterpret_cast<uint8_t*>(&MAINT_ImuType), FLASH_IMU_TYPE_SIZE);
     
+    uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
     if (eeprom_cks != current_cks)
     {
         /** Set fail code **/
         CBIT_Set_fail_code(fail_code.Dword, true);
+        for (int i = 0; i < 8; i++)
+        {
+            gpio_put(PICO_DEFAULT_LED_PIN, 0);
+            sleep_ms(125);
+            gpio_put(PICO_DEFAULT_LED_PIN, 1);
+            sleep_ms(125);
+        }
 
         /** Flash not programmed, loading default **/
         for (int i = int(MOTORS::FIRST); i < int(MOTORS::SIZE); i++)
@@ -297,8 +314,6 @@ void MAINT_Init()
             MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::ENABLED)]    = 1;
             MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = MOTOR_MIN_SIGNAL;
             MAINT_MotorsParameters[i][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = MOTOR_MAX_SIGNAL;
-            
-            eeprom_offset += (int(MAINT_MOTOR_PARAM::SIZE) * sizeof(uint32_t));
         }
         
         for (int i = int(JOYSTICK_CHANNEL::FIRST); i < int(JOYSTICK_CHANNEL::SIZE); i++)
@@ -310,8 +325,6 @@ void MAINT_Init()
 
             MAINT_JoystickParameters[i][int(MAINT_JS_PARAM::ALPHA)] = alpha.ival;
             MAINT_JoystickParameters[i][int(MAINT_JS_PARAM::BETA)]  = beta.ival;
-            
-            eeprom_offset += (int(MAINT_JS_PARAM::SIZE) * sizeof(uint32_t));
         }
 
         for (int i = int(EULER_ANGLES::FIRST); i < int(EULER_ANGLES::SIZE); i++)
@@ -330,8 +343,6 @@ void MAINT_Init()
             MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_SAT)] = sat.ival;
             MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_AD)]  = ad.ival;
             MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_BD)]  = bd.ival;
-            
-            eeprom_offset += (int(MAINT_PID_PARAM::SIZE) * sizeof(uint32_t));
         }
 
         for (int i = int(SENSOR_SOURCE::FIRST); i < int(SENSOR_SOURCE::SIZE); i++)
@@ -342,9 +353,9 @@ void MAINT_Init()
             MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::X)] = t_ptf1_s.ival;
             MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::Y)] = t_ptf1_s.ival;
             MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::Z)] = t_ptf1_s.ival;
-            
-            eeprom_offset += (int(EUCLIDEAN_AXES::SIZE) * sizeof(uint32_t));
         }
+
+        MAINT_ImuType = IMU_TYPE::MPU6050;
 
         /** Storing default to flash **/
         flash_write_params();
@@ -484,6 +495,9 @@ void MAINT_Handler()
                 MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::X)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::Y)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
                 MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::Z)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE:
+                MAINT_ImuType = IMU_TYPE(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 break;
         }
 
@@ -841,6 +855,12 @@ void MAINT_Handler()
         {
             memcpy(&tx_message.payload[tx_payload_idx], MAINT_Ptf1Parameters, FLASH_PTF1_PARAMS_SIZE);
             tx_payload_idx += FLASH_PTF1_PARAMS_SIZE;
+        }
+        if (tx_message.header.Bits.imu_type)
+        {
+            uint32_t idata = static_cast<uint32_t>(MAINT_ImuType);
+            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&idata), sizeof(uint32_t));
+            tx_payload_idx += sizeof(uint32_t);
         }
 
         tx_message.payload[tx_payload_idx] = checksum(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx);

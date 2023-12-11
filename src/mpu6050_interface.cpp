@@ -17,19 +17,21 @@ bool MPU6050Interface::begin(i2c_inst_t* i2c_channel, int sdaPin, int sclPin)
 
 void MPU6050Interface::getAccel(float* x, float* y, float* z)
 {
-    _mpu6050.readAccel(x, y, z);
+    // MPU6050 inverted axis
+    _mpu6050.readAccel(y, x, z);
 }
 
 
 void MPU6050Interface::getGyro(float* x, float* y, float* z)
 {
-    _mpu6050.readGyro(x, y, z);
+    // MPU6050 inverted axis
+    _mpu6050.readGyro(y, x, z);
 }
 
 
 void MPU6050Interface::getMagneticField(float* x, float* y, float* z)
 {
-    // Unimplemented by hardware
+    // Unsupported
     *x = 0;
     *y = 0;
     *z = 0;
@@ -38,7 +40,7 @@ void MPU6050Interface::getMagneticField(float* x, float* y, float* z)
 
 void MPU6050Interface::getAbsoluteOrientation(float* roll, float* pitch, float* yaw)
 {
-    // Unimplemented by hardware
+    // Unsupported
     *roll = 0;
     *pitch = 0;
     *yaw = 0;

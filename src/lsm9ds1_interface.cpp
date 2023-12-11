@@ -44,7 +44,7 @@ void LSM9DS1Interface::getMagneticField(float* x, float* y, float* z)
 
 void LSM9DS1Interface::getAbsoluteOrientation(float* roll, float* pitch, float* yaw)
 {
-    // Unimplemented by hardware
+    // Unsupported
     *roll = 0;
     *pitch = 0;
     *yaw = 0;

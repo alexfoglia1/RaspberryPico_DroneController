@@ -180,8 +180,21 @@ bool ATTITUDE_Init()
 
     filter_on = false;
 
-    imu = new MPU6050Interface();
-    return imu->begin(i2c1, MPU6050_SDA_PIN, MPU6050_SCL_PIN);
+    switch (MAINT_ImuType)
+    {
+        case IMU_TYPE::LSM9DS1:
+            imu = new LSM9DS1Interface();
+            return imu->begin(i2c0, LSM9DS1_SDA_PIN, LSM9DS1_SCL_PIN);
+        case IMU_TYPE::MPU6050:
+            imu = new MPU6050Interface();
+            return imu->begin(i2c1, MPU6050_SDA_PIN, MPU6050_SCL_PIN);
+        case IMU_TYPE::BNO055:
+            imu = new BNO055Interface();
+            return imu->begin(i2c0, BNO055_SDA_PIN, BNO055_SCL_PIN);
+        default:
+            imu = new MPU6050Interface();
+            return imu->begin(i2c1, MPU6050_SDA_PIN, MPU6050_SCL_PIN);
+    }
 }
 
 
@@ -191,11 +204,11 @@ void ATTITUDE_Handler()
     float gx, gy, gz;
     float mx, my, mz;
     
-    //MPU6050 inverted x/y
-    imu->getAccel(&ay, &ax, &az);
-    imu->getGyro(&gy, &gx, &gz);
+
+    imu->getAccel(&ax, &ay, &az);
+    imu->getGyro(&gx, &gy, &gz);
     imu->getMagneticField(&mx, &my, &mz);
-    
+
     if (imu->haveAbsoluteOrientation())
     {
         pt1f_init(ax, ay, az, gx, gy, gz, mx, my, mz);

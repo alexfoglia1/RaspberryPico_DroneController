@@ -8,6 +8,15 @@
 
 namespace Maint
 {
+    enum class IMU_TYPE : uint32_t
+    {
+        FIRST = 0,
+        LSM9DS1 = FIRST,
+        MPU6050,
+        BNO055,
+        SIZE
+    };
+
     typedef union
     {
         struct
@@ -64,7 +73,8 @@ namespace Maint
             uint64_t js_params : 1;     //49
             uint64_t pid_params : 1;     //50
             uint64_t ptf1_params : 1;     //51
-            uint64_t maint_cmd_id : 12;    //52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+            uint64_t imu_type : 1; // 52
+            uint64_t maint_cmd_id : 11;    //53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
         } Bits;
 
         uint8_t  Bytes[8];
@@ -110,6 +120,7 @@ namespace Maint
         TX_SET_JS_PARAMS,
         TX_SET_PID_PARAMS,
         TX_SET_PTF1_PARAMS,
+        TX_SET_IMU_TYPE,
         TX_WRITE_TO_FLASH
     };
 
@@ -135,7 +146,8 @@ namespace Maint
         MAINT_CMD_SET_YAW_PID_PARAMS,
         MAINT_CMD_SET_PTF1_ACC_PARAMS,
         MAINT_CMD_SET_PTF1_GYRO_PARAMS,
-        MAINT_CMD_SET_PTF1_MAGN_PARAMS
+        MAINT_CMD_SET_PTF1_MAGN_PARAMS,
+        MAINT_CMD_SET_IMU_TYPE
     };
 
     static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
@@ -165,6 +177,8 @@ public:
     void TxJoystickParams(uint32_t jsChannel, float alpha, float beta);
     void TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd);
     void TxPtf1params(uint32_t sensorSource, float x, float y, float z);
+    void TxImuType(IMU_TYPE imuType);
+
     void TxWriteToFlash();
 
 public slots:
@@ -227,6 +241,7 @@ signals:
     void receivedJsParams(uint32_t channel_no, float alpha, float beta);
     void receivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
     void receivedPtf1Params(uint32_t source_no, float x, float y, float z);
+    void receivedImuType(uint32_t imu_type);
 
 private:
 	QSerialPort* _serialPort;
@@ -252,6 +267,7 @@ private:
     uint32_t _tx_param_x;
     uint32_t _tx_param_y;
     uint32_t _tx_param_z;
+    uint32_t _tx_param_imu;
     QMutex _txMutex;
     QTimer* _txTimer;
 
