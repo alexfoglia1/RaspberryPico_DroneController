@@ -5,6 +5,7 @@
 #include "joystick.h"
 #include "cbit.h"
 #include "user.h"
+#include "i2c_utils.h"
 
 #include <pico/time.h>
 #include <hardware/flash.h>
@@ -35,6 +36,7 @@ uint32_t MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::SIZE)][int(MAINT_JS_PARA
 uint32_t MAINT_PidParameters[int(EULER_ANGLES::SIZE)][int(MAINT_PID_PARAM::SIZE)];
 uint32_t MAINT_Ptf1Parameters[int(SENSOR_SOURCE::SIZE)][int(EUCLIDEAN_AXES::SIZE)];
 IMU_TYPE MAINT_ImuType;
+uint8_t  MAINT_I2CRead;
 
 bool MAINT_FlashWriteRequested;
 
@@ -48,14 +50,29 @@ static bool shall_tx;
 static bool shall_set;
 static uint64_t last_msg_us;
 static bool controlling_motors;
+static uint8_t uart_tx_buf[UART_BUFLEN];
+static uint8_t uart_ll_tx_buf;
 
 
-static void put_packet(uint8_t* buf, uint32_t len)
+static void put_packet(uint8_t* buf, uint32_t len, MaintClient sender)
 {
-    putchar(MAINT_SYNC_CHAR);
-    for (uint32_t i = 0; i < len; i++)
+    if (sender == MaintClient::USB)
     {
-        putchar(buf[i]);
+        putchar(MAINT_SYNC_CHAR);
+        for (uint32_t i = 0; i < len; i++)
+        {
+            putchar(buf[i]);
+        }
+    }
+    else
+    {
+        if (uart_ll_tx_buf + len + 1 < UART_BUFLEN)
+        {
+            uart_tx_buf[uart_ll_tx_buf] = MAINT_SYNC_CHAR;
+            memcpy(&uart_tx_buf[uart_ll_tx_buf + 1], buf, len);
+            
+            uart_ll_tx_buf += (1 + len);
+        }
     }
 }
 
@@ -120,6 +137,10 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
             return 13; /** 3 * 4 = 12 bytes + checksum **/
         case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE:
             return 5;  /** 1 * 4 = 4  bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_I2C_READ:
+            return 13;  /** 3 * 4 = 12  bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
+            return 17;  /** 4 * 4 = 16  bytes + checksum */
     }
 
     return 0;
@@ -230,10 +251,13 @@ void MAINT_Init()
 {
     MAINT_FlashWriteRequested = false;
     last_msg_us = 0;
+    MAINT_I2CRead = 0;
 
-    memset(rx_buf, sizeof(MAINT_MESSAGE_TAG), 0x00);
-    memset(&rx_message, sizeof(MAINT_MESSAGE_TAG), 0x00);
-    memset(&tx_message, sizeof(MAINT_MESSAGE_TAG), 0x00);
+    memset(rx_buf, 0x00, sizeof(MAINT_MESSAGE_TAG));
+    memset(&rx_message, 0x00, sizeof(MAINT_MESSAGE_TAG));
+    memset(&tx_message, 0x00, sizeof(MAINT_MESSAGE_TAG));
+    memset(&uart_tx_buf, 0x00, sizeof(UART_BUFLEN));
+    uart_ll_tx_buf = 0;
 
     /** Load actual params **/
     uint32_t eeprom_offset = 0;
@@ -375,23 +399,10 @@ void MAINT_Init()
 }
 
 
-void MAINT_OnByteReceived(uint8_t byte_rx)
+void MAINT_OnByteReceived(uint8_t byte_rx, MaintClient sender)
 {
     update_fsm(byte_rx);
-}
 
-
-bool MAINT_IsPresent()
-{
-    return (time_us_64() - last_msg_us) < MAINT_TIMEOUT_S * SECONDS_TO_MICROSECONDS;
-}
-
-
-void MAINT_Handler()
-{
-    int byteIn = getchar();
-    MAINT_OnByteReceived((uint8_t)byteIn & 0xFF);
-    
     if (shall_set)
     {
         switch (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id))
@@ -499,6 +510,18 @@ void MAINT_Handler()
             case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE:
                 MAINT_ImuType = IMU_TYPE(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 break;
+            case MAINT_CMD_ID::MAINT_CMD_I2C_READ:
+                MAINT_I2CRead = i2cReadByteFromRegister(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 0 ? i2c0 : i2c1,
+                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[4]) & 0xFF),
+                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[8]) & 0xFF));
+                break;
+            case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
+                i2cWriteByteToRegister(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 0 ? i2c0 : i2c1,
+                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[4])  & 0xFF),
+                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[8])  & 0xFF),
+                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[12]) & 0xFF));
+                break;
+
         }
 
         shall_set = false;
@@ -862,10 +885,17 @@ void MAINT_Handler()
             memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&idata), sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
+        if (tx_message.header.Bits.i2c_read)
+        {
+            uint32_t idata = static_cast<uint32_t>(MAINT_I2CRead);
+            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&idata), sizeof(uint32_t));
+            tx_payload_idx += sizeof(uint32_t);
+        }
 
         tx_message.payload[tx_payload_idx] = checksum(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx);
-        put_packet(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx + 1);
 
+        put_packet(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx + 1, sender);
+        
         shall_tx = false;
     }
 
@@ -887,6 +917,52 @@ void MAINT_Handler()
     }
 
     
+}
+
+
+bool MAINT_IsPresent()
+{
+    return (time_us_64() - last_msg_us) < MAINT_TIMEOUT_S * SECONDS_TO_MICROSECONDS;
+}
+
+
+void MAINT_UsbHandler()
+{
+    int byteIn = getchar();
+    MAINT_OnByteReceived((uint8_t)byteIn & 0xFF, MaintClient::USB);
+}
+
+
+void MAINT_UartHandler()
+{
+    gpio_put(PICO_DEFAULT_LED_PIN, 0);
+    uint32_t tx_size;
+
+    if (uart_ll_tx_buf > 0 && uart_ll_tx_buf < UART_TX_CHUNK_SIZE)
+    {
+        tx_size = uart_ll_tx_buf;
+    }
+    else if (uart_ll_tx_buf >= UART_TX_CHUNK_SIZE)
+    {
+        tx_size = UART_TX_CHUNK_SIZE;
+    }
+    else
+    {
+        tx_size = 0;
+    }
+
+    for (uint32_t i = 0; i < tx_size; i++)
+    {
+        uart_putc_raw(uart0, uart_tx_buf[i]);
+    }
+    
+    for (uint32_t i = tx_size; i < uart_ll_tx_buf; i++)
+    {
+        uart_tx_buf[i - tx_size] = uart_tx_buf[i];
+    }
+
+    uart_ll_tx_buf -= tx_size;
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
 }
 
 
