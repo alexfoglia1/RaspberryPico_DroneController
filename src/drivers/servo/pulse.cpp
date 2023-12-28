@@ -38,6 +38,13 @@ void Pulse::attach()
 }
 
 
+void Pulse::reset()
+{
+    _t_rise_us = 0;
+    _duration_us = 0;
+}
+
+
 uint64_t Pulse::pulseIn()
 {
     return _duration_us;
