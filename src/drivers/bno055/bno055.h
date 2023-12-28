@@ -78,7 +78,7 @@ namespace equipment_handlers {
             COMPASS = 0x09U,
             M4G = 0x0AU,
             NDOF_FMS_OFF = 0x0BU,
-            NDOF = 0x0CU
+            NDOF = 0x1CU
         };
 
         // --------------------------------
@@ -88,7 +88,6 @@ namespace equipment_handlers {
         bool initialize
             (uint8_t i2cAddress,
              i2c_inst_t* i2cBusID,
-             OperatingModes operatingMode = NDOF,
              PowerModes powerMode = NORMAL,
              bool useExternalCrystal = true);
 

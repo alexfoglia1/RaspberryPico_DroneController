@@ -1,15 +1,38 @@
 #include "bno055_interface.h"
 
+#include <pico/float.h>
+
+#define PI 3.14159265358979323846264338327950288419716939937510582f
+
+static const float DEGREES_TO_RADIANS = PI/180.f;
+static const float RADIANS_TO_DEGREES = 180.0f/PI;
+
 BNO055Interface::BNO055Interface()
 {
-
+    _roll0 = 0;
+    _pitch0 = 0;
 }
     
 bool BNO055Interface::begin(i2c_inst_t* i2c_channel, int sdaPin, int sclPin)
 {
     ImuInterface::begin(i2c_channel, sdaPin, sclPin);
     
-    return _bno055.initialize(equipment_handlers::BNO055_IMU::BNO055_Primary_Address, i2c_channel);
+    bool success = _bno055.initialize(equipment_handlers::BNO055_IMU::BNO055_Primary_Address, i2c_channel);
+
+    if (success)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            equipment_handlers::BNO055_IMU::EulerOrientation oriData;
+            _bno055.readFusedData(oriData);
+
+            _roll0 = oriData.Y > _roll0 ? oriData.Y : _roll0;
+            _pitch0 = oriData.Z > _pitch0 ? oriData.Z : _pitch0;
+            sleep_ms(500);
+        }
+    }
+
+    return success;
 }
 
 
@@ -63,7 +86,8 @@ void BNO055Interface::getAbsoluteOrientation(float* roll, float* pitch, float* y
     equipment_handlers::BNO055_IMU::EulerOrientation oriData;
     _bno055.readFusedData(oriData);
 
-    *roll = oriData.X;
-    *pitch = oriData.Y;
-    *yaw = oriData.Z;
+    // Driver reads starting from heading (x, y, z is just the order of read not the relative axes)
+    *yaw = atan2(sin(oriData.X * DEGREES_TO_RADIANS), cos(oriData.X * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+    *roll = atan2(sin((oriData.Y - _roll0) * DEGREES_TO_RADIANS), cos((oriData.Y - _roll0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+    *pitch = atan2(sin((oriData.Z - _pitch0) * DEGREES_TO_RADIANS), cos((oriData.Z - _pitch0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
 }

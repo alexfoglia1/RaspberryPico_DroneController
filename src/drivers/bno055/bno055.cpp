@@ -255,29 +255,41 @@ namespace equipment_handlers {
     bool BNO055_IMU::initialize
         (uint8_t i2cAddress,
          i2c_inst_t* i2cBusID,
-         BNO055_IMU::OperatingModes operatingMode,
          BNO055_IMU::PowerModes powerMode,
          bool useExternalCrystal)
     {
         this->i2cAddress = i2cAddress;
         this->i2cBusID = i2cBusID;
 
-        bool success = setMode(operatingMode);
+        bool success = setMode(BNO055_IMU::OperatingModes::CONFIG);
 
-        // Select register map page zero:
-        success = success &&
-                  (i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR, 0U) != PICO_ERROR_GENERIC);
-        delayMilliSecs(10);
+        success = success && reset();
 
+        // Set power register normal
         success = success &&
                   (i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PWR_MODE_ADDR, powerMode) != PICO_ERROR_GENERIC);
-        delayMilliSecs(10);
+        delayMilliSecs(500);
+
+        // Set register map page zero:
+        success = success &&
+                  (i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR, 0U) != PICO_ERROR_GENERIC);
+        delayMilliSecs(500);
+
+        // Set trigger map page zero:
+        success = success &&
+                  (i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR, 0U) != PICO_ERROR_GENERIC);
+        delayMilliSecs(500);
+
 
         // An External clock can be selected by setting bit CLK_SEL in the SYSTEM_TRIGGER
         // register.
         uint8_t clkSel = useExternalCrystal ? 0x80U : 0x00U;
         success = success && (i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_SYS_TRIGGER_ADDR, clkSel) != PICO_ERROR_GENERIC);
-        delayMilliSecs(10);
+        delayMilliSecs(500);
+
+        success = success && setMode(NDOF);
+
+        success = success && testWhoAmI();
 
         return success;
     }
@@ -474,10 +486,12 @@ namespace equipment_handlers {
     bool BNO055_IMU::setMode(PowerModes mode) const {
         // Select register map page zero:
         bool success = i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR, 0U);
-        delayMilliSecs(10);
+        delayMilliSecs(500);
 
-        success = success &&
-                  i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PWR_MODE_ADDR, mode);
+        while (i2cReadByteFromRegister(i2cBusID, i2cAddress, BNO055_PAGE_ID_ADDR) != uint8_t(mode))
+        {
+            success = success &&  i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_PWR_MODE_ADDR, mode);
+        }
 
         return success;
     }
@@ -488,20 +502,14 @@ namespace equipment_handlers {
 
 
     bool BNO055_IMU::setMode(BNO055_IMU::OperatingModes operatingMode) {
-        const int switchingFromConfigMode = 8;
-        const int switchingToConfigMode   = 20;
-        bool success;
 
-        if (this->mode == OperatingModes::CONFIG) {
-            success = i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, operatingMode);
-            delayMilliSecs(switchingFromConfigMode);
-        } else {
-            success = i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, OperatingModes::CONFIG);
-            delayMilliSecs(switchingToConfigMode);
-            success = success &&
-                      i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, operatingMode);
-            delayMilliSecs(switchingFromConfigMode);
-        }
+        bool success = i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, operatingMode);
+        delayMilliSecs(500);
+        
+        while (i2cReadByteFromRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR) != operatingMode)
+        {
+            success = success && i2cWriteByteToRegister(i2cBusID, i2cAddress, BNO055_OPR_MODE_ADDR, operatingMode);
+        };
 
         this->mode = success ?
                      operatingMode :
