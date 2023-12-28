@@ -28,6 +28,7 @@ add_executable(DroneController
   src/joystick.h
   src/motors.h
   src/maint.h
+  src/uart.h
   src/cbit.h
 
   src/drivers/i2c_utils/i2c_utils.cpp
@@ -47,6 +48,7 @@ add_executable(DroneController
   src/joystick.cpp
   src/motors.cpp
   src/maint.cpp
+  src/uart.cpp
   src/cbit.cpp
   src/main.cpp
 )
@@ -54,7 +56,6 @@ add_executable(DroneController
 target_include_directories(DroneController PUBLIC src/drivers/lsm9ds1 src/drivers/servo src/drivers/mpu6050 src/drivers/bno055 src/drivers/i2c_utils)
 
 pico_enable_stdio_usb(DroneController 1)
-pico_enable_stdio_uart(DroneController 1)
 
 pico_add_extra_outputs(DroneController)
  
