@@ -74,7 +74,8 @@ namespace Maint
             uint64_t pid_params : 1;     //50
             uint64_t ptf1_params : 1;     //51
             uint64_t imu_type : 1; // 52
-            uint64_t maint_cmd_id : 11;    //53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+            uint64_t i2c_read : 1; // 53
+            uint64_t maint_cmd_id : 10;    //54, 55, 56, 57, 58, 59, 60, 61, 62, 63
         } Bits;
 
         uint8_t  Bytes[8];
@@ -121,6 +122,8 @@ namespace Maint
         TX_SET_PID_PARAMS,
         TX_SET_PTF1_PARAMS,
         TX_SET_IMU_TYPE,
+        TX_I2C_READ,
+        TX_I2C_WRITE,
         TX_WRITE_TO_FLASH
     };
 
@@ -147,7 +150,9 @@ namespace Maint
         MAINT_CMD_SET_PTF1_ACC_PARAMS,
         MAINT_CMD_SET_PTF1_GYRO_PARAMS,
         MAINT_CMD_SET_PTF1_MAGN_PARAMS,
-        MAINT_CMD_SET_IMU_TYPE
+        MAINT_CMD_SET_IMU_TYPE,
+        MAINT_CMD_I2C_READ,
+        MAINT_CMD_I2C_WRITE
     };
 
     static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
@@ -178,6 +183,8 @@ public:
     void TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd);
     void TxPtf1params(uint32_t sensorSource, float x, float y, float z);
     void TxImuType(IMU_TYPE imuType);
+    void I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg);
+    void I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val);
 
     void TxWriteToFlash();
 
@@ -185,8 +192,12 @@ public slots:
     void Tx();
     void OnRx();
 
+private slots:
+    void logBytes(quint8* data, int size);
+
 signals:
     void rxRawData(bool valid, quint8* data, int size);
+    void rxBytes(quint8* bytes, int size);
     void txRawData(quint8* data, int size);
 
     void receivedRawAccelX(float data);
@@ -242,6 +253,7 @@ signals:
     void receivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
     void receivedPtf1Params(uint32_t source_no, float x, float y, float z);
     void receivedImuType(uint32_t imu_type);
+    void receivedI2CRead(uint32_t i2c_read);
 
 private:
 	QSerialPort* _serialPort;
@@ -268,8 +280,15 @@ private:
     uint32_t _tx_param_y;
     uint32_t _tx_param_z;
     uint32_t _tx_param_imu;
+    uint32_t _tx_param_i2c_chan;
+    uint32_t _tx_param_i2c_addr;
+    uint32_t _tx_param_i2c_reg;
+    uint32_t _tx_param_i2c_val;
     QMutex _txMutex;
     QTimer* _txTimer;
+    QString _logFileName;
+    FILE* _logFile;
+
 
     void update_fsm(uint8_t byte_rx);
     void data_ingest(uint8_t rx_cks, uint32_t data_len);

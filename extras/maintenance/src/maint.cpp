@@ -1,5 +1,7 @@
 #include "maint.h"
 
+#include <qdatetime.h>
+
 
 Maint::Maintenance::Maintenance()
 {
@@ -43,7 +45,13 @@ bool Maint::Maintenance::Open(QString serialPortName, enum QSerialPort::BaudRate
 	_serialPort->setStopBits(QSerialPort::OneStop);
 	_serialPort->setFlowControl(QSerialPort::NoFlowControl);
 
+    _logFileName = QString("%1-%2.txt").arg(QDateTime::currentDateTime().toString().replace(" ", "-").replace(":","-")).arg(serialPortName);
+    _logFile = fopen(_logFileName.toStdString().c_str(), "w");
+
+    fclose(_logFile);
+
 	connect(_serialPort, SIGNAL(readyRead()), this, SLOT(OnRx()));
+    connect(this, SIGNAL(rxBytes(quint8*, int)), this, SLOT(logBytes(quint8*, int)));
 
 	return _serialPort->open(QSerialPort::OpenModeFlag::ReadWrite);
 }
@@ -54,6 +62,8 @@ void Maint::Maintenance::Close()
     _txTimer->stop();
     _txTimer->disconnect(_txTimer, SIGNAL(timeout()), this, SLOT(Tx()));
 
+    disconnect(this, SIGNAL(rxBytes(quint8*, int)), this, SLOT(logBytes(quint8*, int)));
+
     _serialPort->disconnect(_serialPort, SIGNAL(readyRead()), this, SLOT(OnRx()));
     _serialPort->close();
 }
@@ -61,7 +71,7 @@ void Maint::Maintenance::Close()
 
 void Maint::Maintenance::EnableTx()
 {
-    _txTimer->setInterval(20);
+    _txTimer->setInterval(10);
     _txTimer->setSingleShot(false);
     _txTimer->setTimerType(Qt::PreciseTimer);
 
@@ -192,6 +202,37 @@ void Maint::Maintenance::TxImuType(IMU_TYPE imuType)
 
     _txMutex.lock();
     _txStatus = Maint::TX_STATUS::TX_SET_IMU_TYPE;
+    _txMutex.unlock();
+}
+
+
+void Maint::Maintenance::I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg)
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_READ);
+
+    _tx_param_i2c_chan = uint32_t(i2c);
+    _tx_param_i2c_addr = uint32_t(addr);
+    _tx_param_i2c_reg  = uint32_t(reg);
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_I2C_READ;
+    _txMutex.unlock();
+}
+
+
+void Maint::Maintenance::I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val)
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_WRITE);
+
+    _tx_param_i2c_chan = uint32_t(i2c);
+    _tx_param_i2c_addr = uint32_t(addr);
+    _tx_param_i2c_reg  = uint32_t(reg);
+    _tx_param_i2c_val  = uint32_t(val);
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_I2C_WRITE;
     _txMutex.unlock();
 }
 
@@ -477,6 +518,93 @@ void Maint::Maintenance::Tx()
         _txStatus = Maint::TX_STATUS::TX_GET;
 
     }
+    else if (_txStatus == Maint::TX_STATUS::TX_I2C_READ)
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* i2cChannelBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_chan);
+        uint8_t* i2cAddressBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_addr);
+        uint8_t* i2cRegisterBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_reg);
+
+        qba.push_back(i2cChannelBytes[0]);
+        qba.push_back(i2cChannelBytes[1]);
+        qba.push_back(i2cChannelBytes[2]);
+        qba.push_back(i2cChannelBytes[3]);
+        qba.push_back(i2cAddressBytes[0]);
+        qba.push_back(i2cAddressBytes[1]);
+        qba.push_back(i2cAddressBytes[2]);
+        qba.push_back(i2cAddressBytes[3]);
+        qba.push_back(i2cRegisterBytes[0]);
+        qba.push_back(i2cRegisterBytes[1]);
+        qba.push_back(i2cRegisterBytes[2]);
+        qba.push_back(i2cRegisterBytes[3]);
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
+    else if (_txStatus == Maint::TX_STATUS::TX_I2C_WRITE)
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* i2cChannelBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_chan);
+        uint8_t* i2cAddressBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_addr);
+        uint8_t* i2cRegisterBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_reg);
+        uint8_t* i2cValBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_val);
+
+        qba.push_back(i2cChannelBytes[0]);
+        qba.push_back(i2cChannelBytes[1]);
+        qba.push_back(i2cChannelBytes[2]);
+        qba.push_back(i2cChannelBytes[3]);
+        qba.push_back(i2cAddressBytes[0]);
+        qba.push_back(i2cAddressBytes[1]);
+        qba.push_back(i2cAddressBytes[2]);
+        qba.push_back(i2cAddressBytes[3]);
+        qba.push_back(i2cRegisterBytes[0]);
+        qba.push_back(i2cRegisterBytes[1]);
+        qba.push_back(i2cRegisterBytes[2]);
+        qba.push_back(i2cRegisterBytes[3]);
+        qba.push_back(i2cValBytes[0]);
+        qba.push_back(i2cValBytes[1]);
+        qba.push_back(i2cValBytes[2]);
+        qba.push_back(i2cValBytes[3]);        
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
     else // TX_WRITE_TO_FLASH
     {
         qba.push_back(Maint::SYNC_CHAR);
@@ -510,6 +638,8 @@ void Maint::Maintenance::OnRx()
 {
 	QByteArray qba = _serialPort->readAll();
 	
+    emit rxBytes(reinterpret_cast<quint8*>(qba.data()), qba.size());
+
 	for (auto& byte : qba)
 	{
         //printf("%c", byte);
@@ -1125,7 +1255,14 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 
             pPayload += sizeof(uint32_t);
         }
+        if (rx_header->Bits.i2c_read)
+        {
+            uint32_t i2c_read = *(reinterpret_cast<uint32_t*>(pPayload));
 
+            emit receivedI2CRead(i2c_read);
+
+            pPayload += sizeof(uint32_t);
+        }
     }
 }
 
@@ -1163,3 +1300,19 @@ uint32_t Maint::Maintenance::calc_exp_bytes(Maint::MAINT_HEADER_T* header)
     return 1 + sizeof(uint32_t) * bit_sets;
 }
 
+
+void Maint::Maintenance::logBytes(quint8* data, int size)
+{
+    QString timestamp = QDateTime::currentDateTime().toString();
+    QString logLine = QString("[%1] ").arg(timestamp);
+
+    for (int i = 0; i < size; i++)
+    {
+        logLine.append(QString("0x%1 ").arg(QString::number(data[i], 16).toUpper()));
+    }
+    logLine.append("\n");
+
+    _logFile = fopen(_logFileName.toStdString().c_str(), "a");
+    fprintf(_logFile, logLine.toStdString().c_str());
+    fclose(_logFile);
+}

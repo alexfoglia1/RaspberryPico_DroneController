@@ -47,6 +47,7 @@ private:
 	const int _txDelayMillis = 20;
 	QMap<QString, int> _defaultPlotSpan;
 	QMap<Maint::IMU_TYPE, QString> _imuTypeToString;
+	QMap<Maint::IMU_TYPE, uint32_t> _imuTypeToI2CAddr;
 	QMap<int, motors_params_format> _rxMotorParams;
 	QMap<int, js_params_format> _rxJsParams;
 	QMap<int, pid_params_format> _rxPidParams;
@@ -78,6 +79,8 @@ private slots:
 	void OnBtnFlashWrite();
 	void OnBtnRefreshParams();
 	void OnSpinSetMaintenanceValue(int newValue);
+	void OnBtnI2CRead();
+	void OnBtnI2CWrite();
 
 	void OnRxRawData(bool valid, quint8* data, int size);
 	void OnTxRawData(quint8* data, int size);
@@ -141,6 +144,7 @@ private slots:
 	void OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
 	void OnReceivedPtf1Params(uint32_t source_no, float x, float y, float z);
 	void OnReceivedImuType(uint32_t imu_type);
+	void OnReceivedI2CRead(uint32_t i2c_read);
 };
 
 #endif

@@ -413,6 +413,13 @@
         </property>
        </widget>
       </item>
+      <item row="8" column="5">
+       <widget class="QCheckBox" name="checkTxI2CRead">
+        <property name="text">
+         <string>I2C Read</string>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </widget>
@@ -1009,6 +1016,16 @@
       </item>
       <item row="2" column="11">
        <widget class="QLineEdit" name="lineRxCbit"/>
+      </item>
+      <item row="3" column="10">
+       <widget class="QCheckBox" name="checkRxI2CRead">
+        <property name="text">
+         <string>I2C Read</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="11">
+       <widget class="QLineEdit" name="lineRxI2CRead"/>
       </item>
      </layout>
     </widget>
@@ -2368,6 +2385,119 @@
     <property name="text">
      <string>Boot</string>
     </property>
+   </widget>
+   <widget class="QGroupBox" name="TxMaintenanceGroup_2">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>460</y>
+      <width>341</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Maintenance I2C Read</string>
+    </property>
+    <widget class="QWidget" name="horizontalLayoutWidget_10">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>309</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_10">
+      <item>
+       <widget class="QComboBox" name="comboSetI2cChannel">
+        <item>
+         <property name="text">
+          <string>i2c0</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>i2c1</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineSetI2cAddress"/>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineSetI2cRegister"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnI2CRead">
+        <property name="text">
+         <string>Send</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QGroupBox" name="TxMaintenanceGroup_3">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>380</y>
+      <width>341</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Maintenance I2C Write</string>
+    </property>
+    <widget class="QWidget" name="horizontalLayoutWidget_11">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>20</y>
+       <width>309</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_11">
+      <item>
+       <widget class="QComboBox" name="comboSetI2cChannelW">
+        <item>
+         <property name="text">
+          <string>i2c0</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>i2c1</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineSetI2cAddressW"/>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineSetI2cRegisterW"/>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="lineSetI2cValW"/>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnI2CWrite">
+        <property name="text">
+         <string>Send</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">

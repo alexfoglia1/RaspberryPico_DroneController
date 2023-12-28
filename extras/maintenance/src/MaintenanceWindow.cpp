@@ -17,6 +17,14 @@ MaintenanceWindow::MaintenanceWindow()
 		{Maint::IMU_TYPE::BNO055,  "BNO055"}
 	};
 
+	_imuTypeToI2CAddr =
+	{
+		{Maint::IMU_TYPE::LSM9DS1, 0x6A},
+		{Maint::IMU_TYPE::MPU6050, 0x68},
+		{Maint::IMU_TYPE::BNO055,  0x28}
+	};
+
+
 	_defaultPlotSpan =
 	{
 		{"NONE", 16000},
@@ -131,6 +139,8 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnSendImuType, SIGNAL(clicked()), this, SLOT(OnBtnSendImuType()));
 	connect(_ui.btnFlashWrite, SIGNAL(clicked()), this, SLOT(OnBtnFlashWrite()));
 	connect(_ui.btnRefreshParams, SIGNAL(clicked()), this, SLOT(OnBtnRefreshParams()));
+	connect(_ui.btnI2CRead, SIGNAL(clicked()), this, SLOT(OnBtnI2CRead()));
+	connect(_ui.btnI2CWrite, SIGNAL(clicked()), this, SLOT(OnBtnI2CWrite()));
 
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
 
@@ -204,6 +214,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxPidParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxPtf1Params, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxImuType, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxI2CRead, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
@@ -265,6 +276,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedPidParams(uint32_t, float, float, float, float, float, float)), this, SLOT(OnReceivedPidParams(uint32_t, float, float, float, float, float, float)));
 	connect(_maintHandler, SIGNAL(receivedPtf1Params(uint32_t, float, float, float)), this, SLOT(OnReceivedPtf1Params(uint32_t, float, float, float)));
 	connect(_maintHandler, SIGNAL(receivedImuType(uint32_t)), this, SLOT(OnReceivedImuType(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedI2CRead(uint32_t)), this, SLOT(OnReceivedI2CRead(uint32_t)));
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
@@ -405,6 +417,8 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 			_ui.comboSelPort->setEnabled(false);
 			_ui.groupBoxTx->setEnabled(true);
 			_ui.TxMaintenanceGroup->setEnabled(true);
+			_ui.TxMaintenanceGroup_2->setEnabled(true);
+			_ui.TxMaintenanceGroup_3->setEnabled(true);
 			_ui.TxMaintenanceParamsGroup->setEnabled(true);
 
 			_ui.btnOpenSerialPort->setText("Close");
@@ -969,6 +983,17 @@ void MaintenanceWindow::OnHeaderChanged()
 		_ui.lineRxCbit->setText("");
 	}
 
+	if (_ui.checkTxI2CRead->isChecked())
+	{
+		header.Bits.i2c_read = 1;
+	}
+	else
+	{
+		header.Bits.i2c_read = 0;
+		_ui.checkRxI2CRead->setChecked(false);
+		_ui.lineRxI2CRead->setText("");
+	}
+
 	if (_ui.checkTxMotorParams->isChecked())
 	{
 		header.Bits.motor_params = 1;
@@ -1031,6 +1056,41 @@ void MaintenanceWindow::OnBtnSendMaintenanceCommand()
 		_maintHandler->TxMaintenanceCommand(_ui.comboSetCommandId->currentIndex() + 1, data);
 	}
 }
+
+
+void MaintenanceWindow::OnBtnI2CRead()
+{
+	if (_maintHandler)
+	{
+		uint32_t i2c = _ui.comboSetI2cChannel->currentIndex();
+		uint32_t addr = _ui.lineSetI2cAddress->text().toUInt(nullptr, 16) & 0xFF;
+		uint32_t reg = _ui.lineSetI2cRegister->text().toUInt(nullptr, 16) & 0xFF;
+
+		_ui.lineSetI2cAddress->setText(QString::number(addr, 16));
+		_ui.lineSetI2cRegister->setText(QString::number(reg, 16));
+
+		_maintHandler->I2CRead(i2c, addr, reg);
+	}
+}
+
+
+void MaintenanceWindow::OnBtnI2CWrite()
+{
+	if (_maintHandler)
+	{
+		uint32_t i2c = _ui.comboSetI2cChannelW->currentIndex();
+		uint32_t addr = _ui.lineSetI2cAddressW->text().toUInt(nullptr, 16) & 0xFF;
+		uint32_t reg = _ui.lineSetI2cRegisterW->text().toUInt(nullptr, 16) & 0xFF;
+		uint32_t val = _ui.lineSetI2cValW->text().toUInt(nullptr, 16) & 0xFF;
+
+		_ui.lineSetI2cAddressW->setText(QString::number(addr, 16));
+		_ui.lineSetI2cRegisterW->setText(QString::number(reg, 16));
+		_ui.lineSetI2cValW->setText(QString::number(val, 16));
+
+		_maintHandler->I2CWrite(i2c, addr, reg, val);
+	}
+}
+
 
 
 void MaintenanceWindow::OnBtnSendMaintenanceParams()
@@ -1677,4 +1737,13 @@ void MaintenanceWindow::OnReceivedPtf1Params(uint32_t source_no, float x, float 
 void MaintenanceWindow::OnReceivedImuType(uint32_t imu_type)
 {
 	_rxImuType = Maint::IMU_TYPE(imu_type);
+	_ui.lineSetI2cAddress->setText(QString::number(_imuTypeToI2CAddr[_rxImuType], 16));
+	_ui.lineSetI2cAddressW->setText(QString::number(_imuTypeToI2CAddr[_rxImuType], 16));
 }
+
+void MaintenanceWindow::OnReceivedI2CRead(uint32_t imu_type)
+{
+	_ui.checkRxI2CRead->setChecked(true);
+	_ui.lineRxI2CRead->setText(QString::number(imu_type, 16));
+}
+
