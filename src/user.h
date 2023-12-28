@@ -26,12 +26,13 @@
 #define MPU6050_SDA_PIN 18
 #define MPU6050_SCL_PIN 19
 
-#define BAUD_RATE 9600
+#define BAUD_RATE 115200
 #define DATA_BITS 8
 #define STOP_BITS 1
 #define PARITY    UART_PARITY_NONE
 #define UART_TX_PIN 0
 #define UART_RX_PIN 1
+#define HC05_
 
 #define PROBE_GPIO 16
 

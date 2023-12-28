@@ -66,6 +66,12 @@ static void put_packet(uint8_t* buf, uint32_t len, MaintClient sender)
     }
     else
     {
+        uart_putc_raw(uart0, MAINT_SYNC_CHAR);
+        for (uint32_t i = 0; i < len; i++)
+        {
+            uart_putc_raw(uart0, buf[i]);
+        }        
+#if 0        
         if (uart_ll_tx_buf + len + 1 < UART_BUFLEN)
         {
             uart_tx_buf[uart_ll_tx_buf] = MAINT_SYNC_CHAR;
@@ -73,6 +79,7 @@ static void put_packet(uint8_t* buf, uint32_t len, MaintClient sender)
             
             uart_ll_tx_buf += (1 + len);
         }
+#endif        
     }
 }
 
@@ -935,6 +942,7 @@ void MAINT_UsbHandler()
 
 void MAINT_UartHandler()
 {
+#if 0
     gpio_put(PICO_DEFAULT_LED_PIN, 0);
     uint32_t tx_size;
 
@@ -963,6 +971,7 @@ void MAINT_UartHandler()
 
     uart_ll_tx_buf -= tx_size;
     gpio_put(PICO_DEFAULT_LED_PIN, 1);
+#endif
 }
 
 
