@@ -32,7 +32,6 @@
 #define PARITY    UART_PARITY_NONE
 #define UART_TX_PIN 0
 #define UART_RX_PIN 1
-#define HC05_
 
 #define PROBE_GPIO 16
 
