@@ -190,7 +190,7 @@ bool ATTITUDE_Init()
             return imu->begin(i2c1, MPU6050_SDA_PIN, MPU6050_SCL_PIN);
         case IMU_TYPE::BNO055:
             imu = new BNO055Interface();
-            return imu->begin(i2c0, BNO055_SDA_PIN, BNO055_SCL_PIN);
+            return imu->begin(i2c1, BNO055_SDA_PIN, BNO055_SCL_PIN);
         default:
             imu = new MPU6050Interface();
             return imu->begin(i2c1, MPU6050_SDA_PIN, MPU6050_SCL_PIN);
