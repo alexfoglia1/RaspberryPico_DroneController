@@ -19,12 +19,19 @@
 #define MOTOR_3_GPIO 6
 #define MOTOR_4_GPIO 9
 
-#define BNO055_SDA_PIN 4
-#define BNO055_SCL_PIN 5
+#define BNO055_SDA_PIN 2
+#define BNO055_SCL_PIN 3
 #define LSM9DS1_SDA_PIN 4
 #define LSM9DS1_SCL_PIN 5
 #define MPU6050_SDA_PIN 18
 #define MPU6050_SCL_PIN 19
+
+#define BAUD_RATE 9600
+#define DATA_BITS 8
+#define STOP_BITS 1
+#define PARITY    UART_PARITY_NONE
+#define UART_TX_PIN 0
+#define UART_RX_PIN 1
 
 #define PROBE_GPIO 16
 

@@ -18,12 +18,12 @@ PID_CONTROL_TAG pid_yaw;
 
 static void calib()
 {
-    motor1.writeMicroseconds(MOTOR_MAX_SIGNAL);
-    motor2.writeMicroseconds(MOTOR_MAX_SIGNAL);
-    motor3.writeMicroseconds(MOTOR_MAX_SIGNAL);
-    motor4.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    //motor1.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    //motor2.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    //motor3.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    //motor4.writeMicroseconds(MOTOR_MAX_SIGNAL);
     
-    sleep_ms(2000);
+    //sleep_ms(2000);
 
     motor1.writeMicroseconds(MOTOR_MIN_SIGNAL);
     motor2.writeMicroseconds(MOTOR_MIN_SIGNAL);

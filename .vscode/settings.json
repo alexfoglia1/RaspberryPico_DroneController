@@ -45,6 +45,7 @@
         "streambuf": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "time.h": "c"
     }
 }

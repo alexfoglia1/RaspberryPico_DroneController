@@ -47,6 +47,7 @@ bool CPU0_TIMER_Loop(repeating_timer_t* timer)
     }
     
     CBIT_Handler();
+    MAINT_UartHandler();
 
     return true;
 }

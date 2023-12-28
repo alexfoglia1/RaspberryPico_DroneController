@@ -5,8 +5,11 @@
 #include "motors.h"
 #include "maint.h"
 #include "cbit.h"
+#include "uart.h"
+
 #include <stdio.h>
 #include <pico/multicore.h>
+
 
 const float MIN_ROLL_DEGREES = -5.0f;
 const float MAX_ROLL_DEGREES = 5.0f;
@@ -57,20 +60,21 @@ void __cpu1_entry_point__()
 
 int main()
 {
+
     /** Initialize gpio directions **/
     InitBoard();
-
     /** Initialize application **/
     MOTORS_Init();
     MAINT_Init();
     CBIT_Init();
-
+    
     /** Turn on LED **/
     gpio_put(PICO_DEFAULT_LED_PIN, 1);
 
     CBIT_TAG fail_code;
     fail_code.Dword = 0;
     fail_code.Bits.imu_failure = 1;
+
     if (!ATTITUDE_Init())
     {
         CBIT_Set_fail_code(fail_code.Dword, true);
@@ -123,10 +127,11 @@ int main()
         }
     }
 
-    while(1)
+    UART_Init();
+    while (1)
     {
-        MAINT_Handler();
+        MAINT_UsbHandler();
     }
-    
+
     return 0;
 }
