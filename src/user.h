@@ -37,6 +37,27 @@
 
 #define MOTOR_ARMED_THRESHOLD 200
 
+#include <stdint.h>
+
+typedef struct
+{
+    uint8_t major_v;
+    uint8_t minor_v;
+    uint8_t stage_v;
+    uint8_t rel_type;
+} SW_VER_TAG;
+
+enum class REL_TYPE_TAG
+{
+    BETA = 0x00,
+    RELEASE = 0x01
+};
+
+#define MAJOR_V  1
+#define MINOR_V  0
+#define STAGE_V  0
+#define REL_TYPE REL_TYPE_TAG::BETA
+
 inline float saturate(float val, float min, float max)
 {
     return (val < min) ? min :

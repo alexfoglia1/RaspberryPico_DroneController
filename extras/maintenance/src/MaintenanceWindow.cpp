@@ -217,6 +217,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.checkTxPtf1Params, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxImuType, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 	connect(_ui.checkTxI2CRead, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
+	connect(_ui.checkTxSwVer, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
 
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
@@ -279,6 +280,8 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedPtf1Params(uint32_t, float, float, float)), this, SLOT(OnReceivedPtf1Params(uint32_t, float, float, float)));
 	connect(_maintHandler, SIGNAL(receivedImuType(uint32_t)), this, SLOT(OnReceivedImuType(uint32_t)));
 	connect(_maintHandler, SIGNAL(receivedI2CRead(uint32_t)), this, SLOT(OnReceivedI2CRead(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)), this, SLOT(OnReceivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)));
+
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
@@ -1020,6 +1023,17 @@ void MaintenanceWindow::OnHeaderChanged()
 		header.Bits.i2c_read = 0;
 		_ui.checkRxI2CRead->setChecked(false);
 		_ui.lineRxI2CRead->setText("");
+	}
+
+	if (_ui.checkTxSwVer->isChecked())
+	{
+		header.Bits.sw_ver = 1;
+	}
+	else
+	{
+		header.Bits.sw_ver = 0;
+		_ui.checkRxSwVer->setChecked(false);
+		_ui.lineRxSwVer->setText("");
 	}
 
 	if (_ui.checkTxMotorParams->isChecked())
@@ -1769,9 +1783,18 @@ void MaintenanceWindow::OnReceivedImuType(uint32_t imu_type)
 	_ui.lineSetI2cAddressW->setText(QString::number(_imuTypeToI2CAddr[_rxImuType], 16));
 }
 
+
 void MaintenanceWindow::OnReceivedI2CRead(uint32_t imu_type)
 {
 	_ui.checkRxI2CRead->setChecked(true);
 	_ui.lineRxI2CRead->setText(QString::number(imu_type, 16));
 }
 
+
+void MaintenanceWindow::OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type)
+{
+	_ui.checkRxSwVer->setChecked(true);
+	_ui.lineRxSwVer->setText(QString("%1.%2.%3-%4").arg(major_v).arg(minor_v).arg(stage_v).arg(
+		Maint::REL_TYPE(rel_type) == Maint::REL_TYPE::BETA    ? "B" :
+		Maint::REL_TYPE(rel_type) == Maint::REL_TYPE::RELEASE ? "R" : "?"));
+}

@@ -149,6 +149,7 @@ private slots:
 	void OnReceivedPtf1Params(uint32_t source_no, float x, float y, float z);
 	void OnReceivedImuType(uint32_t imu_type);
 	void OnReceivedI2CRead(uint32_t i2c_read);
+	void OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
 };
 
 #endif

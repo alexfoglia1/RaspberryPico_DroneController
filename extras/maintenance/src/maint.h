@@ -75,7 +75,8 @@ namespace Maint
             uint64_t ptf1_params : 1;     //51
             uint64_t imu_type : 1; // 52
             uint64_t i2c_read : 1; // 53
-            uint64_t maint_cmd_id : 10;    //54, 55, 56, 57, 58, 59, 60, 61, 62, 63
+            uint64_t sw_ver : 1; // 54
+            uint64_t maint_cmd_id : 9;    //55, 56, 57, 58, 59, 60, 61, 62, 63
         } Bits;
 
         uint8_t  Bytes[8];
@@ -98,6 +99,20 @@ namespace Maint
         uint8_t Bytes[4];
         uint32_t Dword;
     } CBIT_TAG;
+
+    typedef struct
+    {
+        uint8_t major_v;
+        uint8_t minor_v;
+        uint8_t stage_v;
+        uint8_t rel_type;
+    } SW_VER_TAG;
+
+    enum class REL_TYPE : uint8_t
+    {
+        BETA = 0x00,
+        RELEASE = 0x01
+    };
 
     enum class MAINT_STATUS
     {
@@ -254,6 +269,7 @@ signals:
     void receivedPtf1Params(uint32_t source_no, float x, float y, float z);
     void receivedImuType(uint32_t imu_type);
     void receivedI2CRead(uint32_t i2c_read);
+    void receivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
 
 private:
 	QSerialPort* _serialPort;

@@ -1263,6 +1263,14 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 
             pPayload += sizeof(uint32_t);
         }
+        if (rx_header->Bits.sw_ver)
+        {
+            SW_VER_TAG* sw_ver = (reinterpret_cast<SW_VER_TAG*>(pPayload));
+
+            emit receivedSwVer(sw_ver->major_v, sw_ver->minor_v, sw_ver->stage_v, sw_ver->rel_type);
+
+            pPayload += sizeof(uint32_t);
+        }
     }
 }
 

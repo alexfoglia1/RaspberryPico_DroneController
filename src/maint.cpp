@@ -898,6 +898,14 @@ void MAINT_OnByteReceived(uint8_t byte_rx, MaintClient sender)
             memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&idata), sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
+        if (tx_message.header.Bits.sw_ver)
+        {
+            SW_VER_TAG sw_ver = {MAJOR_V, MINOR_V, STAGE_V, static_cast<uint8_t>(REL_TYPE)};
+
+            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&sw_ver), sizeof(uint32_t));
+            
+            tx_payload_idx += sizeof(uint32_t);
+        }
 
         tx_message.payload[tx_payload_idx] = checksum(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx);
 
