@@ -7,6 +7,8 @@
 MaintenanceWindow::MaintenanceWindow()
 {
 	_ui.setupUi(this);
+	_progressUi.setupUi(&_autoscanProgressWindow);
+	_autoscanProgressWindow.setVisible(false);
 
 	_maintHandler = nullptr;
 
@@ -116,7 +118,6 @@ MaintenanceWindow::MaintenanceWindow()
 		_ui.comboSetImuType->addItem(text, userData);
 	}
 
-	autoScanComPorts();
 	_ui.comboSelBaud->addItem("1200", QSerialPort::Baud1200);
 	_ui.comboSelBaud->addItem("2400", QSerialPort::Baud2400);
 	_ui.comboSelBaud->addItem("4800", QSerialPort::Baud4800);
@@ -131,6 +132,7 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
 	connect(_ui.btnOpenBoot, SIGNAL(clicked()), this, SLOT(OnBtnOpenBoot()));
+	connect(_ui.btnRescanPorts, SIGNAL(clicked()), this, SLOT(OnBtnRescanPorts()));
 	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
 	connect(_ui.btnSendMaintenanceParams, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceParams()));
 	connect(_ui.btnSendMaintenanceJsParams, SIGNAL(clicked()), this, SLOT(OnBtnSendJsParams()));
@@ -280,11 +282,21 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
+
+	QTimer* autoscanComPortsTimer = new QTimer();
+	autoscanComPortsTimer->setSingleShot(true);
+	autoscanComPortsTimer->setTimerType(Qt::PreciseTimer);
+
+	connect(autoscanComPortsTimer, &QTimer::timeout, this, [this, autoscanComPortsTimer] { this->autoScanComPorts(); autoscanComPortsTimer->deleteLater(); });
+	autoscanComPortsTimer->start(500);
 }
 
 
 void MaintenanceWindow::autoScanComPorts()
 {
+	_progressUi.autoscanStatusPrompt->setText("");
+
+	_autoscanProgressWindow.setVisible(true);
 	for (int i = 0; i < 100; i++)
 	{
 #ifdef __linux__
@@ -292,6 +304,9 @@ void MaintenanceWindow::autoScanComPorts()
 #else
 		QString portName = QString("COM%1").arg(i);
 #endif
+		_progressUi.autoscanStatusPrompt->append(QString("Testing %1").arg(portName));
+		qApp->processEvents();
+
 		QSerialPort* serialPort = new QSerialPort(portName);
 		if (serialPort->open(QSerialPort::ReadWrite))
 		{
@@ -299,8 +314,18 @@ void MaintenanceWindow::autoScanComPorts()
 			serialPort->deleteLater();
 
 			_ui.comboSelPort->addItem(portName);
+			_progressUi.autoscanStatusPrompt->append(QString("OK"));
 		}
+		else
+		{
+			_progressUi.autoscanStatusPrompt->append(QString("FAIL"));
+		}
+
+		_progressUi.autoscanStatusProgress->setValue(i + 1);
+
+		qApp->processEvents();
 	}
+	_autoscanProgressWindow.setVisible(false);
 }
 
 
@@ -391,12 +416,6 @@ void MaintenanceWindow::OnComboTrack3TextChanged(const QString& newText)
 
 void MaintenanceWindow::OnBtnOpenSerialPort()
 {
-	if (_ui.comboSelPort->count() == 0)
-	{
-		autoScanComPorts();
-		return;
-	}
-
 	if (_ui.btnOpenSerialPort->text().toUpper() == "OPEN")
 	{
 		int idx = _ui.comboSelBaud->currentIndex();
@@ -422,6 +441,7 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 			_ui.TxMaintenanceParamsGroup->setEnabled(true);
 
 			_ui.btnOpenSerialPort->setText("Close");
+			_ui.btnRescanPorts->setEnabled(false);
 		}
 		else
 		{
@@ -432,6 +452,7 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 	{
 		_maintHandler->Close();
 		_ui.comboSelPort->setEnabled(true);
+		_ui.btnRescanPorts->setEnabled(true);
 		_ui.btnOpenSerialPort->setText("Open");
 		_ui.lblRxData->setStyleSheet("background-color:#FF0000");
 		_ui.lblTxData->setStyleSheet("background-color:#FF0000");
@@ -447,6 +468,13 @@ void MaintenanceWindow::OnBtnOpenBoot()
 	_ui.btnOpenSerialPort->setText("Open");
 	_ui.lblRxData->setStyleSheet("background-color:#FF0000");
 	_ui.lblTxData->setStyleSheet("background-color:#FF0000");
+}
+
+
+void MaintenanceWindow::OnBtnRescanPorts()
+{
+	_ui.comboSelPort->clear();
+	autoScanComPorts();
 }
 
 

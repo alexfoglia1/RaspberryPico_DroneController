@@ -18,12 +18,12 @@ PID_CONTROL_TAG pid_yaw;
 
 static void calib()
 {
-    //motor1.writeMicroseconds(MOTOR_MAX_SIGNAL);
-    //motor2.writeMicroseconds(MOTOR_MAX_SIGNAL);
-    //motor3.writeMicroseconds(MOTOR_MAX_SIGNAL);
-    //motor4.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    motor1.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    motor2.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    motor3.writeMicroseconds(MOTOR_MAX_SIGNAL);
+    motor4.writeMicroseconds(MOTOR_MAX_SIGNAL);
     
-    //sleep_ms(2000);
+    sleep_ms(2000);
 
     motor1.writeMicroseconds(MOTOR_MIN_SIGNAL);
     motor2.writeMicroseconds(MOTOR_MIN_SIGNAL);
@@ -92,6 +92,8 @@ void MOTORS_Handler()
         /** Velocity control loop **/
         //pid_controller(&pid_yaw, pid_yaw_gain, 0.0f, gz_flt_tag.filt_k);
 
+        pid_yaw.u = 0x00;
+        pid_roll.u = 0x00;
         pid_yaw.u = 0x00;
 
         if (MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_roll.u - pid_pitch.u - pid_yaw.u);

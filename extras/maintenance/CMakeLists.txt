@@ -11,6 +11,7 @@ set(CMAKE_AUTORCC ON)
 
 add_executable(DroneMaintenance
 ${CMAKE_SOURCE_DIR}/src/MaintenanceGui.ui
+${CMAKE_SOURCE_DIR}/src/AutoscanComPortsGui.ui
 
 ${CMAKE_SOURCE_DIR}/src/MaintenanceWindow.h
 ${CMAKE_SOURCE_DIR}/src/MaintenanceWindow.cpp

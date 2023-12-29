@@ -4,6 +4,7 @@
 
 #include "maint.h"
 #include "ui_MaintenanceGui.h"
+#include "ui_AutoscanComPortsGui.h"
 
 typedef struct
 {
@@ -43,6 +44,7 @@ public:
 
 private:
 	Ui_MaintenanceGui _ui;
+	Ui_AutoscanComPortsGui _progressUi;
 	Maint::Maintenance* _maintHandler;
 	const int _txDelayMillis = 20;
 	QMap<QString, int> _defaultPlotSpan;
@@ -53,6 +55,7 @@ private:
 	QMap<int, pid_params_format> _rxPidParams;
 	QMap<int, ptf1_params_format> _rxPtf1Params;
 	Maint::IMU_TYPE _rxImuType;
+	QMainWindow _autoscanProgressWindow;
 
 	void autoScanComPorts();
 	void checkPlot(QString expectedText, double value);
@@ -61,6 +64,7 @@ private slots:
 
 	void OnBtnOpenSerialPort();
 	void OnBtnOpenBoot();
+	void OnBtnRescanPorts();
 	void OnPlotSliderValueChanged(int newValue);
 	void OnPlotTrack1ValueChanged(int newValue);
 	void OnPlotTrack2ValueChanged(int newValue);

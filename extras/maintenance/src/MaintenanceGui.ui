@@ -1033,7 +1033,7 @@
    <widget class="QPushButton" name="btnOpenSerialPort">
     <property name="geometry">
      <rect>
-      <x>380</x>
+      <x>460</x>
       <y>10</y>
       <width>75</width>
       <height>21</height>
@@ -2376,7 +2376,7 @@
    <widget class="QPushButton" name="btnOpenBoot">
     <property name="geometry">
      <rect>
-      <x>470</x>
+      <x>550</x>
       <y>10</y>
       <width>75</width>
       <height>21</height>
@@ -2498,6 +2498,19 @@
       </item>
      </layout>
     </widget>
+   </widget>
+   <widget class="QPushButton" name="btnRescanPorts">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>10</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rescan</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
