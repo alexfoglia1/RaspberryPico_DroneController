@@ -91,7 +91,7 @@ void JOYSTICK_Handler()
     else
     {
         JOYSTICK_Roll = (max_roll + min_roll) / 2.0f;
-        JOYSTICK_Pitch = (max_pitch - min_pitch) / 2.0f;
+        JOYSTICK_Pitch = (max_pitch + min_pitch) / 2.0f;
         JOYSTICK_Throttle = RADIO_MIN_SIGNAL;
     }
 
