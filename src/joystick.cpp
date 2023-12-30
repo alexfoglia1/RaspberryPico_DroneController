@@ -81,10 +81,19 @@ void JOYSTICK_Handler()
 
     armed_signal_value = armed_signal.pulseIn();
 
-    JOYSTICK_Roll = dead_center(to_range(roll_signal_value, RADIO_MIN_SIGNAL_ROLL, RADIO_MAX_SIGNAL_ROLL, min_roll, max_roll));
-    JOYSTICK_Pitch = -dead_center(to_range(pitch_signal_value, RADIO_MIN_SIGNAL_PITCH, RADIO_MAX_SIGNAL_PITCH, min_pitch, max_pitch));
-    JOYSTICK_Throttle = throttle_signal_value;
     JOYSTICK_MotorsArmed = (armed_signal_value > ((RADIO_MAX_SIGNAL + RADIO_MIN_SIGNAL) / 2));
+    if (JOYSTICK_MotorsArmed)
+    {
+        JOYSTICK_Roll = dead_center(to_range(roll_signal_value, RADIO_MIN_SIGNAL_ROLL, RADIO_MAX_SIGNAL_ROLL, min_roll, max_roll));
+        JOYSTICK_Pitch = -dead_center(to_range(pitch_signal_value, RADIO_MIN_SIGNAL_PITCH, RADIO_MAX_SIGNAL_PITCH, min_pitch, max_pitch));
+        JOYSTICK_Throttle = throttle_signal_value;
+    }
+    else
+    {
+        JOYSTICK_Roll = (max_roll + min_roll) / 2.0f;
+        JOYSTICK_Pitch = (max_pitch - min_pitch) / 2.0f;
+        JOYSTICK_Throttle = RADIO_MIN_SIGNAL;
+    }
 
     /** Check failure **/
     uint64_t lastRollRise_t_us = roll_signal.lastRise_us();
