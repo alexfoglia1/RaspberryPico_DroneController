@@ -226,3 +226,10 @@ Release Type:
 ### Maintenance Client
 
 Under extras/maintenance a cross-platform Qt application is provided as an example of a maintenance protocol client.
+
+
+## Credits
+
+The LSM9DS1 device driver is a porting of the [Arduino LSM9DS1 library](https://github.com/sparkfun/LSM9DS1_Breakout) by Jim Lindblom of [SparkFun Electronics](https://www.sparkfun.com/).
+
+The BNO055 device driver is a porting of the [BNO055 device driver for Raspberry Pi](https://github.com/AngelPerezM/rpi-bno055-drv) developed by [Ángel Pérez Muñoz](https://github.com/AngelPerezM).
