@@ -56,6 +56,8 @@ private:
 	QMap<int, ptf1_params_format> _rxPtf1Params;
 	Maint::IMU_TYPE _rxImuType;
 	QMainWindow _autoscanProgressWindow;
+	uint32_t _rxCounter;
+	int64_t _rxT0millis;
 
 	void autoScanComPorts();
 	void checkPlot(QString expectedText, double value);

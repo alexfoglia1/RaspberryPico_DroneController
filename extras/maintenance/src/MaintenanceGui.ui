@@ -2529,6 +2529,32 @@
      <string>Rescan</string>
     </property>
    </widget>
+   <widget class="QLabel" name="lblRxCount">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>820</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Count: 0</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="lblRxFreq">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>820</y>
+      <width>161</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Frequency: NaN Hz</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">

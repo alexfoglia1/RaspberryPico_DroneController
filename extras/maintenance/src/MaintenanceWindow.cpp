@@ -11,7 +11,8 @@ MaintenanceWindow::MaintenanceWindow()
 	_autoscanProgressWindow.setVisible(false);
 
 	_maintHandler = nullptr;
-
+	_rxCounter = 0;
+	_rxT0millis = -1;
 	_imuTypeToString =
 	{
 		{Maint::IMU_TYPE::LSM9DS1, "LSM9DS1"},
@@ -445,6 +446,12 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 
 			_ui.btnOpenSerialPort->setText("Close");
 			_ui.btnRescanPorts->setEnabled(false);
+
+			_rxCounter = 0;
+			_rxT0millis = -1;
+
+			_ui.lblRxCount->setText("Count: 0");
+			_ui.lblRxFreq->setText("Frequency: NaN Hz");
 		}
 		else
 		{
@@ -459,6 +466,12 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 		_ui.btnOpenSerialPort->setText("Open");
 		_ui.lblRxData->setStyleSheet("background-color:#FF0000");
 		_ui.lblTxData->setStyleSheet("background-color:#FF0000");
+
+		_rxCounter = 0;
+		_rxT0millis = -1;
+
+		_ui.lblRxCount->setText("Count: 0");
+		_ui.lblRxFreq->setText("Frequency: NaN Hz");
 	}
 }
 
@@ -1255,6 +1268,8 @@ void MaintenanceWindow::OnSpinSetMaintenanceValue(int newValue)
 
 void MaintenanceWindow::OnRxRawData(bool valid, quint8* data, int size)
 {
+	int64_t curMillis = QDateTime::currentMSecsSinceEpoch();
+
 	QString dataString("0xFF ");
 
 	for (int i = 0; i < size; i++)
@@ -1278,6 +1293,22 @@ void MaintenanceWindow::OnRxRawData(bool valid, quint8* data, int size)
 	else
 	{
 		_ui.lblRxData->setStyleSheet("background-color: #00FF00");
+
+		_rxCounter += 1;
+		_ui.lblRxCount->setText(QString("Count: %1").arg(_rxCounter));
+
+		if (_rxT0millis < 0)
+		{
+			_rxT0millis = curMillis;
+		}
+		else
+		{
+			qint64 delta_t_millis = (curMillis - _rxT0millis);
+			double dt_seconds = static_cast<double>(delta_t_millis) * 1e-3;
+			double freq = static_cast<double>(_rxCounter) / dt_seconds;
+
+			_ui.lblRxFreq->setText(QString("Frequency: %1 Hz").arg(freq));
+		}
 	}
 }
 
