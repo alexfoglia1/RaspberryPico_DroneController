@@ -156,70 +156,6 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.comboSelTrack2, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack2TextChanged(const QString&)));
 	connect(_ui.comboSelTrack3, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack3TextChanged(const QString&)));
 
-	connect(_ui.checkTxRawAccX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRawAccY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRawAccZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRawGyroX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRawGyroY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRawGyroZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRawMagnX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRawMagnY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRawMagnZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
-	connect(_ui.checkTxFiltAccX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxFiltAccY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxFiltAccZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxFiltGyroX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxFiltGyroY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxFiltGyroZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxFiltMagnX, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxFiltMagnY, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxFiltMagnZ, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
-	connect(_ui.checkTxThrottleSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRollSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxPitchSignal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
-	connect(_ui.checkTxCmdThrottle, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxCmdRoll, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxCmdPitch, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
-	connect(_ui.checkTxBodyRoll, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxBodyPitch, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxBodyYaw, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
-	connect(_ui.checkTxRollPidErr, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRollPidP, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRollPidI, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRollPidD, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxRollPidU, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
-	connect(_ui.checkTxPitchPidErr, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxPitchPidP, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxPitchPidI, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxPitchPidD, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxPitchPidU, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
-	connect(_ui.checkTxYawPidErr, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxYawPidP, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxYawPidI, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxYawPidD, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxYawPidU, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
-	connect(_ui.checkTxMotor1Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxMotor2Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxMotor3Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxMotor4Signal, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxMotorsArmed, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxCbit, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxMotorParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxJsParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxPidParams, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxPtf1Params, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxImuType, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxI2CRead, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-	connect(_ui.checkTxSwVer, SIGNAL(clicked()), this, SLOT(OnHeaderChanged()));
-
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelZ(float)), this, SLOT(OnReceivedRawAccelZ(float)));
@@ -286,6 +222,8 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
+	
+	connect(_maintHandler, SIGNAL(downlink()), this, SLOT(OnPicoDownlink()));
 
 	QTimer* autoscanComPortsTimer = new QTimer();
 	autoscanComPortsTimer->setSingleShot(true);
@@ -293,6 +231,20 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(autoscanComPortsTimer, &QTimer::timeout, this, [this, autoscanComPortsTimer] { this->autoScanComPorts(); autoscanComPortsTimer->deleteLater(); });
 	autoscanComPortsTimer->start(500);
+
+	QTimer* checkHeaderChanged = new QTimer();
+	checkHeaderChanged->setSingleShot(false);
+	checkHeaderChanged->setTimerType(Qt::PreciseTimer);
+	checkHeaderChanged->setInterval(_txDelayMillis);
+
+	connect(checkHeaderChanged, &QTimer::timeout, this, &MaintenanceWindow::OnHeaderChanged);
+	checkHeaderChanged->start();
+}
+
+
+void MaintenanceWindow::OnPicoDownlink()
+{
+	_ui.lblRxData->setStyleSheet("background-color:#FF0000");
 }
 
 

@@ -34,6 +34,7 @@ Maint::Maintenance::Maintenance()
     _tx_param_y = 0;
     _tx_param_z = 0;
 
+    _checkDownlink = new QTimer();
 }
 
 bool Maint::Maintenance::Open(QString serialPortName, enum QSerialPort::BaudRate baud)
@@ -53,15 +54,29 @@ bool Maint::Maintenance::Open(QString serialPortName, enum QSerialPort::BaudRate
 	connect(_serialPort, SIGNAL(readyRead()), this, SLOT(OnRx()));
     connect(this, SIGNAL(rxBytes(quint8*, int)), this, SLOT(logBytes(quint8*, int)));
 
-	return _serialPort->open(QSerialPort::OpenModeFlag::ReadWrite);
+	bool ret = _serialPort->open(QSerialPort::OpenModeFlag::ReadWrite);
+
+    if (ret)
+    {
+        _checkDownlink->setInterval(1000);
+        _checkDownlink->setSingleShot(false);
+        _checkDownlink->setTimerType(Qt::PreciseTimer);
+
+        connect(_checkDownlink, SIGNAL(timeout()), this, SLOT(onDownlinkTimeout()));
+        _checkDownlink->start();
+    }
+
+    return ret;
 }
 
 
 void Maint::Maintenance::Close()
 {
     _txTimer->stop();
-    _txTimer->disconnect(_txTimer, SIGNAL(timeout()), this, SLOT(Tx()));
+    _checkDownlink->stop();
 
+    disconnect(_txTimer, SIGNAL(timeout()), this, SLOT(Tx()));
+    disconnect(_checkDownlink, SIGNAL(timeout()), this, SLOT(onDownlinkTimeout()));
     disconnect(this, SIGNAL(rxBytes(quint8*, int)), this, SLOT(logBytes(quint8*, int)));
 
     _serialPort->disconnect(_serialPort, SIGNAL(readyRead()), this, SLOT(OnRx()));
@@ -636,6 +651,9 @@ void Maint::Maintenance::Tx()
 
 void Maint::Maintenance::OnRx()
 {
+    _checkDownlink->stop();
+    _checkDownlink->start();
+
 	QByteArray qba = _serialPort->readAll();
 	
     emit rxBytes(reinterpret_cast<quint8*>(qba.data()), qba.size());
@@ -1323,4 +1341,12 @@ void Maint::Maintenance::logBytes(quint8* data, int size)
     _logFile = fopen(_logFileName.toStdString().c_str(), "a");
     fprintf(_logFile, logLine.toStdString().c_str());
     fclose(_logFile);
+}
+
+
+void Maint::Maintenance::onDownlinkTimeout()
+{
+    _checkDownlink->stop();
+
+    emit downlink();
 }

@@ -209,11 +209,13 @@ public slots:
 
 private slots:
     void logBytes(quint8* data, int size);
+    void onDownlinkTimeout();
 
 signals:
     void rxRawData(bool valid, quint8* data, int size);
     void rxBytes(quint8* bytes, int size);
     void txRawData(quint8* data, int size);
+    void downlink();
 
     void receivedRawAccelX(float data);
     void receivedRawAccelY(float data);
@@ -273,6 +275,7 @@ signals:
 
 private:
 	QSerialPort* _serialPort;
+    QTimer* _checkDownlink;
     Maint::MAINT_STATUS _status;
     Maint::TX_STATUS _txStatus;
     uint32_t _expected_bytes;

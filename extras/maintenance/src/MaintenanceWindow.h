@@ -67,6 +67,7 @@ private slots:
 	void OnBtnOpenSerialPort();
 	void OnBtnOpenBoot();
 	void OnBtnRescanPorts();
+	void OnPicoDownlink();
 	void OnPlotSliderValueChanged(int newValue);
 	void OnPlotTrack1ValueChanged(int newValue);
 	void OnPlotTrack2ValueChanged(int newValue);
