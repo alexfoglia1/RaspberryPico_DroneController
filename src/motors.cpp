@@ -16,7 +16,6 @@ PID_CONTROL_TAG pid_roll;
 PID_CONTROL_TAG pid_pitch;
 PID_CONTROL_TAG pid_yaw;
 
-static bool wereArmed = false;
 
 static void calib()
 {
@@ -32,6 +31,7 @@ static void calib()
     motor3.writeMicroseconds(MOTOR_MIN_SIGNAL);
     motor4.writeMicroseconds(MOTOR_MIN_SIGNAL);
 }
+
 
 void MOTORS_Init()
 {
@@ -79,14 +79,13 @@ void MOTORS_Handler()
     pid_yaw_gain[int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_SAT)]);
     pid_yaw_gain[int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_AD)]);
     pid_yaw_gain[int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_BD)]);
-
-    pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, ATTITUDE_Roll);
-    pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, ATTITUDE_Pitch);
-    //pid_controller(&pid_yaw, pid_yaw_gain, 0.0f, ATTITUDE_Yaw);
-    pid_reset(&pid_yaw);
     
     if (JOYSTICK_MotorsArmed)
     {
+        pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, ATTITUDE_Roll);
+        pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, ATTITUDE_Pitch);
+        //pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, ATTITUDE_Pitch);pid_controller(&pid_pitch, pid_pitch_gain, 0.0f, ATTITUDE_Pitch);
+
         float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
@@ -97,16 +96,12 @@ void MOTORS_Handler()
         if (MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed - pid_roll.u + pid_pitch.u - pid_yaw.u);
         if (MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed + pid_roll.u + pid_pitch.u + pid_yaw.u);
     }
-    
-    if (!JOYSTICK_MotorsArmed && wereArmed)
+    else
     {
-        /** Reset pid when switch from armed to disarmed */
-        /** m_signals = MOTOR_MIN_SIGNAL as initialized **/
         pid_reset(&pid_roll);
         pid_reset(&pid_pitch);
         pid_reset(&pid_yaw);
     }
-    wereArmed = JOYSTICK_MotorsArmed;
 
     m1_signal = saturate(m1_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL);
     m2_signal = saturate(m2_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL);
