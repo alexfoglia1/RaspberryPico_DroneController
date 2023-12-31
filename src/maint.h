@@ -6,8 +6,6 @@
 
 #define MAINT_PAYLOAD_SIZE 512
 #define MAINT_SYNC_CHAR    0xFF
-#define UART_BUFLEN        1024
-#define UART_TX_CHUNK_SIZE 10
 
 typedef union
 {
@@ -216,12 +214,6 @@ typedef union
     float    fval;
 } maint_float_t;
 
-enum class MaintClient
-{
-    USB,
-    UART
-};
-
 extern uint32_t MAINT_MotorsParameters[int(MOTORS::SIZE)][int(MAINT_MOTOR_PARAM::SIZE)];
 extern uint32_t MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::SIZE)][int(MAINT_JS_PARAM::SIZE)];
 extern uint32_t MAINT_PidParameters[int(EULER_ANGLES::SIZE)][int(MAINT_PID_PARAM::SIZE)];
@@ -231,9 +223,8 @@ extern IMU_TYPE MAINT_ImuType;
 extern bool MAINT_FlashWriteRequested;
 
 void MAINT_Init();
-void MAINT_OnByteReceived(uint8_t byte_rx, MaintClient sender);
-void MAINT_UsbHandler();
-void MAINT_UartHandler();
+void MAINT_OnByteReceived(uint8_t byte_rx);
+void MAINT_Handler();
 bool MAINT_IsPresent();
 bool MAINT_IsControllingMotors();
 

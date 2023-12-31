@@ -6,7 +6,8 @@
 
 void InitBoard()
 {
-    stdio_usb_init();
+    //stdio_usb_init();
+    stdio_init_all();
 
     gpio_init(PROBE_GPIO);
     gpio_set_dir(PROBE_GPIO, GPIO_OUT);

@@ -47,7 +47,6 @@ After timers have been launched, software eventually waits for flash updates.
 | FS-IA6    | Channel5 falling edge | Asynchronous | N/A | 0 | Compute radio channel 5 pulse width to decide if motors shall be armed or not |
 | Pico Oscillator    | Timer0 | Synchronous | 500 Hz | 0 | Read attitude and user commands, perform PID control loop and actuates PID output to the motors |
 | Pico Oscillator    | Timer1 | Synchronous | 500 Hz | 1 | Read IMU through I2C interface and estimates body attitude |
-| HC-05 | UART RX | Asynchronous | N/A | 0 | Read one byte from pico UART0 interface for maintenance purposes |
 
 #### Maintenance Protocol
 In order to facilitate debugging, a maintenance protocol is defined to communicate with the pico through USB or UART/Bluetooth serial interfaces.
@@ -62,10 +61,12 @@ Through the maintenance protocol it is possible to:
 | Interface| Baud Rate | Data Bits | Stop Bits | Parity | Flow Control |
 | -------- | --------- | --------- | --------- | ------ | ------------ |
 | USB      | Any       | 8         | 1         | No     | No           |
-| UART     | 115200    | 8         | 1         | No     | No           |
+| UART     | 115200 (Pico Default)   | 8         | 1         | No     | No           |
+
+UART or USB interface is managed by pico bsp, software initializes stdio from both UART and USB.
 
 If you are using the HC-05 UART-Bluetooth adapter module, your client will interface with the [Bluetooth Serial Port Profile](https://www.bluetooth.com/specifications/specs/serial-port-profile-1-1/) of the HC-05 module. The HC-05 module will do the bridge and it interfaces with pico UART.
-To change HC-05 serial parameters you can use Arduino IDE to upload the [AT interface sketch](https://www.lombardoandrea.com/arduino-hc-05-base/) to the pico, open the serial monitor and send with CR+LF:
+To change HC-05 serial parameters you can use Arduino IDE to upload the [AT interface sketch](https://forum.arduino.cc/t/how-do-you-change-the-baud-rate-of-hc-05/993572/4) to the pico, power on the module in AT mode by wiring KEY pin to VCC, open the serial monitor and send with CR+LF:
 
     AT+UART=115200,0,0
 

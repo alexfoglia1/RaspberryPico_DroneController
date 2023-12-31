@@ -50,36 +50,13 @@ static bool shall_tx;
 static bool shall_set;
 static uint64_t last_msg_us;
 static bool controlling_motors;
-static uint8_t uart_tx_buf[UART_BUFLEN];
-static uint8_t uart_ll_tx_buf;
 
-
-static void put_packet(uint8_t* buf, uint32_t len, MaintClient sender)
+static void put_packet(uint8_t* buf, uint32_t len)
 {
-    if (sender == MaintClient::USB)
+    putchar(MAINT_SYNC_CHAR);
+    for (uint32_t i = 0; i < len; i++)
     {
-        putchar(MAINT_SYNC_CHAR);
-        for (uint32_t i = 0; i < len; i++)
-        {
-            putchar(buf[i]);
-        }
-    }
-    else
-    {
-        uart_putc_raw(uart0, MAINT_SYNC_CHAR);
-        for (uint32_t i = 0; i < len; i++)
-        {
-            uart_putc_raw(uart0, buf[i]);
-        }        
-#if 0        
-        if (uart_ll_tx_buf + len + 1 < UART_BUFLEN)
-        {
-            uart_tx_buf[uart_ll_tx_buf] = MAINT_SYNC_CHAR;
-            memcpy(&uart_tx_buf[uart_ll_tx_buf + 1], buf, len);
-            
-            uart_ll_tx_buf += (1 + len);
-        }
-#endif        
+        putchar(buf[i]);
     }
 }
 
@@ -97,14 +74,17 @@ static uint8_t checksum(uint8_t* buf, uint32_t size)
 
 static void data_ingest(uint8_t rx_cks, uint32_t data_len)
 {
-    uint8_t local_cks = checksum(&rx_buf[0], data_len - 1);
-    if (local_cks == rx_cks)
+    if (data_len <= sizeof(MAINT_MESSAGE_TAG))
     {
-        last_msg_us = time_us_64();
+        uint8_t local_cks = checksum(&rx_buf[0], data_len - 1);
+        if (local_cks == rx_cks)
+        {
+            last_msg_us = time_us_64();
 
-        memcpy(&rx_message, &rx_buf[0], data_len);
-        shall_tx = true;
-        shall_set = (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id) != MAINT_CMD_ID::MAINT_CMD_NONE);
+            memcpy(&rx_message, &rx_buf[0], data_len);
+            shall_tx = true;
+            shall_set = (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id) != MAINT_CMD_ID::MAINT_CMD_NONE);
+        }
     }
 }
 
@@ -263,8 +243,6 @@ void MAINT_Init()
     memset(rx_buf, 0x00, sizeof(MAINT_MESSAGE_TAG));
     memset(&rx_message, 0x00, sizeof(MAINT_MESSAGE_TAG));
     memset(&tx_message, 0x00, sizeof(MAINT_MESSAGE_TAG));
-    memset(&uart_tx_buf, 0x00, sizeof(UART_BUFLEN));
-    uart_ll_tx_buf = 0;
 
     /** Load actual params **/
     uint32_t eeprom_offset = 0;
@@ -406,7 +384,7 @@ void MAINT_Init()
 }
 
 
-void MAINT_OnByteReceived(uint8_t byte_rx, MaintClient sender)
+void MAINT_OnByteReceived(uint8_t byte_rx)
 {
     update_fsm(byte_rx);
 
@@ -909,7 +887,7 @@ void MAINT_OnByteReceived(uint8_t byte_rx, MaintClient sender)
 
         tx_message.payload[tx_payload_idx] = checksum(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx);
 
-        put_packet(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx + 1, sender);
+        put_packet(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx + 1);
         
         shall_tx = false;
     }
@@ -941,46 +919,12 @@ bool MAINT_IsPresent()
 }
 
 
-void MAINT_UsbHandler()
+void MAINT_Handler()
 {
     int byteIn = getchar();
-    MAINT_OnByteReceived((uint8_t)byteIn & 0xFF, MaintClient::USB);
+    MAINT_OnByteReceived((uint8_t)byteIn & 0xFF);
 }
 
-
-void MAINT_UartHandler()
-{
-#if 0
-    gpio_put(PICO_DEFAULT_LED_PIN, 0);
-    uint32_t tx_size;
-
-    if (uart_ll_tx_buf > 0 && uart_ll_tx_buf < UART_TX_CHUNK_SIZE)
-    {
-        tx_size = uart_ll_tx_buf;
-    }
-    else if (uart_ll_tx_buf >= UART_TX_CHUNK_SIZE)
-    {
-        tx_size = UART_TX_CHUNK_SIZE;
-    }
-    else
-    {
-        tx_size = 0;
-    }
-
-    for (uint32_t i = 0; i < tx_size; i++)
-    {
-        uart_putc_raw(uart0, uart_tx_buf[i]);
-    }
-    
-    for (uint32_t i = tx_size; i < uart_ll_tx_buf; i++)
-    {
-        uart_tx_buf[i - tx_size] = uart_tx_buf[i];
-    }
-
-    uart_ll_tx_buf -= tx_size;
-    gpio_put(PICO_DEFAULT_LED_PIN, 1);
-#endif
-}
 
 
 bool MAINT_IsControllingMotors()
