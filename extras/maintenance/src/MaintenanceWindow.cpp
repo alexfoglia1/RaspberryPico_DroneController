@@ -31,6 +31,8 @@ MaintenanceWindow::MaintenanceWindow()
 	_defaultPlotSpan =
 	{
 		{"NONE", 16000},
+		{"RX_COUNT", 4000},
+		{"FREQUENCY", 300},
 		{"RAW_ACC_X", 4},
 		{"RAW_ACC_Y", 4},
 		{"RAW_ACC_Z", 4},
@@ -155,6 +157,8 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.comboSelTrack1, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack1TextChanged(const QString&)));
 	connect(_ui.comboSelTrack2, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack2TextChanged(const QString&)));
 	connect(_ui.comboSelTrack3, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack3TextChanged(const QString&)));
+
+	connect(_ui.actionClear_logs, SIGNAL(triggered()), this, SLOT(OnClearLogs()));
 
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
@@ -443,6 +447,18 @@ void MaintenanceWindow::OnBtnRescanPorts()
 {
 	_ui.comboSelPort->clear();
 	autoScanComPorts();
+}
+
+
+void MaintenanceWindow::OnClearLogs()
+{
+	int n = 0;
+	if (_maintHandler)
+	{
+		n = _maintHandler->ClearLogs();
+	}
+
+	QMessageBox::information(this, "Info", QString("Deleted %1 files").arg(n));
 }
 
 
@@ -1248,6 +1264,7 @@ void MaintenanceWindow::OnRxRawData(bool valid, quint8* data, int size)
 
 		_rxCounter += 1;
 		_ui.lblRxCount->setText(QString("Count: %1").arg(_rxCounter));
+		checkPlot("RX_COUNT", _rxCounter);
 
 		if (_rxT0millis < 0)
 		{
@@ -1260,6 +1277,7 @@ void MaintenanceWindow::OnRxRawData(bool valid, quint8* data, int size)
 			double freq = static_cast<double>(_rxCounter) / dt_seconds;
 
 			_ui.lblRxFreq->setText(QString("Frequency: %1 Hz").arg(freq));
+			checkPlot("FREQUENCY", freq);
 		}
 	}
 }

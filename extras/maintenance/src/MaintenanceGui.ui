@@ -1118,6 +1118,16 @@
     </item>
     <item>
      <property name="text">
+      <string>RX_COUNT</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FREQUENCY</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
       <string>RAW_ACC_X</string>
      </property>
     </item>
@@ -1371,6 +1381,16 @@
     </item>
     <item>
      <property name="text">
+      <string>RX_COUNT</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FREQUENCY</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
       <string>RAW_ACC_X</string>
      </property>
     </item>
@@ -1620,6 +1640,16 @@
     <item>
      <property name="text">
       <string>NONE</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>RX_COUNT</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>FREQUENCY</string>
      </property>
     </item>
     <item>
@@ -2565,8 +2595,20 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionClear_logs"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionClear_logs">
+   <property name="text">
+    <string>Clear logs</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

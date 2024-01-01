@@ -200,6 +200,7 @@ public:
     void TxImuType(IMU_TYPE imuType);
     void I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg);
     void I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val);
+    int  ClearLogs();
 
     void TxWriteToFlash();
 

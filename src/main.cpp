@@ -5,6 +5,7 @@
 #include "motors.h"
 #include "maint.h"
 #include "cbit.h"
+#include "uart.h"
 
 #include <stdio.h>
 #include <pico/multicore.h>
@@ -126,6 +127,7 @@ int main()
         }
     }
 
+    UART_Init();
     while (1)
     {
         MAINT_Handler();

@@ -6,6 +6,8 @@
 
 #define MAINT_PAYLOAD_SIZE 512
 #define MAINT_SYNC_CHAR    0xFF
+#define UART_BUFLEN        1024
+#define UART_TX_CHUNK_SIZE 10
 
 typedef union
 {

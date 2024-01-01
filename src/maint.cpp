@@ -6,6 +6,7 @@
 #include "cbit.h"
 #include "user.h"
 #include "i2c_utils.h"
+#include "uart.h"
 
 #include <pico/time.h>
 #include <hardware/flash.h>
@@ -51,12 +52,15 @@ static bool shall_set;
 static uint64_t last_msg_us;
 static bool controlling_motors;
 
+
 static void put_packet(uint8_t* buf, uint32_t len)
 {
     putchar(MAINT_SYNC_CHAR);
+    uart_putc_raw(uart0, MAINT_SYNC_CHAR);
     for (uint32_t i = 0; i < len; i++)
     {
         putchar(buf[i]);
+        uart_putc_raw(uart0, buf[i]);
     }
 }
 
@@ -74,17 +78,14 @@ static uint8_t checksum(uint8_t* buf, uint32_t size)
 
 static void data_ingest(uint8_t rx_cks, uint32_t data_len)
 {
-    if (data_len <= sizeof(MAINT_MESSAGE_TAG))
+    uint8_t local_cks = checksum(&rx_buf[0], data_len - 1);
+    if (local_cks == rx_cks)
     {
-        uint8_t local_cks = checksum(&rx_buf[0], data_len - 1);
-        if (local_cks == rx_cks)
-        {
-            last_msg_us = time_us_64();
+        last_msg_us = time_us_64();
 
-            memcpy(&rx_message, &rx_buf[0], data_len);
-            shall_tx = true;
-            shall_set = (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id) != MAINT_CMD_ID::MAINT_CMD_NONE);
-        }
+        memcpy(&rx_message, &rx_buf[0], data_len);
+        shall_tx = true;
+        shall_set = (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id) != MAINT_CMD_ID::MAINT_CMD_NONE);
     }
 }
 
@@ -921,10 +922,20 @@ bool MAINT_IsPresent()
 
 void MAINT_Handler()
 {
-    int byteIn = getchar();
-    MAINT_OnByteReceived((uint8_t)byteIn & 0xFF);
+    int usbRx = getchar_timeout_us(0);
+    if (usbRx != PICO_ERROR_TIMEOUT)
+    {
+        MAINT_OnByteReceived((uint8_t)usbRx & 0xFF);
+    }
+    else
+    {
+        while (UART_IsReadable())
+        {
+            uint8_t uartRx = UART_ReadByte();
+            MAINT_OnByteReceived(uartRx);
+        }
+    }
 }
-
 
 
 bool MAINT_IsControllingMotors()

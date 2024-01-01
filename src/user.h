@@ -26,6 +26,13 @@
 #define MPU6050_SDA_PIN 18
 #define MPU6050_SCL_PIN 19
 
+#define BAUD_RATE 115200
+#define DATA_BITS 8
+#define STOP_BITS 1
+#define PARITY    UART_PARITY_NONE
+#define UART_TX_PIN 0
+#define UART_RX_PIN 1
+
 #define PROBE_GPIO 16
 
 #define MOTOR_ARMED_THRESHOLD 200
@@ -48,7 +55,7 @@ enum class REL_TYPE_TAG
 
 #define MAJOR_V  1
 #define MINOR_V  0
-#define STAGE_V  7
+#define STAGE_V  8
 #define REL_TYPE REL_TYPE_TAG::BETA
 
 inline float saturate(float val, float min, float max)

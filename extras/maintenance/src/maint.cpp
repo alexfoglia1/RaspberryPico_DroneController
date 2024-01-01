@@ -1,7 +1,9 @@
 #include "maint.h"
 
 #include <qdatetime.h>
-
+#include <qdir.h>
+#include <qdiriterator.h>
+#include <qfile.h>
 
 Maint::Maintenance::Maintenance()
 {
@@ -46,7 +48,7 @@ bool Maint::Maintenance::Open(QString serialPortName, enum QSerialPort::BaudRate
 	_serialPort->setStopBits(QSerialPort::OneStop);
 	_serialPort->setFlowControl(QSerialPort::NoFlowControl);
 
-    _logFileName = QString("%1-%2.txt").arg(QDateTime::currentDateTime().toString().replace(" ", "-").replace(":","-")).arg(serialPortName);
+    _logFileName = QString("log-%1-%2.txt").arg(QDateTime::currentDateTime().toString().replace(" ", "-").replace(":","-")).arg(serialPortName);
     _logFile = fopen(_logFileName.toStdString().c_str(), "w");
 
     fclose(_logFile);
@@ -67,6 +69,24 @@ bool Maint::Maintenance::Open(QString serialPortName, enum QSerialPort::BaudRate
     }
 
     return ret;
+}
+
+
+int Maint::Maintenance::ClearLogs()
+{
+    QDirIterator it(".", QStringList() << "log-*", QDir::Files, QDirIterator::Subdirectories);
+    int n = 0;
+    while (it.hasNext())
+    {
+        QFile f(it.next());
+        if (f.exists())
+        {
+            n++;
+            f.remove();
+        }
+    }
+
+    return n;
 }
 
 
