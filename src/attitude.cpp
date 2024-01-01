@@ -18,8 +18,8 @@ static int nSample = 0;
 static int nGyroZ = 0;
 static bool wasArmed = false;
 
-static float ATTITUDE_Roll0;
-static float ATTITUDE_Pitch0;
+float ATTITUDE_Roll0;
+float ATTITUDE_Pitch0;
 
 static ImuInterface* imu;
 
