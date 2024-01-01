@@ -111,6 +111,8 @@ MaintenanceWindow::MaintenanceWindow()
 		{3, {0.1f, 0.1f, 0.1f}}, //MAGNETOMETER
 	};
 
+	_rxRollOffset = 0.0f;
+	_rxPitchOffset = 0.0f;
 
 	_rxImuType = Maint::IMU_TYPE::LSM9DS1;
 	for (uint32_t i = uint32_t(Maint::IMU_TYPE::FIRST); i < uint32_t(Maint::IMU_TYPE::SIZE); i++)
@@ -146,7 +148,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnRefreshParams, SIGNAL(clicked()), this, SLOT(OnBtnRefreshParams()));
 	connect(_ui.btnI2CRead, SIGNAL(clicked()), this, SLOT(OnBtnI2CRead()));
 	connect(_ui.btnI2CWrite, SIGNAL(clicked()), this, SLOT(OnBtnI2CWrite()));
-	connect(_ui.btnResetImuOffset, SIGNAL(clicked()), this, SLOT(OnBtnResetImuOffset()));
+	connect(_ui.btnSetImuOffset, SIGNAL(clicked()), this, SLOT(OnBtnSetImuOffset()));
 
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
 
@@ -1132,11 +1134,14 @@ void MaintenanceWindow::OnBtnI2CWrite()
 }
 
 
-void MaintenanceWindow::OnBtnResetImuOffset()
+void MaintenanceWindow::OnBtnSetImuOffset()
 {
 	if (_maintHandler)
 	{
-		_maintHandler->ResetImuOffset();
+		float roll_offset = _ui.spinRollOffset->value();
+		float pitch_offset = _ui.spinPitchOffset->value();
+
+		_maintHandler->SetImuOffset(roll_offset, pitch_offset);
 	}
 }
 
@@ -1237,6 +1242,9 @@ void MaintenanceWindow::OnBtnRefreshParams()
 	_ui.spinSetPtf1X->setValue(_rxPtf1Params[currentPtf1Source].x);
 	_ui.spinSetPtf1Y->setValue(_rxPtf1Params[currentPtf1Source].y);
 	_ui.spinSetPtf1Z->setValue(_rxPtf1Params[currentPtf1Source].z);
+
+	_ui.spinRollOffset->setValue(_rxRollOffset);
+	_ui.spinPitchOffset->setValue(_rxPitchOffset);
 
 	for (int i = 0; i < _ui.comboSetImuType->count(); i++)
 	{
@@ -1839,6 +1847,9 @@ void MaintenanceWindow::OnReceivedImuOffset(float roll_offset, float pitch_offse
 	_ui.checkRxRollOffset->setChecked(true);
 	_ui.checkRxPitchOffset->setChecked(true);
 
-	_ui.lineRxRollOffset->setText(QString::number(roll_offset));
-	_ui.lineRxPitchOffset->setText(QString::number(pitch_offset));
+	_rxRollOffset = roll_offset;
+	_rxPitchOffset = pitch_offset;
+
+	_ui.lineRxRollOffset->setText(QString::number(_rxRollOffset));
+	_ui.lineRxPitchOffset->setText(QString::number(_rxPitchOffset));
 }

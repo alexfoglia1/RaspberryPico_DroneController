@@ -2424,16 +2424,42 @@
        <widget class="QComboBox" name="comboSetImuType"/>
       </item>
       <item>
-       <widget class="QPushButton" name="btnResetImuOffset">
+       <widget class="QDoubleSpinBox" name="spinRollOffset">
+        <property name="decimals">
+         <number>8</number>
+        </property>
+        <property name="minimum">
+         <double>-180.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>180.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinPitchOffset">
+        <property name="decimals">
+         <number>8</number>
+        </property>
+        <property name="minimum">
+         <double>-180.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>180.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSetImuOffset">
         <property name="text">
-         <string>Reset Offset</string>
+         <string>Set Offset</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QPushButton" name="btnSendImuType">
         <property name="text">
-         <string>Send</string>
+         <string>Set Type</string>
         </property>
        </widget>
       </item>
@@ -2542,7 +2568,7 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>311</width>
+       <width>327</width>
        <height>41</height>
       </rect>
      </property>

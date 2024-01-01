@@ -241,16 +241,13 @@ void ATTITUDE_Handler()
 }
 
 
-void ATTITUDE_Calibrate(bool power_on)
+void ATTITUDE_Calibrate()
 {
     ATTITUDE_Roll0 = 0;
     ATTITUDE_Pitch0 = 0;
 
-    if (power_on)
-    {
-        sleep_ms(2000);
-    }
-
+    sleep_ms(2000);
+    
     ATTITUDE_Handler();
 
     ATTITUDE_Roll0 = ATTITUDE_Roll;

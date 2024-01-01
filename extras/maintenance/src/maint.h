@@ -141,7 +141,7 @@ namespace Maint
         TX_I2C_READ,
         TX_I2C_WRITE,
         TX_WRITE_TO_FLASH,
-        TX_RESET_IMU_OFFSET
+        TX_SET_IMU_OFFSET
     };
 
     enum class MAINT_CMD_ID
@@ -170,7 +170,7 @@ namespace Maint
         MAINT_CMD_SET_IMU_TYPE,
         MAINT_CMD_I2C_READ,
         MAINT_CMD_I2C_WRITE,
-        MAINT_CMD_RESET_IMU_OFFSET
+        MAINT_CMD_SET_IMU_OFFSET
     };
 
     static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
@@ -204,7 +204,7 @@ public:
     void I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg);
     void I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val);
     void TxWriteToFlash();
-    void ResetImuOffset();
+    void SetImuOffset(float roll_offset, float pitch_offset);
 
     int ClearLogs();
 
@@ -309,6 +309,8 @@ private:
     uint32_t _tx_param_i2c_addr;
     uint32_t _tx_param_i2c_reg;
     uint32_t _tx_param_i2c_val;
+    float _tx_param_roll_offset;
+    float _tx_param_pitch_offset;
     QMutex _txMutex;
     QTimer* _txTimer;
     QString _logFileName;

@@ -284,13 +284,16 @@ void Maint::Maintenance::TxWriteToFlash()
 }
 
 
-void Maint::Maintenance::ResetImuOffset()
+void Maint::Maintenance::SetImuOffset(float roll_offset, float pitch_offset)
 {
     _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET);
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET);
+
+    _tx_param_roll_offset = roll_offset;
+    _tx_param_pitch_offset = pitch_offset;
 
     _txMutex.lock();
-    _txStatus = Maint::TX_STATUS::TX_RESET_IMU_OFFSET;
+    _txStatus = Maint::TX_STATUS::TX_SET_IMU_OFFSET;
     _txMutex.unlock();
 
 }
@@ -652,7 +655,7 @@ void Maint::Maintenance::Tx()
         _txCommand.All = 0;
         _txStatus = Maint::TX_STATUS::TX_GET;
     }
-    else if (_txStatus == Maint::TX_STATUS::TX_RESET_IMU_OFFSET)
+    else if (_txStatus == Maint::TX_STATUS::TX_SET_IMU_OFFSET)
     {
         qba.push_back(Maint::SYNC_CHAR);
         qba.push_back(_txCommand.Bytes[0]);
@@ -663,6 +666,18 @@ void Maint::Maintenance::Tx()
         qba.push_back(_txCommand.Bytes[5]);
         qba.push_back(_txCommand.Bytes[6]);
         qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* rollOffsetBytes = reinterpret_cast<uint8_t*>(&_tx_param_roll_offset);
+        uint8_t* pitchOffsetBytes = reinterpret_cast<uint8_t*>(&_tx_param_pitch_offset);
+
+        qba.push_back(rollOffsetBytes[0]);
+        qba.push_back(rollOffsetBytes[1]);
+        qba.push_back(rollOffsetBytes[2]);
+        qba.push_back(rollOffsetBytes[3]);
+        qba.push_back(pitchOffsetBytes[0]);
+        qba.push_back(pitchOffsetBytes[1]);
+        qba.push_back(pitchOffsetBytes[2]);
+        qba.push_back(pitchOffsetBytes[3]);
 
         uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
 

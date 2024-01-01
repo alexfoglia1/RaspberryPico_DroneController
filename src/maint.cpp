@@ -98,7 +98,6 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
     {
         case MAINT_CMD_ID::MAINT_CMD_NONE:
         case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE:
-        case MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET:
             return 1; /** Checksum only **/
         case MAINT_CMD_ID::MAINT_CMD_SET_M1: 
         case MAINT_CMD_ID::MAINT_CMD_SET_M2:
@@ -130,6 +129,8 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
             return 13;  /** 3 * 4 = 12  bytes + checksum **/
         case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
             return 17;  /** 4 * 4 = 16  bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET:
+            return 9;  /** 2 * 4 = 8 bytes + checksum **/
     }
 
     return 0;
@@ -508,8 +509,9 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                                                         (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[8])  & 0xFF),
                                                         (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[12]) & 0xFF));
                 break;
-            case MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET:
-                ATTITUDE_Calibrate(false);
+            case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET:
+                ATTITUDE_Roll0 = (*reinterpret_cast<float*>(&rx_message.payload[0]));
+                ATTITUDE_Pitch0 = (*reinterpret_cast<float*>(&rx_message.payload[4]));
                 break;
 
         }

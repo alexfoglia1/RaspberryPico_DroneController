@@ -56,7 +56,7 @@ void __cpu1_entry_point__()
     }
 }
 
-
+#include <stdio.h>
 int main()
 {
 
@@ -88,10 +88,10 @@ int main()
     }
     else
     {
-        ATTITUDE_Calibrate(true);
+        ATTITUDE_Calibrate();
         CBIT_Set_fail_code(fail_code.Dword, false);
     }
-
+    
     JOYSTICK_Init(MIN_ROLL_DEGREES,
                   MAX_ROLL_DEGREES,
                   MIN_PITCH_DEGREES,

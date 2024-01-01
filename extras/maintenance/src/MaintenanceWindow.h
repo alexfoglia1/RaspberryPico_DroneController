@@ -54,6 +54,8 @@ private:
 	QMap<int, js_params_format> _rxJsParams;
 	QMap<int, pid_params_format> _rxPidParams;
 	QMap<int, ptf1_params_format> _rxPtf1Params;
+	float _rxRollOffset;
+	float _rxPitchOffset;
 	Maint::IMU_TYPE _rxImuType;
 	QMainWindow _autoscanProgressWindow;
 	uint32_t _rxCounter;
@@ -89,7 +91,7 @@ private slots:
 	void OnSpinSetMaintenanceValue(int newValue);
 	void OnBtnI2CRead();
 	void OnBtnI2CWrite();
-	void OnBtnResetImuOffset();
+	void OnBtnSetImuOffset();
 
 	void OnRxRawData(bool valid, quint8* data, int size);
 	void OnTxRawData(quint8* data, int size);
