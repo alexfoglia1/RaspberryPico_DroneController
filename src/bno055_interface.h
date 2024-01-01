@@ -21,8 +21,6 @@ public:
 
 private:
     equipment_handlers::BNO055_IMU _bno055;
-    float _roll0;
-    float _pitch0;
 
 };
 

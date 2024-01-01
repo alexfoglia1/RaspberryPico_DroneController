@@ -68,7 +68,8 @@ typedef union
         uint64_t imu_type         :1;     //52
         uint64_t i2c_read         :1;     //53
         uint64_t sw_ver           :1;     //54
-        uint64_t maint_cmd_id     :9;    //55, 56, 57, 58, 59, 60, 61, 62, 63
+        uint64_t imu_offset       :1;     //55
+        uint64_t maint_cmd_id     :8;     //56, 57, 58, 59, 60, 61, 62, 63
     } Bits;
     
     uint8_t  Bytes[8];
@@ -122,7 +123,8 @@ enum class MAINT_CMD_ID
     MAINT_CMD_SET_PTF1_MAGN_PARAMS,
     MAINT_CMD_SET_IMU_TYPE,
     MAINT_CMD_I2C_READ,
-    MAINT_CMD_I2C_WRITE
+    MAINT_CMD_I2C_WRITE,
+    MAINT_CMD_RESET_IMU_OFFSET,
 };
 
 enum class MAINT_MOTOR_PARAM

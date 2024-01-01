@@ -29,7 +29,7 @@ Current setup is using the Adafruit BNO055 IMU but software is compatible with t
 Controller is an interrupt-based multi-core RP2040 application.
 Once executed, software initializes board gpio and device drivers, then it reads runtime parameters from flash memory and it starts one timer foreach CPU on the pico:
 
-1) Attitude Producer: Reads raw IMU, filters data with a pt1 filter and estimates body attitude, on CPU1. If BNO55 is used, attitude estimation is replaced with the absolute orientation given by the sensor.
+1) Attitude Producer: Reads raw IMU, filters data with a pt1 filter and estimates body attitude, on CPU1. If BNO55 is used, attitude estimation is replaced with the absolute orientation given by the sensor. First roll/pitch measured are considered IMU offset to obtain a known zero position.
 2) Attitude Consumer: Reads body attitude and user commands. User commands are alpha/beta filtered and the output is used to perform a PID control loop, on CPU0. PID output is the PWM pulse width actuated to the motors.
 
 After timers have been launched, software eventually waits for flash updates.
@@ -85,7 +85,7 @@ Server expects the following packet:
 | 4 Header byte 3         | body_roll | body_pitch | body_yaw | roll_pid_error | roll_pid_p | roll_pid_i | roll_pid_d | roll_pid_u |
 | 5 Header byte 4         | pitch_pid_error | pitch_pid_p | pitch_pid_i | pitch_pid_d | pitch_pid_u | yaw_pid_error | yaw_pid_p | yaw_pid_i |
 | 6 Header byte 5         | yaw_pid_d | yaw_pid_u | motor1_signal | motor2_signal | motor3_signal | motor4_signal | motors_armed | builtin_test_status |
-| 7 Header byte 6         | motor_params | js_params | pid_params | ptf1_params | imu_type | i2c_read | sw_ver | cmd_id_bit_8 |
+| 7 Header byte 6         | motor_params | js_params | pid_params | ptf1_params | imu_type | i2c_read | sw_ver | imu_offset |
 | 8 Header byte 7         | cmd_id_bit_7 | cmd_id_bit_6 | cmd_id_bit_5 | cmd_id_bit_4 | cmd_id_bit_3 | cmd_id_bit_2 | cmd_id_bit_1 | cmd_id_bit_0 |
 | 9..N Payload            | payload_data_n_bit_7 | payload_data_n_bit_6 | payload_data_n_bit_5 | payload_data_n_bit_4 | payload_data_n_bit_3 | payload_data_n_bit_2 | payload_data_n_bit_1 | payload_data_n_bit_0 |
 | N+1 Checksum            | cks_bit_7 | cks_bit_6 | cks_bit_5 | cks_bit_4 | cks_bit_3 | cks_bit_2 | cks_bit_1 | cks_bit_0 |
@@ -134,6 +134,7 @@ Values of the header fields determine the expected payload the client will send:
 | set_cmd_id               | 21    | Update parameter IMU type | imu_type (enum : uint32_t) + checksum (uint8_t) | 5 |
 | set_cmd_id               | 22    | I2C read | i2c channel (uint32_t) + i2c address (uint32_t) + i2c register (uint32_t) + checksum (uint8_t) | 13 |
 | set_cmd_id               | 23    | I2C write | i2c channel (uint32_t) + i2c address (uint32_t) + i2c register (uint32_t) + value (uint32_t) + checksum (uint8_t) | 17 |
+| set_cmd_id               | 24    | Reset IMU offset | checksum (uint8_t) | 1 |
 
 IMU Type:
 
@@ -205,6 +206,7 @@ pt1f_params | (Foreach IMU sensor) pt1 filter time constant x axis + pt1 filter 
 imu_type | IMU type | enum : uint32_t | 4 |
 i2c_read | value read after the i2c read command | uint32_t | 4 |
 sw_ver | software version | struct : uint8_t[4] | 4 |
+imu_offset | current IMU offset | Offset roll + Offset pitch | float[2] | 12 |
 
 
 Software version data structure:
@@ -215,6 +217,7 @@ Software version data structure:
 | MINOR Version | uint8_t        |
 | STAGE Version | uint8_t        |
 | Release Type  | enum : uint8_t |
+
 
 Release Type:
 

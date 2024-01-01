@@ -18,6 +18,9 @@ static int nSample = 0;
 static int nGyroZ = 0;
 static bool wasArmed = false;
 
+static float ATTITUDE_Roll0;
+static float ATTITUDE_Pitch0;
+
 static ImuInterface* imu;
 
 pt1_flt_tag ax_flt_tag;
@@ -159,6 +162,9 @@ static void estimate_attitude()
         ATTITUDE_Yaw = heading * RADIANS_TO_DEGREES;
     }
 
+    ATTITUDE_Roll = atan2(sin((ATTITUDE_Roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS), cos((ATTITUDE_Roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+    ATTITUDE_Pitch = atan2(sin((ATTITUDE_Pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS), cos((ATTITUDE_Pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+
     wasArmed = JOYSTICK_MotorsArmed;
 }
 
@@ -179,6 +185,9 @@ bool ATTITUDE_Init()
     ATTITUDE_Yaw = 0.0f;
 
     filter_on = false;
+
+    ATTITUDE_Roll0 = 0;
+    ATTITUDE_Pitch0 = 0;
 
     switch (MAINT_ImuType)
     {
@@ -213,6 +222,8 @@ void ATTITUDE_Handler()
     {
         pt1f_init(ax, ay, az, gx, gy, gz, mx, my, mz);
         imu->getAbsoluteOrientation(&ATTITUDE_Roll, &ATTITUDE_Pitch, &ATTITUDE_Yaw);
+        ATTITUDE_Roll = atan2(sin((ATTITUDE_Roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS), cos((ATTITUDE_Roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+        ATTITUDE_Pitch = atan2(sin((ATTITUDE_Pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS), cos((ATTITUDE_Pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
     }
     else
     {
@@ -228,4 +239,16 @@ void ATTITUDE_Handler()
 
         estimate_attitude();
     }
+}
+
+
+void ATTITUDE_Calibrate()
+{
+    ATTITUDE_Roll0 = 0;
+    ATTITUDE_Pitch0 = 0;
+
+    ATTITUDE_Handler();
+
+    ATTITUDE_Roll0 = ATTITUDE_Roll;
+    ATTITUDE_Pitch0 = ATTITUDE_Pitch;
 }

@@ -76,7 +76,8 @@ namespace Maint
             uint64_t imu_type : 1; // 52
             uint64_t i2c_read : 1; // 53
             uint64_t sw_ver : 1; // 54
-            uint64_t maint_cmd_id : 9;    //55, 56, 57, 58, 59, 60, 61, 62, 63
+            uint64_t imu_offset : 1; //55
+            uint64_t maint_cmd_id : 8;    //56, 57, 58, 59, 60, 61, 62, 63
         } Bits;
 
         uint8_t  Bytes[8];
@@ -167,7 +168,8 @@ namespace Maint
         MAINT_CMD_SET_PTF1_MAGN_PARAMS,
         MAINT_CMD_SET_IMU_TYPE,
         MAINT_CMD_I2C_READ,
-        MAINT_CMD_I2C_WRITE
+        MAINT_CMD_I2C_WRITE,
+        MAINT_CMD_RESET_IMU_OFFSET
     };
 
     static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
@@ -273,6 +275,7 @@ signals:
     void receivedImuType(uint32_t imu_type);
     void receivedI2CRead(uint32_t i2c_read);
     void receivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
+    void receivedImuOffset(float offset_roll, float offset_pitch);
 
 private:
 	QSerialPort* _serialPort;

@@ -23,8 +23,11 @@ extern pt1_flt_tag gz_flt_tag;
 extern pt1_flt_tag mx_flt_tag;
 extern pt1_flt_tag my_flt_tag;
 extern pt1_flt_tag mz_flt_tag;
+extern float ATTITUDE_Roll0;
+extern float ATTITUDE_Pitch0;
 
 bool ATTITUDE_Init();
+void ATTITUDE_Calibrate();
 void ATTITUDE_Handler();
 
 

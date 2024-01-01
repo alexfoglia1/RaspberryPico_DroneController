@@ -89,6 +89,7 @@ int main()
     }
     else
     {
+        ATTITUDE_Calibrate();
         CBIT_Set_fail_code(fail_code.Dword, false);
     }
 

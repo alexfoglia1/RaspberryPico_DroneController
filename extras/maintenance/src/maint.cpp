@@ -1309,6 +1309,14 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 
             pPayload += sizeof(uint32_t);
         }
+        if (rx_header->Bits.imu_offset)
+        {
+            float offset_roll = *(reinterpret_cast<float*>(pPayload));
+            float offset_pitch = *(reinterpret_cast<float*>(pPayload + 4));
+
+            emit receivedImuOffset(offset_roll, offset_pitch);
+            pPayload += (2 * sizeof(uint32_t));
+        }
     }
 }
 

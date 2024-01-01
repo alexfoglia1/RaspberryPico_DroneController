@@ -128,7 +128,9 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
         case MAINT_CMD_ID::MAINT_CMD_I2C_READ:
             return 13;  /** 3 * 4 = 12  bytes + checksum **/
         case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
-            return 17;  /** 4 * 4 = 16  bytes + checksum */
+            return 17;  /** 4 * 4 = 16  bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET:
+            return 9;  /** 2 * 4 = 8 bytes + checksum **/
     }
 
     return 0;
@@ -507,6 +509,9 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                                                         (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[8])  & 0xFF),
                                                         (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[12]) & 0xFF));
                 break;
+            case MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET:
+                ATTITUDE_Calibrate();
+                break;
 
         }
 
@@ -884,6 +889,16 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
             memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&sw_ver), sizeof(uint32_t));
             
             tx_payload_idx += sizeof(uint32_t);
+        }
+        if (tx_message.header.Bits.imu_offset)
+        {
+            uint32_t idata_roll  = *(reinterpret_cast<uint32_t*>(&ATTITUDE_Roll0));
+            uint32_t idata_pitch = *(reinterpret_cast<uint32_t*>(&ATTITUDE_Pitch0));
+
+            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&idata_roll), sizeof(uint32_t));
+            memcpy(&tx_message.payload[tx_payload_idx + sizeof(uint32_t)], reinterpret_cast<uint32_t*>(&idata_pitch), sizeof(uint32_t));
+
+            tx_payload_idx += (2 * sizeof(uint32_t));
         }
 
         tx_message.payload[tx_payload_idx] = checksum(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx);

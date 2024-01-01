@@ -222,6 +222,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedImuType(uint32_t)), this, SLOT(OnReceivedImuType(uint32_t)));
 	connect(_maintHandler, SIGNAL(receivedI2CRead(uint32_t)), this, SLOT(OnReceivedI2CRead(uint32_t)));
 	connect(_maintHandler, SIGNAL(receivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)), this, SLOT(OnReceivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)));
+	connect(_maintHandler, SIGNAL(receivedImuOffset(float, float)), this, SLOT(OnReceivedImuOffset(float, float)));
 
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
@@ -1015,6 +1016,21 @@ void MaintenanceWindow::OnHeaderChanged()
 		header.Bits.sw_ver = 0;
 		_ui.checkRxSwVer->setChecked(false);
 		_ui.lineRxSwVer->setText("");
+	}
+
+	if (_ui.checkTxImuOffset->isChecked())
+	{
+		header.Bits.imu_offset = 1;
+	}
+	else
+	{
+		header.Bits.imu_offset = 0;
+
+		_ui.checkRxRollOffset->setChecked(false);
+		_ui.checkRxPitchOffset->setChecked(false);
+
+		_ui.checkRxRollOffset->setText("");
+		_ui.checkRxPitchOffset->setText("");
 	}
 
 	if (_ui.checkTxMotorParams->isChecked())
