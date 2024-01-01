@@ -154,6 +154,7 @@ private slots:
 	void OnReceivedImuType(uint32_t imu_type);
 	void OnReceivedI2CRead(uint32_t i2c_read);
 	void OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
+	void OnReceivedImuOffset(float, float);
 };
 
 #endif

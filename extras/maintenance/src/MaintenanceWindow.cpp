@@ -1029,8 +1029,8 @@ void MaintenanceWindow::OnHeaderChanged()
 		_ui.checkRxRollOffset->setChecked(false);
 		_ui.checkRxPitchOffset->setChecked(false);
 
-		_ui.checkRxRollOffset->setText("");
-		_ui.checkRxPitchOffset->setText("");
+		_ui.lineRxRollOffset->setText("");
+		_ui.lineRxPitchOffset->setText("");
 	}
 
 	if (_ui.checkTxMotorParams->isChecked())
@@ -1822,4 +1822,14 @@ void MaintenanceWindow::OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_
 	_ui.lineRxSwVer->setText(QString("%1.%2.%3-%4").arg(major_v).arg(minor_v).arg(stage_v).arg(
 		Maint::REL_TYPE(rel_type) == Maint::REL_TYPE::BETA    ? "B" :
 		Maint::REL_TYPE(rel_type) == Maint::REL_TYPE::RELEASE ? "R" : "?"));
+}
+
+
+void MaintenanceWindow::OnReceivedImuOffset(float roll_offset, float pitch_offset)
+{
+	_ui.checkRxRollOffset->setChecked(true);
+	_ui.checkRxPitchOffset->setChecked(true);
+
+	_ui.lineRxRollOffset->setText(QString::number(roll_offset));
+	_ui.lineRxRollOffset->setText(QString::number(pitch_offset));
 }
