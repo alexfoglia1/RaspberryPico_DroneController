@@ -34,9 +34,9 @@ pt1_flt_tag mz_flt_tag;
 
 static bool filter_on;
 
-float ATTITUDE_Roll;
-float ATTITUDE_Pitch;
-float ATTITUDE_Yaw;
+static float body_roll;
+static float body_pitch;
+static float body_yaw;
 
 
 static float pt1f(float raw_k, float raw_km1, float filt_km1, float T_PTF1_S)
@@ -115,8 +115,11 @@ static void pt1f_update(float ax, float ay, float az, float gx, float gy, float 
 
 static void estimate_attitude()
 {
-    ATTITUDE_Roll = atan2(ay_flt_tag.filt_k, az_flt_tag.filt_k) * RADIANS_TO_DEGREES;
-    ATTITUDE_Pitch = atan2(-ax_flt_tag.filt_k, sqrt(ay_flt_tag.filt_k * ay_flt_tag.filt_k + az_flt_tag.filt_k * az_flt_tag.filt_k)) * RADIANS_TO_DEGREES;
+    body_roll = atan2(ay_flt_tag.filt_k, az_flt_tag.filt_k) * RADIANS_TO_DEGREES;
+    body_pitch = atan2(-ax_flt_tag.filt_k, sqrt(ay_flt_tag.filt_k * ay_flt_tag.filt_k + az_flt_tag.filt_k * az_flt_tag.filt_k)) * RADIANS_TO_DEGREES;
+
+    body_roll = atan2(sin(body_roll * DEGREES_TO_RADIANS), cos(body_roll * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+    body_pitch = atan2(sin(body_pitch * DEGREES_TO_RADIANS), cos(body_pitch * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
 
     float heading;
 
@@ -131,15 +134,15 @@ static void estimate_attitude()
             /** Check if became disarmed **/
             if (!JOYSTICK_MotorsArmed && wasArmed)
             {
-                ATTITUDE_Yaw = 0;
+                body_yaw = 0;
                 nSample = 0;
             }
             else
             {
                 /** Integrate over gyro_z **/
                 float dGz = -gz_flt_tag.filt_k;
-                ATTITUDE_Yaw += dGz * CTRL_LOOP_PERIOD_S;
-                ATTITUDE_Yaw = atan2(sin(ATTITUDE_Yaw * DEGREES_TO_RADIANS), cos(ATTITUDE_Yaw * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+                body_yaw += dGz * CTRL_LOOP_PERIOD_S;
+                body_yaw = atan2(sin(body_yaw * DEGREES_TO_RADIANS), cos(body_yaw * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
             }
         }
     }
@@ -158,11 +161,8 @@ static void estimate_attitude()
         else if (heading < -PI)
             heading += (2 * PI);
 
-        ATTITUDE_Yaw = heading * RADIANS_TO_DEGREES;
+        body_yaw = heading * RADIANS_TO_DEGREES;
     }
-
-    ATTITUDE_Roll = atan2(sin((ATTITUDE_Roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS), cos((ATTITUDE_Roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
-    ATTITUDE_Pitch = atan2(sin((ATTITUDE_Pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS), cos((ATTITUDE_Pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
 
     wasArmed = JOYSTICK_MotorsArmed;
 }
@@ -179,9 +179,9 @@ bool ATTITUDE_Init()
     my_flt_tag = {};
     mz_flt_tag = {};
 
-    ATTITUDE_Roll = 0.0f;
-    ATTITUDE_Pitch = 0.0f;
-    ATTITUDE_Yaw = 0.0f;
+    body_roll = 0.0f;
+    body_pitch = 0.0f;
+    body_yaw = 0.0f;
 
     filter_on = false;
 
@@ -220,9 +220,9 @@ void ATTITUDE_Handler()
     if (imu->haveAbsoluteOrientation())
     {
         pt1f_init(ax, ay, az, gx, gy, gz, mx, my, mz);
-        imu->getAbsoluteOrientation(&ATTITUDE_Roll, &ATTITUDE_Pitch, &ATTITUDE_Yaw);
-        ATTITUDE_Roll = atan2(sin((ATTITUDE_Roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS), cos((ATTITUDE_Roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
-        ATTITUDE_Pitch = atan2(sin((ATTITUDE_Pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS), cos((ATTITUDE_Pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+        imu->getAbsoluteOrientation(&body_roll, &body_pitch, &body_yaw);
+        body_roll = atan2(sin(body_roll * DEGREES_TO_RADIANS), cos(body_roll * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+        body_pitch = atan2(sin(body_pitch * DEGREES_TO_RADIANS), cos(body_pitch * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
     }
     else
     {
@@ -250,6 +250,24 @@ void ATTITUDE_Calibrate()
     
     ATTITUDE_Handler();
 
-    ATTITUDE_Roll0 = ATTITUDE_Roll;
-    ATTITUDE_Pitch0 = ATTITUDE_Pitch;
+    ATTITUDE_Roll0 = body_roll;
+    ATTITUDE_Pitch0 = body_pitch;
+}
+
+
+float ATTITUDE_RelRoll()
+{
+    return atan2(sin((body_roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS), cos((body_roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+}
+
+
+float ATTITUDE_RelPitch()
+{
+    return atan2(sin((body_pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS), cos((body_pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+}
+
+
+float ATTITUDE_AbsYaw()
+{
+    return body_yaw;
 }

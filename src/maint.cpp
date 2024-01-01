@@ -691,21 +691,21 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.body_roll)
         {
-            float fdata = ATTITUDE_Roll;
+            float fdata = ATTITUDE_RelRoll();
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.body_pitch)
         {
-            float fdata = ATTITUDE_Pitch;
+            float fdata = ATTITUDE_RelPitch();
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.body_yaw)
         {
-            float fdata = ATTITUDE_Yaw;
+            float fdata = ATTITUDE_AbsYaw();
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);

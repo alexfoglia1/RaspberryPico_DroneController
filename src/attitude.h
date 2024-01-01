@@ -11,9 +11,7 @@ typedef struct
     float filt_k;
 } pt1_flt_tag;
 
-extern float ATTITUDE_Roll;
-extern float ATTITUDE_Pitch;
-extern float ATTITUDE_Yaw;
+
 extern pt1_flt_tag ax_flt_tag;
 extern pt1_flt_tag ay_flt_tag;
 extern pt1_flt_tag az_flt_tag;
@@ -29,6 +27,9 @@ extern float ATTITUDE_Pitch0;
 bool ATTITUDE_Init();
 void ATTITUDE_Calibrate();
 void ATTITUDE_Handler();
+float ATTITUDE_RelRoll();
+float ATTITUDE_RelPitch();
+float ATTITUDE_AbsYaw();
 
 
 #endif //ATTITUDE_H

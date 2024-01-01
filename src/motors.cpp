@@ -82,9 +82,8 @@ void MOTORS_Handler()
     
     if (JOYSTICK_MotorsArmed)
     {
-        pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, ATTITUDE_Roll);
-        pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, ATTITUDE_Pitch);
-        //pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, ATTITUDE_Pitch);pid_controller(&pid_pitch, pid_pitch_gain, 0.0f, ATTITUDE_Pitch);
+        pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, ATTITUDE_RelRoll());
+        pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, ATTITUDE_RelPitch());
 
         float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);

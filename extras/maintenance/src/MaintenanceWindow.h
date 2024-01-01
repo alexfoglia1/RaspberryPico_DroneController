@@ -56,6 +56,8 @@ private:
 	QMap<int, ptf1_params_format> _rxPtf1Params;
 	float _rxRollOffset;
 	float _rxPitchOffset;
+	float _rxRoll;
+	float _rxPitch;
 	Maint::IMU_TYPE _rxImuType;
 	QMainWindow _autoscanProgressWindow;
 	uint32_t _rxCounter;
@@ -92,6 +94,7 @@ private slots:
 	void OnBtnI2CRead();
 	void OnBtnI2CWrite();
 	void OnBtnSetImuOffset();
+	void OnBtnImuAutoOffset();
 
 	void OnRxRawData(bool valid, quint8* data, int size);
 	void OnTxRawData(quint8* data, int size);

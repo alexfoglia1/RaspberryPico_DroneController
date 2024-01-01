@@ -113,6 +113,8 @@ MaintenanceWindow::MaintenanceWindow()
 
 	_rxRollOffset = 0.0f;
 	_rxPitchOffset = 0.0f;
+	_rxRoll = 0.0f;
+	_rxPitch = 0.0f;
 
 	_rxImuType = Maint::IMU_TYPE::LSM9DS1;
 	for (uint32_t i = uint32_t(Maint::IMU_TYPE::FIRST); i < uint32_t(Maint::IMU_TYPE::SIZE); i++)
@@ -149,6 +151,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnI2CRead, SIGNAL(clicked()), this, SLOT(OnBtnI2CRead()));
 	connect(_ui.btnI2CWrite, SIGNAL(clicked()), this, SLOT(OnBtnI2CWrite()));
 	connect(_ui.btnSetImuOffset, SIGNAL(clicked()), this, SLOT(OnBtnSetImuOffset()));
+	connect(_ui.btnImuAutoOffset, SIGNAL(clicked()), this, SLOT(OnBtnImuAutoOffset()));
 
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
 
@@ -1146,6 +1149,18 @@ void MaintenanceWindow::OnBtnSetImuOffset()
 }
 
 
+void MaintenanceWindow::OnBtnImuAutoOffset()
+{
+	float auto_offset_roll = _rxRollOffset + _rxRoll;
+	float auto_offset_pitch = _rxPitchOffset + _rxPitch;
+
+	_ui.spinRollOffset->setValue(auto_offset_roll);
+	_ui.spinPitchOffset->setValue(auto_offset_pitch);
+
+	OnBtnSetImuOffset();
+}
+
+
 void MaintenanceWindow::OnBtnSendMaintenanceParams()
 {
 	if (_maintHandler)
@@ -1579,6 +1594,7 @@ void MaintenanceWindow::OnReceivedBodyRoll(float data)
 {
 	_ui.checkRxBodyRoll->setChecked(true);
 	_ui.lineRxBodyRoll->setText(QString::number(data));
+	_rxRoll = data;
 
 	checkPlot("BODY_ROLL", data);
 }
@@ -1588,6 +1604,7 @@ void MaintenanceWindow::OnReceivedBodyPitch(float data)
 {
 	_ui.checkRxBodyPitch->setChecked(true);
 	_ui.lineRxBodyPitch->setText(QString::number(data));
+	_rxPitch = data;
 
 	checkPlot("BODY_PITCH", data);
 }
