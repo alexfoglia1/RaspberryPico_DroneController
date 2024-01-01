@@ -1746,6 +1746,8 @@ void MaintenanceWindow::OnReceivedCbit(uint32_t data)
 
 void MaintenanceWindow::OnReceivedMotorsParams(uint32_t motor_no, bool enabled, uint32_t min_signal, uint32_t max_signal)
 {
+	_ui.checkTxMotorParams->setChecked(false);
+
 	if (_rxMotorParams.keys().indexOf(motor_no) != -1)
 	{
 		_rxMotorParams[motor_no] = { enabled, min_signal, max_signal };
@@ -1754,6 +1756,8 @@ void MaintenanceWindow::OnReceivedMotorsParams(uint32_t motor_no, bool enabled, 
 
 void MaintenanceWindow::OnReceivedJsParams(uint32_t channel_no, float alpha, float beta)
 {
+	_ui.checkTxJsParams->setChecked(false);
+
 	if (_rxJsParams.keys().indexOf(channel_no) != -1)
 	{
 		_rxJsParams[channel_no] = { alpha, beta };
@@ -1762,6 +1766,8 @@ void MaintenanceWindow::OnReceivedJsParams(uint32_t channel_no, float alpha, flo
 
 void MaintenanceWindow::OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd)
 {
+	_ui.checkTxPidParams->setChecked(false);
+
 	if (_rxPidParams.keys().indexOf(angle_no) != -1)
 	{
 		_rxPidParams[angle_no] = { kp, ki, kt, sat, ad, bd };
@@ -1770,6 +1776,8 @@ void MaintenanceWindow::OnReceivedPidParams(uint32_t angle_no, float kp, float k
 
 void MaintenanceWindow::OnReceivedPtf1Params(uint32_t source_no, float x, float y, float z)
 {
+	_ui.checkTxPtf1Params->setChecked(false);
+
 	if (_rxPtf1Params.keys().indexOf(source_no) != -1)
 	{
 		_rxPtf1Params[source_no] = { x, y, z };
