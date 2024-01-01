@@ -98,6 +98,7 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
     {
         case MAINT_CMD_ID::MAINT_CMD_NONE:
         case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE:
+        case MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET:
             return 1; /** Checksum only **/
         case MAINT_CMD_ID::MAINT_CMD_SET_M1: 
         case MAINT_CMD_ID::MAINT_CMD_SET_M2:
@@ -129,8 +130,6 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
             return 13;  /** 3 * 4 = 12  bytes + checksum **/
         case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
             return 17;  /** 4 * 4 = 16  bytes + checksum **/
-        case MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET:
-            return 9;  /** 2 * 4 = 8 bytes + checksum **/
     }
 
     return 0;
