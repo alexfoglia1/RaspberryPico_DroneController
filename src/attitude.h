@@ -27,7 +27,7 @@ extern float ATTITUDE_Roll0;
 extern float ATTITUDE_Pitch0;
 
 bool ATTITUDE_Init();
-void ATTITUDE_Calibrate();
+void ATTITUDE_Calibrate(bool power_on);
 void ATTITUDE_Handler();
 
 

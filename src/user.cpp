@@ -4,6 +4,12 @@
 #include <hardware/gpio.h>
 
 
+const uint8_t MAJOR_V = 1;
+const uint8_t MINOR_V = 0;
+const uint8_t STAGE_V = 10;
+const REL_TYPE_TAG REL_TYPE = REL_TYPE_TAG::BETA;
+
+
 void InitBoard()
 {
     stdio_usb_init();

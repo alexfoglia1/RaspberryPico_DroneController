@@ -7,7 +7,6 @@
 #include "cbit.h"
 #include "uart.h"
 
-#include <stdio.h>
 #include <pico/multicore.h>
 
 
@@ -89,7 +88,7 @@ int main()
     }
     else
     {
-        ATTITUDE_Calibrate();
+        ATTITUDE_Calibrate(true);
         CBIT_Set_fail_code(fail_code.Dword, false);
     }
 

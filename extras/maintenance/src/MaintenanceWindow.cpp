@@ -146,6 +146,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnRefreshParams, SIGNAL(clicked()), this, SLOT(OnBtnRefreshParams()));
 	connect(_ui.btnI2CRead, SIGNAL(clicked()), this, SLOT(OnBtnI2CRead()));
 	connect(_ui.btnI2CWrite, SIGNAL(clicked()), this, SLOT(OnBtnI2CWrite()));
+	connect(_ui.btnResetImuOffset, SIGNAL(clicked()), this, SLOT(OnBtnResetImuOffset()));
 
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
 
@@ -1131,6 +1132,14 @@ void MaintenanceWindow::OnBtnI2CWrite()
 }
 
 
+void MaintenanceWindow::OnBtnResetImuOffset()
+{
+	if (_maintHandler)
+	{
+		_maintHandler->ResetImuOffset();
+	}
+}
+
 
 void MaintenanceWindow::OnBtnSendMaintenanceParams()
 {
@@ -1831,5 +1840,5 @@ void MaintenanceWindow::OnReceivedImuOffset(float roll_offset, float pitch_offse
 	_ui.checkRxPitchOffset->setChecked(true);
 
 	_ui.lineRxRollOffset->setText(QString::number(roll_offset));
-	_ui.lineRxRollOffset->setText(QString::number(pitch_offset));
+	_ui.lineRxPitchOffset->setText(QString::number(pitch_offset));
 }

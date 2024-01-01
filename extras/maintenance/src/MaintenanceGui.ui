@@ -2424,7 +2424,7 @@
        <widget class="QComboBox" name="comboSetImuType"/>
       </item>
       <item>
-       <widget class="QPushButton" name="btnSendImuType_2">
+       <widget class="QPushButton" name="btnResetImuOffset">
         <property name="text">
          <string>Reset Offset</string>
         </property>

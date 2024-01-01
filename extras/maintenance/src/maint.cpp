@@ -284,6 +284,18 @@ void Maint::Maintenance::TxWriteToFlash()
 }
 
 
+void Maint::Maintenance::ResetImuOffset()
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET);
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_RESET_IMU_OFFSET;
+    _txMutex.unlock();
+
+}
+
+
 void Maint::Maintenance::Tx()
 {
     _txMutex.lock();
@@ -627,6 +639,30 @@ void Maint::Maintenance::Tx()
         qba.push_back(i2cValBytes[1]);
         qba.push_back(i2cValBytes[2]);
         qba.push_back(i2cValBytes[3]);        
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
+    else if (_txStatus == Maint::TX_STATUS::TX_RESET_IMU_OFFSET)
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
 
         uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
 
@@ -1349,6 +1385,11 @@ uint32_t Maint::Maintenance::calc_exp_bytes(Maint::MAINT_HEADER_T* header)
     if (header->Bits.ptf1_params)
     {
         bit_sets += 8; // Expecting 3 blocks of 3 float = 9, 1 still counted
+    }
+
+    if (header->Bits.imu_offset)
+    {
+        bit_sets += 1; // Expecting 1 block of 2 float = 2, 1 still counted
     }
 
     return 1 + sizeof(uint32_t) * bit_sets;

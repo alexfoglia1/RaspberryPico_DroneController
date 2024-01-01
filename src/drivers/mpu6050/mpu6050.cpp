@@ -4,7 +4,6 @@
 #include <string.h>
 #include <limits>
 #include <hardware/i2c.h>
-#include <stdio.h>
 
 MPU6050::MPU6050()
 {

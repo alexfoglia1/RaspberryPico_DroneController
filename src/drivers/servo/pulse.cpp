@@ -1,5 +1,4 @@
 #include "pulse.h"
-#include <stdio.h>
 #include <pico/stdlib.h>
 
 std::vector<Pulse*> pulse_in_vector;

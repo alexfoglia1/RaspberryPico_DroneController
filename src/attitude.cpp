@@ -6,7 +6,6 @@
 #include "user.h"
 #include "maint.h"
 
-#include <stdio.h>
 #include <pico/float.h>
 
 static const float DEGREES_TO_RADIANS = PI/180.f;
@@ -242,10 +241,15 @@ void ATTITUDE_Handler()
 }
 
 
-void ATTITUDE_Calibrate()
+void ATTITUDE_Calibrate(bool power_on)
 {
     ATTITUDE_Roll0 = 0;
     ATTITUDE_Pitch0 = 0;
+
+    if (power_on)
+    {
+        sleep_ms(2000);
+    }
 
     ATTITUDE_Handler();
 

@@ -510,7 +510,7 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                                                         (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[12]) & 0xFF));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_RESET_IMU_OFFSET:
-                ATTITUDE_Calibrate();
+                ATTITUDE_Calibrate(false);
                 break;
 
         }
@@ -902,7 +902,6 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
 
         tx_message.payload[tx_payload_idx] = checksum(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx);
-
         put_packet(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx + 1);
         
         shall_tx = false;

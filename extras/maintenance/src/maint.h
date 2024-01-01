@@ -140,7 +140,8 @@ namespace Maint
         TX_SET_IMU_TYPE,
         TX_I2C_READ,
         TX_I2C_WRITE,
-        TX_WRITE_TO_FLASH
+        TX_WRITE_TO_FLASH,
+        TX_RESET_IMU_OFFSET
     };
 
     enum class MAINT_CMD_ID
@@ -202,9 +203,10 @@ public:
     void TxImuType(IMU_TYPE imuType);
     void I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg);
     void I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val);
-    int  ClearLogs();
-
     void TxWriteToFlash();
+    void ResetImuOffset();
+
+    int ClearLogs();
 
 public slots:
     void Tx();
