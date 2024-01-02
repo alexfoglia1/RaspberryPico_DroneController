@@ -51,8 +51,6 @@ bool Maint::Maintenance::Open(QString serialPortName, enum QSerialPort::BaudRate
     _logFileName = QString("log-%1-%2.txt").arg(QDateTime::currentDateTime().toString().replace(" ", "-").replace(":","-")).arg(serialPortName);
     _logFile = fopen(_logFileName.toStdString().c_str(), "w");
 
-    fclose(_logFile);
-
 	connect(_serialPort, SIGNAL(readyRead()), this, SLOT(OnRx()));
     connect(this, SIGNAL(rxBytes(quint8*, int)), this, SLOT(logBytes(quint8*, int)));
 
@@ -101,6 +99,8 @@ void Maint::Maintenance::Close()
 
     _serialPort->disconnect(_serialPort, SIGNAL(readyRead()), this, SLOT(OnRx()));
     _serialPort->close();
+
+    fclose(_logFile);
 }
 
 
@@ -1558,9 +1558,8 @@ void Maint::Maintenance::logBytes(quint8* data, int size)
     }
     logLine.append("\n");
 
-    _logFile = fopen(_logFileName.toStdString().c_str(), "a");
+
     fprintf(_logFile, logLine.toStdString().c_str());
-    fclose(_logFile);
 }
 
 

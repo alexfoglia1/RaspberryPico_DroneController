@@ -215,7 +215,7 @@ void Joystick::run()
             default:
                 break;
         }
-        msleep(10);
+        msleep(1);
     }
 
     emit jsThreadExit();

@@ -49,10 +49,10 @@ void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p)
     JOYSTICK_MotorsArmed = false;
     JOYSTICK_Timeout = false;
 
-    min_roll = saturate(min_r, -360.f, 360.f);
-    max_roll = saturate(max_r, -360.f, 360.f);
-    min_pitch = saturate(min_p, -360.f, 360.f);
-    max_pitch = saturate(max_p, -360.f, 360.f);
+    min_roll = saturate(min_r, -180.f, 180.f);
+    max_roll = saturate(max_r, -180.f, 180.f);
+    min_pitch = saturate(min_p, -180.f, 180.f);
+    max_pitch = saturate(max_p, -180.f, 180.f);
 
     roll_signal.attach();
     pitch_signal.attach();
@@ -122,12 +122,12 @@ void JOYSTICK_Handler()
                         ((cur_t_us - lastThrottleRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
                         ((cur_t_us - lastArmedRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS));
                     
-    if (!MAINT_IsControllingMotors())
+    if (!MAINT_IsOverridingRadio())
     {
         JOYSTICK_MotorsArmed = !JOYSTICK_Timeout;
     }
     else
     {
-        JOYSTICK_MotorsArmed = !MAINT_IsPresent();
+        JOYSTICK_MotorsArmed = (JOYSTICK_MotorsArmed && MAINT_IsPresent());
     }
 }
