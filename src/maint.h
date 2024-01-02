@@ -125,6 +125,11 @@ enum class MAINT_CMD_ID
     MAINT_CMD_I2C_READ,
     MAINT_CMD_I2C_WRITE,
     MAINT_CMD_SET_IMU_OFFSET,
+    MAINT_CMD_SET_OVERRIDE_RADIO,
+    MAINT_CMD_SET_THROTTLE_SIGNAL,
+    MAINT_CMD_SET_ROLL_SIGNAL,
+    MAINT_CMD_SET_PITCH_SIGNAL,
+    MAINT_CMD_SET_ARMED_SIGNAL
 };
 
 enum class MAINT_MOTOR_PARAM
@@ -231,5 +236,10 @@ void MAINT_OnByteReceived(uint8_t byte_rx);
 void MAINT_Handler();
 bool MAINT_IsPresent();
 bool MAINT_IsControllingMotors();
+bool MAINT_IsOverridingRadio();
+uint32_t MAINT_ThrottleSignal();
+uint32_t MAINT_RollSignal();
+uint32_t MAINT_PitchSignal();
+uint32_t MAINT_ArmedSignal();
 
 #endif //MAINT_H
