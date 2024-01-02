@@ -3,6 +3,7 @@
 #include <qmainwindow.h>
 
 #include "maint.h"
+#include "Joystick.h"
 #include "ui_MaintenanceGui.h"
 #include "ui_AutoscanComPortsGui.h"
 
@@ -46,6 +47,8 @@ private:
 	Ui_MaintenanceGui _ui;
 	Ui_AutoscanComPortsGui _progressUi;
 	Maint::Maintenance* _maintHandler;
+	Joystick _jsController;
+
 	const int _txDelayMillis = 20;
 	QMap<QString, int> _defaultPlotSpan;
 	QMap<Maint::IMU_TYPE, QString> _imuTypeToString;
@@ -62,6 +65,8 @@ private:
 	QMainWindow _autoscanProgressWindow;
 	uint32_t _rxCounter;
 	int64_t _rxT0millis;
+	bool _jsIsControlling;
+	bool _jsIsArmed;
 
 	void autoScanComPorts();
 	void checkPlot(QString expectedText, double value);
@@ -69,6 +74,7 @@ private:
 private slots:
 
 	void OnBtnOpenSerialPort();
+	void OnMaintOpenTrial(bool result);
 	void OnBtnOpenBoot();
 	void OnBtnRescanPorts();
 	void OnClearLogs();
@@ -161,6 +167,11 @@ private slots:
 	void OnReceivedI2CRead(uint32_t i2c_read);
 	void OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
 	void OnReceivedImuOffset(float, float);
+
+	void OnJsConnected(bool connected);
+	void OnJsBtnPressed(js_button button);
+	void OnJsControl(js_control_packet packet);
+	void OnJsThreadExit();
 };
 
 #endif

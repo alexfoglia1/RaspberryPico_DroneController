@@ -13,6 +13,9 @@ MaintenanceWindow::MaintenanceWindow()
 	_maintHandler = nullptr;
 	_rxCounter = 0;
 	_rxT0millis = -1;
+	_jsIsControlling = false;
+	_jsIsArmed = false;
+
 	_imuTypeToString =
 	{
 		{Maint::IMU_TYPE::LSM9DS1, "LSM9DS1"},
@@ -166,6 +169,8 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(_ui.actionClear_logs, SIGNAL(triggered()), this, SLOT(OnClearLogs()));
 
+	connect(_maintHandler, SIGNAL(openTrial(bool)), this, SLOT(OnMaintOpenTrial(bool)));
+
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelZ(float)), this, SLOT(OnReceivedRawAccelZ(float)));
@@ -250,6 +255,13 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(checkHeaderChanged, &QTimer::timeout, this, &MaintenanceWindow::OnHeaderChanged);
 	checkHeaderChanged->start();
+
+	connect(&_jsController, SIGNAL(jsConnected(bool)), this, SLOT(OnJsConnected(bool)));
+	connect(&_jsController, SIGNAL(jsBtnPressed(js_button)), this, SLOT(OnJsBtnPressed(js_button)));
+	connect(&_jsController, SIGNAL(jsControl(js_control_packet)), this, SLOT(OnJsControl(js_control_packet)));
+	connect(&_jsController, SIGNAL(jsThreadExit()), this, SLOT(OnJsThreadExit()));
+
+	_jsController.start();
 }
 
 
@@ -396,36 +408,15 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 #endif
 		}
 
-		if (_maintHandler->Open(_ui.comboSelPort->currentText(), baud))
-		{
-			_maintHandler->EnableTx();
-
-			_ui.comboSelPort->setEnabled(false);
-			_ui.groupBoxTx->setEnabled(true);
-			_ui.TxMaintenanceGroup->setEnabled(true);
-			_ui.TxMaintenanceGroup_2->setEnabled(true);
-			_ui.TxMaintenanceGroup_3->setEnabled(true);
-			_ui.TxMaintenanceParamsGroup->setEnabled(true);
-
-			_ui.btnOpenSerialPort->setText("Close");
-			_ui.btnRescanPorts->setEnabled(false);
-
-			_rxCounter = 0;
-			_rxT0millis = -1;
-
-			_ui.lblRxCount->setText("Count: 0");
-			_ui.lblRxFreq->setText("Frequency: NaN Hz");
-		}
-		else
-		{
-			QMessageBox::warning(this, "Error", QString("Cannot open serial port %1").arg(_ui.comboSelPort->currentText()));
-		}
+		_maintHandler->Open(_ui.comboSelPort->currentText(), baud);
+		_maintHandler->start();
 	}
 	else
 	{
 		_maintHandler->Close();
 		_ui.comboSelPort->setEnabled(true);
 		_ui.btnRescanPorts->setEnabled(true);
+		_ui.groupBoxTx->setEnabled(false);
 		_ui.btnOpenSerialPort->setText("Open");
 		_ui.lblRxData->setStyleSheet("background-color:#FF0000");
 		_ui.lblTxData->setStyleSheet("background-color:#FF0000");
@@ -439,10 +430,48 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 }
 
 
+void MaintenanceWindow::OnMaintOpenTrial(bool result)
+{
+	if (result)
+	{
+		_ui.comboSelPort->setEnabled(false);
+		_ui.groupBoxTx->setEnabled(true);
+		_ui.TxMaintenanceGroup->setEnabled(true);
+		_ui.TxMaintenanceGroup_2->setEnabled(true);
+		_ui.TxMaintenanceGroup_3->setEnabled(true);
+		_ui.TxMaintenanceParamsGroup->setEnabled(true);
+
+		_ui.btnOpenSerialPort->setText("Close");
+		_ui.btnRescanPorts->setEnabled(false);
+
+		_rxCounter = 0;
+		_rxT0millis = -1;
+
+		_ui.lblRxCount->setText("Count: 0");
+		_ui.lblRxFreq->setText("Frequency: NaN Hz");
+
+		_maintHandler->start();
+	}
+	else
+	{
+		QMessageBox::warning(this, "Error", QString("Cannot open serial port %1").arg(_ui.comboSelPort->currentText()));
+	}
+}
+
+
 void MaintenanceWindow::OnBtnOpenBoot()
 {
-	_maintHandler->Open(_ui.comboSelPort->currentText(), QSerialPort::Baud1200);
 	_maintHandler->Close();
+
+	QSerialPort serialPort;
+	serialPort.setPortName(_ui.comboSelPort->currentText());
+	serialPort.setBaudRate(QSerialPort::Baud1200);
+	serialPort.setParity(QSerialPort::NoParity);
+	serialPort.setDataBits(QSerialPort::Data8);
+	serialPort.setStopBits(QSerialPort::OneStop);
+	serialPort.setFlowControl(QSerialPort::NoFlowControl);
+	serialPort.open(QIODevice::OpenModeFlag::ReadWrite);
+
 	_ui.comboSelPort->setEnabled(true);
 	_ui.btnOpenSerialPort->setText("Open");
 	_ui.lblRxData->setStyleSheet("background-color:#FF0000");
@@ -1872,4 +1901,68 @@ void MaintenanceWindow::OnReceivedImuOffset(float roll_offset, float pitch_offse
 
 	_ui.lineRxRollOffset->setText(QString::number(_rxRollOffset));
 	_ui.lineRxPitchOffset->setText(QString::number(_rxPitchOffset));
+}
+
+
+void MaintenanceWindow::OnJsConnected(bool connected)
+{
+	if (connected)
+	{
+		_ui.lblJsPresent->setStyleSheet("background-color: #00FF00");
+	}
+	else
+	{
+		_ui.lblJsPresent->setStyleSheet("background-color: #FF0000");
+	}
+}
+
+
+void MaintenanceWindow::OnJsBtnPressed(js_button button)
+{
+	if (button == js_button::CROSS)
+	{
+		_jsIsControlling = !_jsIsControlling;
+
+		if (_jsIsControlling)
+		{
+			_ui.lblJsControl->setStyleSheet("background-color: #00FF00");
+		}
+		else
+		{
+			_ui.lblJsControl->setStyleSheet("background-color: #FF0000");
+		}
+
+		if (_maintHandler)
+		{
+			_maintHandler->TxOverrideRadio(_jsIsControlling);
+		}
+	}
+	else if (button == js_button::TRIANGLE)
+	{
+		_jsIsArmed = !_jsIsArmed;
+
+		if (_maintHandler)
+		{
+			_maintHandler->TxSetArmedSignal(_jsIsArmed ? 2000 : 1000);
+		}
+	}
+}
+
+
+void MaintenanceWindow::OnJsControl(js_control_packet packet)
+{
+	uint16_t roll_signal = _jsController.remapJsValue(packet.r3_haxis, 1000, 2000);
+	uint16_t pitch_signal = _jsController.remapJsValue(packet.r3_vaxis, 1000, 2000);
+	uint16_t throttle_signal = _jsController.remapJsValue(packet.l3_vaxis, 1000, 2000);
+
+	if (_maintHandler)
+	{
+		_maintHandler->TxSetRollPitchThrottleSignal(roll_signal, pitch_signal, throttle_signal);
+	}
+}
+
+
+void MaintenanceWindow::OnJsThreadExit()
+{
+
 }

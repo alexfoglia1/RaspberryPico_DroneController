@@ -19,6 +19,9 @@ ${CMAKE_SOURCE_DIR}/src/MaintenanceWindow.cpp
 ${CMAKE_SOURCE_DIR}/src/maint.h
 ${CMAKE_SOURCE_DIR}/src/maint.cpp
 
+${CMAKE_SOURCE_DIR}/src/Joystick.h
+${CMAKE_SOURCE_DIR}/src/Joystick.cpp
+
 ${CMAKE_SOURCE_DIR}/src/PlotWidget.h
 ${CMAKE_SOURCE_DIR}/src/PlotWidget.cpp
 
@@ -31,8 +34,9 @@ ${CMAKE_SOURCE_DIR}/src/HeadingDisplay.cpp
 ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
 
+find_package(Threads REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets SerialPort REQUIRED)
+find_package(SDL2 REQUIRED)
 
-target_include_directories(DroneMaintenance PUBLIC ${CMAKE_SOURCE_DIR}/src/)
-
-target_link_libraries(DroneMaintenance Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort)
+target_include_directories(DroneMaintenance PUBLIC ${CMAKE_SOURCE_DIR}/src/ ${SDL2_INCLUDE_DIRS})
+target_link_libraries(DroneMaintenance Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort ${SDL2_LIBRARIES})
