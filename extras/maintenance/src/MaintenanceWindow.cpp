@@ -405,6 +405,7 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
             baud = enum QSerialPort::BaudRate(_ui.comboSelBaud->itemData(idx).toInt());
 #endif
 		}
+
 		if (_maintHandler->Open(_ui.comboSelPort->currentText(), baud))
 		{
 			_maintHandler->EnableTx();
@@ -415,13 +416,13 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 			_ui.TxMaintenanceGroup_2->setEnabled(true);
 			_ui.TxMaintenanceGroup_3->setEnabled(true);
 			_ui.TxMaintenanceParamsGroup->setEnabled(true);
-			
+
 			_ui.btnOpenSerialPort->setText("Close");
 			_ui.btnRescanPorts->setEnabled(false);
-			
+
 			_rxCounter = 0;
 			_rxT0millis = -1;
-			
+
 			_ui.lblRxCount->setText("Count: 0");
 			_ui.lblRxFreq->setText("Frequency: NaN Hz");
 		}
@@ -453,7 +454,6 @@ void MaintenanceWindow::OnBtnOpenBoot()
 {
 	_maintHandler->Open(_ui.comboSelPort->currentText(), QSerialPort::Baud1200);
 	_maintHandler->Close();
-
 	_ui.comboSelPort->setEnabled(true);
 	_ui.btnOpenSerialPort->setText("Open");
 	_ui.lblRxData->setStyleSheet("background-color:#FF0000");
