@@ -104,9 +104,9 @@ void Maint::Maintenance::Close()
 }
 
 
-void Maint::Maintenance::EnableTx()
+void Maint::Maintenance::EnableTx(int delayMillis)
 {
-    _txTimer->setInterval(10);
+    _txTimer->setInterval(delayMillis);
     _txTimer->setSingleShot(false);
     _txTimer->setTimerType(Qt::PreciseTimer);
 

@@ -259,6 +259,14 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(&_jsController, SIGNAL(jsControl(js_control_packet)), this, SLOT(OnJsControl(js_control_packet)));
 	connect(&_jsController, SIGNAL(jsThreadExit()), this, SLOT(OnJsThreadExit()));
 
+	const double SAMPLE_PERIOD_S = _txDelayMillis * 1e-3;
+	const double SAMPLE_FREQ = 1 / SAMPLE_PERIOD_S;
+
+	_ui.plot->UpdateSamplesPerSecond(SAMPLE_FREQ);
+	int samplesInNewValue = SAMPLE_FREQ * _ui.plotTimeSlider->value();
+
+	_ui.plot->SetXSpan(samplesInNewValue);
+
 	_jsController.start();
 }
 
@@ -408,7 +416,7 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 
 		if (_maintHandler->Open(_ui.comboSelPort->currentText(), baud))
 		{
-			_maintHandler->EnableTx();
+			_maintHandler->EnableTx(_txDelayMillis);
 
 			_ui.comboSelPort->setEnabled(false);
 			_ui.groupBoxTx->setEnabled(true);

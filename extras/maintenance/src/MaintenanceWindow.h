@@ -49,7 +49,7 @@ private:
 	Maint::Maintenance* _maintHandler;
 	Joystick _jsController;
 
-	const int _txDelayMillis = 20;
+	const int _txDelayMillis = 25;
 	QMap<QString, int> _defaultPlotSpan;
 	QMap<Maint::IMU_TYPE, QString> _imuTypeToString;
 	QMap<Maint::IMU_TYPE, uint32_t> _imuTypeToI2CAddr;

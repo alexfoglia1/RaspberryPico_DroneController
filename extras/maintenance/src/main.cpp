@@ -16,5 +16,6 @@ int main(int argc, char** argv)
 
 	MaintenanceWindow* maintWindow = new MaintenanceWindow();
 	maintWindow->setVisible(true);
+
 	return maint->exec();
 }

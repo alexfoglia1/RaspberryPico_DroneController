@@ -199,7 +199,7 @@ public:
 	Maintenance();
     bool Open(QString serialPortName, enum QSerialPort::BaudRate baud = QSerialPort::Baud38400);
     void Close();
-    void EnableTx();
+    void EnableTx(int delayMillis);
     void SetTxHeader(MAINT_HEADER_T txHeader);
     void TxMaintenanceCommand(uint32_t motorNo, uint32_t data);
     void TxMaintenanceParams(uint32_t motorNo, bool enabled, uint32_t minParam, uint32_t maxParam);
