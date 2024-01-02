@@ -1595,6 +1595,7 @@ void MaintenanceWindow::OnReceivedBodyRoll(float data)
 	_ui.checkRxBodyRoll->setChecked(true);
 	_ui.lineRxBodyRoll->setText(QString::number(data));
 	_rxRoll = data;
+	_ui.pfdRollPitch->UpdateRoll(data);
 
 	checkPlot("BODY_ROLL", data);
 }
@@ -1605,6 +1606,7 @@ void MaintenanceWindow::OnReceivedBodyPitch(float data)
 	_ui.checkRxBodyPitch->setChecked(true);
 	_ui.lineRxBodyPitch->setText(QString::number(data));
 	_rxPitch = data;
+	_ui.pfdRollPitch->UpdatePitch(data);
 
 	checkPlot("BODY_PITCH", data);
 }
@@ -1614,6 +1616,7 @@ void MaintenanceWindow::OnReceivedBodyYaw(float data)
 {
 	_ui.checkRxBodyYaw->setChecked(true);
 	_ui.lineRxBodyYaw->setText(QString::number(data));
+	_ui.pfdHeading->UpdateHeading(data);
 
 	checkPlot("BODY_YAW", data);
 }

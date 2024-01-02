@@ -1116,7 +1116,7 @@
       <x>1150</x>
       <y>70</y>
       <width>681</width>
-      <height>701</height>
+      <height>571</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -1985,7 +1985,7 @@
     <property name="geometry">
      <rect>
       <x>1150</x>
-      <y>780</y>
+      <y>650</y>
       <width>681</width>
       <height>22</height>
      </rect>
@@ -2007,7 +2007,7 @@
     <property name="geometry">
      <rect>
       <x>1740</x>
-      <y>800</y>
+      <y>670</y>
       <width>81</width>
       <height>16</height>
      </rect>
@@ -2415,7 +2415,7 @@
       <rect>
        <x>10</x>
        <y>180</y>
-       <width>691</width>
+       <width>712</width>
        <height>41</height>
       </rect>
      </property>
@@ -2652,6 +2652,39 @@
      <string>Frequency: NaN Hz</string>
     </property>
    </widget>
+   <widget class="QGroupBox" name="groupBox">
+    <property name="geometry">
+     <rect>
+      <x>1150</x>
+      <y>700</y>
+      <width>681</width>
+      <height>261</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string>Flight Display</string>
+    </property>
+    <widget class="RollPitchDisplay" name="pfdRollPitch" native="true">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>30</y>
+       <width>211</width>
+       <height>211</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="HeadingDisplay" name="pfdHeading" native="true">
+     <property name="geometry">
+      <rect>
+       <x>440</x>
+       <y>30</y>
+       <width>211</width>
+       <height>211</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -2682,6 +2715,18 @@
    <class>PlotWidget</class>
    <extends>QLabel</extends>
    <header>PlotWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>RollPitchDisplay</class>
+   <extends>QWidget</extends>
+   <header>RollPitchDisplay.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>HeadingDisplay</class>
+   <extends>QWidget</extends>
+   <header>HeadingDisplay.h</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>
