@@ -52,10 +52,10 @@ static bool shall_set;
 static uint64_t last_msg_us;
 static bool controlling_motors;
 static bool overriding_radio;
-static uint32_t throttle_override_signal;
-static uint32_t roll_override_signal;
-static uint32_t pitch_override_signal;
-static uint32_t armed_override_signal;
+static uint64_t throttle_override_signal;
+static uint64_t roll_override_signal;
+static uint64_t pitch_override_signal;
+static uint64_t armed_override_signal;
 
 static void put_packet(uint8_t* buf, uint32_t len)
 {
@@ -137,14 +137,10 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
             return 9;  /** 2 * 4 = 8 bytes + checksum **/
         case MAINT_CMD_ID::MAINT_CMD_SET_OVERRIDE_RADIO:
             return 5;  /** 1 * 4 = 4 bytes + checksum **/
-        case MAINT_CMD_ID::MAINT_CMD_SET_THROTTLE_SIGNAL:
-            return 5;  /** 1 * 4 = 4 bytes + checksum **/
-        case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_SIGNAL:
-            return 5;  /** 1 * 4 = 4 bytes + checksum **/
-        case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_SIGNAL:
-            return 5;  /** 1 * 4 = 4 bytes + checksum **/
+        case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PITCH_THROTTLE_SIGNAL:
+            return 7;  /** 6 bytes + checksum **/
         case MAINT_CMD_ID::MAINT_CMD_SET_ARMED_SIGNAL:
-            return 5;  /** 1 * 4 = 4 bytes + checksum **/                                                    
+            return 3;  /** 1 * 2 = 2 bytes + checksum **/                                                    
     }
 
     return 0;
@@ -537,17 +533,13 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
             case MAINT_CMD_ID::MAINT_CMD_SET_OVERRIDE_RADIO:
                 overriding_radio = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 1);
                 break;
-            case MAINT_CMD_ID::MAINT_CMD_SET_THROTTLE_SIGNAL:
-                throttle_override_signal = saturate(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
-                break;
-            case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_SIGNAL:
-                pitch_override_signal = saturate(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
-                break;
-            case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_SIGNAL:
-                roll_override_signal = saturate(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
+            case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PITCH_THROTTLE_SIGNAL:
+                roll_override_signal = saturate(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
+                pitch_override_signal = saturate(*reinterpret_cast<uint16_t*>(&rx_message.payload[2]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
+                throttle_override_signal = saturate(*reinterpret_cast<uint16_t*>(&rx_message.payload[4]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_ARMED_SIGNAL:
-                armed_override_signal = saturate(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
+                armed_override_signal = saturate(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
                 break;
         }
 
@@ -687,19 +679,19 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.throttle_sgn)
         {
-            uint32_t idata = throttle_signal.pulseIn();
+            uint32_t idata = overriding_radio ? throttle_override_signal : throttle_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.roll_sgn)
         {
-            uint32_t idata = roll_signal.pulseIn();
+            uint32_t idata = overriding_radio ? roll_override_signal : roll_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.pitch_sgn)
         {
-            uint32_t idata = pitch_signal.pulseIn();
+            uint32_t idata = overriding_radio ? pitch_override_signal : pitch_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
@@ -1000,25 +992,25 @@ bool MAINT_IsOverridingRadio()
 }
 
 
-uint32_t MAINT_ThrottleSignal()
+uint64_t MAINT_ThrottleSignal()
 {
     return throttle_override_signal;
 }
 
 
-uint32_t MAINT_RollSignal()
+uint64_t MAINT_RollSignal()
 {
     return roll_override_signal;
 }
 
 
-uint32_t MAINT_PitchSignal()
+uint64_t MAINT_PitchSignal()
 {
     return pitch_override_signal;
 }
 
 
-uint32_t MAINT_ArmedSignal()
+uint64_t MAINT_ArmedSignal()
 {
     return armed_override_signal;
 }
