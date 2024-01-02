@@ -1,5 +1,10 @@
 #include "RollPitchDisplay.h"
 #include <qpainter.h>
+#include <qpainterpath.h>
+
+#ifdef __linux__
+#include <cmath>
+#endif
 
 RollPitchDisplay::RollPitchDisplay(QWidget* parent) : QLabel(parent)
 {

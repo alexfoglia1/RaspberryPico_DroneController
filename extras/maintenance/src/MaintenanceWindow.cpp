@@ -285,7 +285,7 @@ void MaintenanceWindow::autoScanComPorts()
 	for (int i = 0; i < 100; i++)
 	{
 #ifdef __linux__
-        QString portName = QString("/dev/ttyUSB%1").arg(i);
+        QString portName = QString("/dev/ttyACM%1").arg(i);
 #else
 		QString portName = QString("COM%1").arg(i);
 #endif

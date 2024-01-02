@@ -1,5 +1,10 @@
 #include "HeadingDisplay.h"
 #include <qpainter.h>
+#include <qpainterpath.h>
+
+#ifdef __linux__
+#include <cmath>
+#endif
 
 HeadingDisplay::HeadingDisplay(QWidget* parent) : QLabel(parent)
 {
