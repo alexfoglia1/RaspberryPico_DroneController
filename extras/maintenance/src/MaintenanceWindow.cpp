@@ -169,8 +169,6 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(_ui.actionClear_logs, SIGNAL(triggered()), this, SLOT(OnClearLogs()));
 
-	connect(_maintHandler, SIGNAL(openTrial(bool)), this, SLOT(OnMaintOpenTrial(bool)));
-
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelZ(float)), this, SLOT(OnReceivedRawAccelZ(float)));
@@ -407,9 +405,30 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
             baud = enum QSerialPort::BaudRate(_ui.comboSelBaud->itemData(idx).toInt());
 #endif
 		}
+		if (_maintHandler->Open(_ui.comboSelPort->currentText(), baud))
+		{
+			_maintHandler->EnableTx();
 
-		_maintHandler->Open(_ui.comboSelPort->currentText(), baud);
-		_maintHandler->start();
+			_ui.comboSelPort->setEnabled(false);
+			_ui.groupBoxTx->setEnabled(true);
+			_ui.TxMaintenanceGroup->setEnabled(true);
+			_ui.TxMaintenanceGroup_2->setEnabled(true);
+			_ui.TxMaintenanceGroup_3->setEnabled(true);
+			_ui.TxMaintenanceParamsGroup->setEnabled(true);
+			
+			_ui.btnOpenSerialPort->setText("Close");
+			_ui.btnRescanPorts->setEnabled(false);
+			
+			_rxCounter = 0;
+			_rxT0millis = -1;
+			
+			_ui.lblRxCount->setText("Count: 0");
+			_ui.lblRxFreq->setText("Frequency: NaN Hz");
+		}
+		else
+		{
+			QMessageBox::warning(this, "Error", QString("Cannot open serial port %1").arg(_ui.comboSelPort->currentText()));
+		}
 	}
 	else
 	{
@@ -430,47 +449,10 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 }
 
 
-void MaintenanceWindow::OnMaintOpenTrial(bool result)
-{
-	if (result)
-	{
-		_ui.comboSelPort->setEnabled(false);
-		_ui.groupBoxTx->setEnabled(true);
-		_ui.TxMaintenanceGroup->setEnabled(true);
-		_ui.TxMaintenanceGroup_2->setEnabled(true);
-		_ui.TxMaintenanceGroup_3->setEnabled(true);
-		_ui.TxMaintenanceParamsGroup->setEnabled(true);
-
-		_ui.btnOpenSerialPort->setText("Close");
-		_ui.btnRescanPorts->setEnabled(false);
-
-		_rxCounter = 0;
-		_rxT0millis = -1;
-
-		_ui.lblRxCount->setText("Count: 0");
-		_ui.lblRxFreq->setText("Frequency: NaN Hz");
-
-		_maintHandler->start();
-	}
-	else
-	{
-		QMessageBox::warning(this, "Error", QString("Cannot open serial port %1").arg(_ui.comboSelPort->currentText()));
-	}
-}
-
-
 void MaintenanceWindow::OnBtnOpenBoot()
 {
+	_maintHandler->Open(_ui.comboSelPort->currentText(), QSerialPort::Baud1200);
 	_maintHandler->Close();
-
-	QSerialPort serialPort;
-	serialPort.setPortName(_ui.comboSelPort->currentText());
-	serialPort.setBaudRate(QSerialPort::Baud1200);
-	serialPort.setParity(QSerialPort::NoParity);
-	serialPort.setDataBits(QSerialPort::Data8);
-	serialPort.setStopBits(QSerialPort::OneStop);
-	serialPort.setFlowControl(QSerialPort::NoFlowControl);
-	serialPort.open(QIODevice::OpenModeFlag::ReadWrite);
 
 	_ui.comboSelPort->setEnabled(true);
 	_ui.btnOpenSerialPort->setText("Open");

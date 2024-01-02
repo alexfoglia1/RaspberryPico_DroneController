@@ -74,7 +74,6 @@ private:
 private slots:
 
 	void OnBtnOpenSerialPort();
-	void OnMaintOpenTrial(bool result);
 	void OnBtnOpenBoot();
 	void OnBtnRescanPorts();
 	void OnClearLogs();
