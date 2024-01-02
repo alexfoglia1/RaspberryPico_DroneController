@@ -299,6 +299,47 @@ void Maint::Maintenance::SetImuOffset(float roll_offset, float pitch_offset)
 }
 
 
+void Maint::Maintenance::TxOverrideRadio(bool is_override)
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_OVERRIDE_RADIO);
+
+    _tx_param_override_radio = is_override ? 1 : 0;
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_SET_OVERRIDE_RADIO;
+    _txMutex.unlock();
+}
+
+
+void Maint::Maintenance::TxSetArmedSignal(uint16_t signal)
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_ARMED_SIGNAL);
+
+    _tx_param_override_armed_signal = signal;
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_SET_OVERRIDE_ARMED_SIGNAL;
+    _txMutex.unlock();
+}
+
+
+void Maint::Maintenance::TxSetRollPitchThrottleSignal(uint16_t roll_signal, uint16_t pitch_signal, uint16_t throttle_signal)
+{
+    _txCommand.All = 0;
+    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PITCH_THROTTLE_SIGNAL);
+
+    _tx_param_override_roll_signal = roll_signal;
+    _tx_param_override_pitch_signal = pitch_signal;
+    _tx_param_override_throttle_signal = throttle_signal;
+
+    _txMutex.lock();
+    _txStatus = Maint::TX_STATUS::TX_SET_OVERRIDE_ROLL_PITCH_THROTTLE_SIGNAL;
+    _txMutex.unlock();
+}
+
+
 void Maint::Maintenance::Tx()
 {
     _txMutex.lock();
@@ -678,6 +719,101 @@ void Maint::Maintenance::Tx()
         qba.push_back(pitchOffsetBytes[1]);
         qba.push_back(pitchOffsetBytes[2]);
         qba.push_back(pitchOffsetBytes[3]);
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
+    else if (_txStatus == Maint::TX_STATUS::TX_SET_OVERRIDE_RADIO)
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* overrideRadioBytes = reinterpret_cast<uint8_t*>(&_tx_param_override_radio);
+
+        qba.push_back(overrideRadioBytes[0]);
+        qba.push_back(overrideRadioBytes[1]);
+        qba.push_back(overrideRadioBytes[2]);
+        qba.push_back(overrideRadioBytes[3]);
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
+    else if (_txStatus == Maint::TX_STATUS::TX_SET_OVERRIDE_ARMED_SIGNAL)
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* armedSignalBytes = reinterpret_cast<uint8_t*>(&_tx_param_override_armed_signal);
+
+        qba.push_back(armedSignalBytes[0]);
+        qba.push_back(armedSignalBytes[1]);
+
+        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
+
+        _txMutex.unlock();
+
+        qba.push_back(cks);
+        bytesWritten = _serialPort->write(qba);
+        _serialPort->flush();
+
+        _tx_data = 0;
+        _txCommand.All = 0;
+        _txStatus = Maint::TX_STATUS::TX_GET;
+    }
+    else if (_txStatus == Maint::TX_STATUS::TX_SET_OVERRIDE_ROLL_PITCH_THROTTLE_SIGNAL)
+    {
+        qba.push_back(Maint::SYNC_CHAR);
+        qba.push_back(_txCommand.Bytes[0]);
+        qba.push_back(_txCommand.Bytes[1]);
+        qba.push_back(_txCommand.Bytes[2]);
+        qba.push_back(_txCommand.Bytes[3]);
+        qba.push_back(_txCommand.Bytes[4]);
+        qba.push_back(_txCommand.Bytes[5]);
+        qba.push_back(_txCommand.Bytes[6]);
+        qba.push_back(_txCommand.Bytes[7]);
+
+        uint8_t* rollSignalBytes = reinterpret_cast<uint8_t*>(&_tx_param_override_roll_signal);
+        uint8_t* pitchSignalBytes = reinterpret_cast<uint8_t*>(&_tx_param_override_pitch_signal);
+        uint8_t* throttleSignalBytes = reinterpret_cast<uint8_t*>(&_tx_param_override_throttle_signal);
+
+        qba.push_back(rollSignalBytes[0]);
+        qba.push_back(rollSignalBytes[1]);
+        qba.push_back(pitchSignalBytes[0]);
+        qba.push_back(pitchSignalBytes[1]);
+        qba.push_back(throttleSignalBytes[0]);
+        qba.push_back(throttleSignalBytes[1]);
 
         uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
 

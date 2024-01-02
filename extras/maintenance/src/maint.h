@@ -141,7 +141,10 @@ namespace Maint
         TX_I2C_READ,
         TX_I2C_WRITE,
         TX_WRITE_TO_FLASH,
-        TX_SET_IMU_OFFSET
+        TX_SET_IMU_OFFSET,
+        TX_SET_OVERRIDE_RADIO,
+        TX_SET_OVERRIDE_ROLL_PITCH_THROTTLE_SIGNAL,
+        TX_SET_OVERRIDE_ARMED_SIGNAL
     };
 
     enum class MAINT_CMD_ID
@@ -170,7 +173,10 @@ namespace Maint
         MAINT_CMD_SET_IMU_TYPE,
         MAINT_CMD_I2C_READ,
         MAINT_CMD_I2C_WRITE,
-        MAINT_CMD_SET_IMU_OFFSET
+        MAINT_CMD_SET_IMU_OFFSET,
+        MAINT_CMD_SET_OVERRIDE_RADIO,
+        MAINT_CMD_SET_ROLL_PITCH_THROTTLE_SIGNAL,
+        MAINT_CMD_SET_ARMED_SIGNAL
     };
 
     static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
@@ -205,7 +211,9 @@ public:
     void I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val);
     void TxWriteToFlash();
     void SetImuOffset(float roll_offset, float pitch_offset);
-
+    void TxOverrideRadio(bool is_override);
+    void TxSetArmedSignal(uint16_t signal);
+    void TxSetRollPitchThrottleSignal(uint16_t roll_signal, uint16_t pitch_signal, uint16_t throttle_signal);
     int ClearLogs();
 
 public slots:
@@ -311,6 +319,11 @@ private:
     uint32_t _tx_param_i2c_val;
     float _tx_param_roll_offset;
     float _tx_param_pitch_offset;
+    uint32_t _tx_param_override_radio;
+    uint16_t _tx_param_override_armed_signal;
+    uint16_t _tx_param_override_roll_signal;
+    uint16_t _tx_param_override_pitch_signal;
+    uint16_t _tx_param_override_throttle_signal;
     QMutex _txMutex;
     QTimer* _txTimer;
     QString _logFileName;
