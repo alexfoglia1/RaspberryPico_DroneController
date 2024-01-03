@@ -141,7 +141,6 @@ void Joystick::checkJsEvent(SDL_Event event)
 void Joystick::run()
 {
     js_thread_state_t  __act_state__ = js_thread_state_t::IDLE;
-    setPriority(QThread::LowestPriority);
 
     while (__act_state__ != js_thread_state_t::EXIT)
     {

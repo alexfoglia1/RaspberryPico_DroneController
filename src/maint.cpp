@@ -91,6 +91,9 @@ static uint8_t checksum(uint8_t* buf, uint32_t size)
 static void data_ingest(uint8_t rx_cks, uint32_t data_len)
 {
     uint8_t local_cks = checksum(&rx_buf[0], data_len - 1);
+
+            
+    //printf(", expected checksum(%d)\n", local_cks);
     if (local_cks == rx_cks)
     {
         last_msg_us = time_us_64();
@@ -101,11 +104,48 @@ static void data_ingest(uint8_t rx_cks, uint32_t data_len)
     }
 }
 
+static const char* maint_cmd_id_tostr(uint64_t cmd_id)
+{
+    switch (static_cast<MAINT_CMD_ID>(cmd_id))
+    {
+        case MAINT_CMD_ID::MAINT_CMD_NONE: return "NONE";
+        case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE: return "FLASH WRITE";
+        case MAINT_CMD_ID::MAINT_CMD_SET_M1: return "SET MOTOR 1";
+        case MAINT_CMD_ID::MAINT_CMD_SET_M2: return "SET MOTOR 2";
+        case MAINT_CMD_ID::MAINT_CMD_SET_M3: return "SET MOTOR 3";
+        case MAINT_CMD_ID::MAINT_CMD_SET_M4: return "SET MOTOR 4";
+        case MAINT_CMD_ID::MAINT_CMD_SET_MALL: return "SET MOTORS";
+        case MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS: return "CONTROL MOTORS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS: return "SET M1 PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS: return "SET M2 PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS: return "SET M3 PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS: return "SET M4 PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA: return "SET JS THROTTLE A/B";
+        case MAINT_CMD_ID::MAINT_CMD_SET_JS_ROLL_ALPHA_BETA: return "SET JS ROLL A/B";
+        case MAINT_CMD_ID::MAINT_CMD_SET_JS_PITCH_ALPHA_BETA: return "SET JS PITCH A/B";
+        case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS: return "SET ROLL PID PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS: return "SET PITCH PID PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS: return "SET YAW PID PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS: return "SET ACC PTF1 PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS: return "SET GYRO PTF1 PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS: return "SET MAGN PTF1 PARAMS";
+        case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE: return "SET IMU TYPE";
+        case MAINT_CMD_ID::MAINT_CMD_I2C_READ: return "I2C READ";
+        case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE: return "I2C WRITE";
+        case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET: return "SET IMU OFFSET";
+        case MAINT_CMD_ID::MAINT_CMD_SET_OVERRIDE_RADIO: return "SET RADIO OVERRIDDEN";
+        case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PITCH_THROTTLE_SIGNAL: return "SET ROLL PITCH THROTTLE SIGNAL";
+        case MAINT_CMD_ID::MAINT_CMD_SET_ARMED_SIGNAL: return "SET ARMED SIGNAL";
+    }
+    return "";     
+}
+
 
 static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
 {
     uint64_t cmd_id = header->Bits.maint_cmd_id;
     
+    //printf(", set: %s", maint_cmd_id_tostr(cmd_id));
     switch (static_cast<MAINT_CMD_ID>(cmd_id))
     {
         case MAINT_CMD_ID::MAINT_CMD_NONE:
@@ -151,12 +191,63 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
             return 3;  /** 1 * 2 = 2 bytes + checksum **/                                                    
     }
 
-    return 0;
+    return 1;
+}
+
+
+static const char* status_tostr(MAINT_STATUS status)
+{
+    switch (status)
+    {
+        case MAINT_STATUS::WAIT_SYNC:
+        {
+            return "WAIT_SYNC";
+        }
+        case MAINT_STATUS::WAIT_HEADER_BYTE_0:
+        {
+            return "WAIT_HEADER_BYTE_0";
+        }
+        case MAINT_STATUS::WAIT_HEADER_BYTE_1:
+        {
+            return "WAIT_HEADER_BYTE_1";
+        }
+        case MAINT_STATUS::WAIT_HEADER_BYTE_2:
+        {
+            return "WAIT_HEADER_BYTE_2";
+        }
+        case MAINT_STATUS::WAIT_HEADER_BYTE_3:
+        {
+            return "WAIT_HEADER_BYTE_3";
+        }
+        case MAINT_STATUS::WAIT_HEADER_BYTE_4:
+        {
+            return "WAIT_HEADER_BYTE_4";
+        }
+        case MAINT_STATUS::WAIT_HEADER_BYTE_5:
+        {
+            return "WAIT_HEADER_BYTE_5";
+        }
+        case MAINT_STATUS::WAIT_HEADER_BYTE_6:
+        {
+            return "WAIT_HEADER_BYTE_6";
+        }
+        case MAINT_STATUS::WAIT_HEADER_BYTE_7:
+        {
+            return "WAIT_HEADER_BYTE_7";
+        }
+        case MAINT_STATUS::WAIT_PAYLOAD:
+        {
+            return "WAIT_PAYLOAD";
+        }
+    }
+    
+    return "";
 }
 
 
 static void update_fsm(uint8_t byte_rx)
 {
+    //printf("\nstatus(%s), rxByte(%d)", status_tostr(status), byte_rx);
     switch (status)
     {
         case MAINT_STATUS::WAIT_SYNC:
@@ -212,9 +303,11 @@ static void update_fsm(uint8_t byte_rx)
         case MAINT_STATUS::WAIT_HEADER_BYTE_7:
         {
             rx_buf[7] = byte_rx;
-            status = MAINT_STATUS::WAIT_PAYLOAD;
             expected_bytes = calc_exp_bytes(reinterpret_cast<MAINT_HEADER_T*>(&rx_buf[0]));
+            //printf(", expected payload size(%d)", expected_bytes);
             rx_payload_idx = 0;
+
+            status = MAINT_STATUS::WAIT_PAYLOAD;
             break;
         }
         case MAINT_STATUS::WAIT_PAYLOAD:

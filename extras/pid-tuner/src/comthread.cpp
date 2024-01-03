@@ -11,6 +11,7 @@ ComThread::ComThread(QObject* parent) : QThread(parent)
 	get_status_msg.Bits.motor2 = 1;
 	get_status_msg.Bits.motor3 = 1;
 	get_status_msg.Bits.motor4 = 1;
+	get_status_msg.Bits.motors_armed = 1;
 
 	get_pid_params_msg.All = 0;
 	get_pid_params_msg.Bits.pid_params = 1;
@@ -157,14 +158,10 @@ void ComThread::overrideRadio(bool override)
 }
 
 
-void ComThread::run()
+void ComThread::scheduler()
 {
-	_serialPort = new QSerialPort();
-
-	while (_status != ComThreadStatus::EXIT)
+	switch (_status)
 	{
-		switch (_status)
-		{
 		case ComThreadStatus::INIT_SERIAL_PORT:
 		{
 			if (initSerialPort())
@@ -222,10 +219,23 @@ void ComThread::run()
 			_status = ComThreadStatus::TX_GET_STATUS;
 			break;
 		}
+		default:
+			break;
 
 		}
 
-		checkDownlink();
+	checkDownlink();
+}
+
+
+void ComThread::run()
+{
+	_serialPort = new QSerialPort();
+	_serialPort->moveToThread(this);
+
+	while (_status != ComThreadStatus::EXIT)
+	{
+		scheduler();
 
 		QThread::msleep(_delay);
 	}
@@ -286,7 +296,6 @@ void ComThread::txGet(MaintenanceProtocolHdr* msg)
 void ComThread::txSet(MaintenanceProtocolHdr* msg)
 {
 	QByteArray qba;
-	qba.push_back(SYNC_CHAR);
 	qba.push_back(msg->Bytes[0]);
 	qba.push_back(msg->Bytes[1]);
 	qba.push_back(msg->Bytes[2]);
@@ -305,8 +314,10 @@ void ComThread::txSet(MaintenanceProtocolHdr* msg)
 		payloadSize += 1;
 	}
 
-	quint8 cks = checksum(reinterpret_cast<quint8*>(qba.data()), sizeof(MaintenanceProtocolHdr) + payloadSize, true);
+	quint8 cks = checksum(reinterpret_cast<quint8*>(qba.data()), sizeof(MaintenanceProtocolHdr) + payloadSize);
 	qba.push_back(cks);
+
+	qba.push_front(SYNC_CHAR);
 
 	_serialPort->write(qba);
 	_serialPort->flush();
@@ -339,7 +350,7 @@ quint32 ComThread::calculatePayloadSize(MaintenanceProtocolHdr* rxHeader)
 {
 	if (rxHeader->All == get_status_msg.All)
 	{
-		return 36;
+		return 40;
 	}
 	else if (rxHeader->All == get_pid_params_msg.All)
 	{
@@ -421,10 +432,12 @@ void ComThread::dataIngest()
 								 *reinterpret_cast<float*>(&_rxBuf[12]),
 								 *reinterpret_cast<float*>(&_rxBuf[16]));
 
-		emit droneMotorsUpdate(*reinterpret_cast<float*>(&_rxBuf[20]),
-			*reinterpret_cast<float*>(&_rxBuf[24]),
-			*reinterpret_cast<float*>(&_rxBuf[28]),
-			*reinterpret_cast<float*>(&_rxBuf[32]));
+
+		emit droneMotorsUpdate(*reinterpret_cast<quint32*>(&_rxBuf[20]),
+			*reinterpret_cast<quint32*>(&_rxBuf[24]),
+			*reinterpret_cast<quint32*>(&_rxBuf[28]),
+			*reinterpret_cast<quint32*>(&_rxBuf[32]),
+			*reinterpret_cast<quint32*>(&_rxBuf[36]));
 	}
 	else if (hdr->All == get_pid_params_msg.All)
 	{

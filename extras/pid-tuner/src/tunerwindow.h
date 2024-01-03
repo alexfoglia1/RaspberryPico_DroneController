@@ -76,7 +76,7 @@ public slots:
 	void OnDroneAlive();
 	void OnDroneDownlink();
 	void OnDroneAttitudeUpdate(float roll, float pitch, float yaw);
-	void OnDroneMotorsUpdate(quint32 m1, quint32 m2, quint32 m3, quint32 m4);
+	void OnDroneMotorsUpdate(quint32 m1, quint32 m2, quint32 m3, quint32 m4, quint32 armed);
 	void OnRollPidParams(float kp, float ki, float kt, float sat, float ad, float bd);
 	void OnPitchPidParams(float kp, float ki, float kt, float sat, float ad, float bd);
 	void OnYawPidParams(float kp, float ki, float kt, float sat, float ad, float bd);

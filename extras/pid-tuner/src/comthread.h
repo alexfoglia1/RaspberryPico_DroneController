@@ -5,6 +5,7 @@
 
 #include <qthread.h>
 #include <qserialport.h>
+#include <qtimer.h>
 
 enum class ComThreadStatus
 {
@@ -30,11 +31,10 @@ enum class RxStatus
 };
 
 
-inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync = false)
+inline uint8_t checksum(uint8_t* buf, uint32_t size)
 {
 	uint8_t cks = 0;
-	uint32_t first = (firstSync) ? 1 : 0;
-	for (uint32_t i = first; i < size; i++)
+	for (uint32_t i = 0; i < size; i++)
 	{
 		cks ^= buf[i];
 	}
@@ -67,7 +67,7 @@ signals:
 	void droneAlive();
 	void droneDownlink();
 	void droneAttitudeUpdate(float roll, float pitch, float yaw);
-	void droneMotorsUpdate(quint32 m1, quint32 m2, quint32 m3, quint32 m4);
+	void droneMotorsUpdate(quint32 m1, quint32 m2, quint32 m3, quint32 m4, quint32 armed);
 	void rollPidParamsUpdate(float kp, float ki, float kt, float sat, float ad, float bd);
 	void pitchPidParamsUpdate(float kp, float ki, float kt, float sat, float ad, float bd);
 	void yawPidParamsUpdate(float kp, float ki, float kt, float sat, float ad, float bd);
@@ -81,6 +81,8 @@ private:
 	MaintenanceProtocolHdr override_radio_msg;
 	MaintenanceProtocolHdr override_roll_pitch_throttle_msg;
 	MaintenanceProtocolHdr override_armed_msg;
+
+	QSerialPort* _serialPort;
 
 	qint64 _lastMessageFromDroneMSecs;
 	quint32 _delay;
@@ -105,8 +107,7 @@ private:
 	void dataIngest();
 
 	void pushDataToPayload(quint8* data, int len);
-
-	QSerialPort* _serialPort;
+	void scheduler();
 
 private slots:
 	void onReadyRead();

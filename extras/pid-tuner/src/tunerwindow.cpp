@@ -155,7 +155,6 @@ void TunerWindow::SetCommMenuEntryDefaultValue2(MenuEntryKey entryKey, QVariant 
 void TunerWindow::OnDroneAlive()
 {
 	SetCommMenuEntryValue2(MenuEntryKey::MENU_KEY_DRONE_STATUS, quint8(MenuWidgetLedColor::GREEN));
-	SetCommMenuEntryValue1(MenuEntryKey::MENU_KEY_DRONE_STATUS, "OPER");
 }
 
 
@@ -179,12 +178,13 @@ void TunerWindow::OnDroneAttitudeUpdate(float roll, float pitch, float yaw)
 }
 
 
-void TunerWindow::OnDroneMotorsUpdate(quint32 m1, quint32 m2, quint32 m3, quint32 m4)
+void TunerWindow::OnDroneMotorsUpdate(quint32 m1, quint32 m2, quint32 m3, quint32 m4, quint32 armed)
 {
 	_ui.lcdNumberM1->display((int) m1);
 	_ui.lcdNumberM2->display((int) m2);
 	_ui.lcdNumberM3->display((int) m3);
 	_ui.lcdNumberM4->display((int) m4);
+	SetCommMenuEntryValue1(MenuEntryKey::MENU_KEY_DRONE_STATUS, armed == 0 ? "DISRM" : "ARMED");
 }
 
 void TunerWindow::OnRollPidParams(float kp, float ki, float kt, float sat, float ad, float bd)
@@ -458,7 +458,7 @@ void TunerWindow::OnMenuEntryUpdated(quint32 entryKey, QVariant newValue)
 				connect(_comThread, SIGNAL(droneAlive()), this, SLOT(OnDroneAlive()));
 				connect(_comThread, SIGNAL(droneDownlink()), this, SLOT(OnDroneDownlink()));
 				connect(_comThread, SIGNAL(droneAttitudeUpdate(float, float, float)), this, SLOT(OnDroneAttitudeUpdate(float, float, float)));
-				connect(_comThread, SIGNAL(droneMotorsUpdate(quint32, quint32, quint32, quint32)), this, SLOT(OnDroneMotorsUpdate(quint32, quint32, quint32, quint32)));
+				connect(_comThread, SIGNAL(droneMotorsUpdate(quint32, quint32, quint32, quint32, quint32)), this, SLOT(OnDroneMotorsUpdate(quint32, quint32, quint32, quint32, quint32)));
 				connect(_comThread, SIGNAL(rollPidParamsUpdate(float, float, float, float, float, float)), this, SLOT(OnRollPidParams(float, float, float, float, float, float)));
 				connect(_comThread, SIGNAL(pitchPidParamsUpdate(float, float, float, float, float, float)), this, SLOT(OnPitchPidParams(float, float, float, float, float, float)));
 				connect(_comThread, SIGNAL(yawPidParamsUpdate(float, float, float, float, float, float)), this, SLOT(OnYawPidParams(float, float, float, float, float, float)));
@@ -466,7 +466,7 @@ void TunerWindow::OnMenuEntryUpdated(quint32 entryKey, QVariant newValue)
 				int iBaudValue = _ui.serialCommMenu->valueOf(quint32(MenuEntryKey::MENU_KEY_BAUD_RATE)).toString().toInt();
 				QSerialPort::BaudRate baudRate = QSerialPort::BaudRate(iBaudValue);
 				_comThread->setSerialPort(newValue.toString(), baudRate);
-				_comThread->setDelay(250); // TODO menu
+				_comThread->setDelay(100); // TODO menu
 				_comThread->start();
 			}
 			else
@@ -547,7 +547,7 @@ void TunerWindow::OnSerialPortClosed()
 	disconnect(_comThread, SIGNAL(droneAlive()), this, SLOT(OnDroneAlive()));
 	disconnect(_comThread, SIGNAL(droneDownlink()), this, SLOT(OnDroneDownlink()));
 	disconnect(_comThread, SIGNAL(droneAttitudeUpdate(float, float, float)), this, SLOT(OnDroneAttitudeUpdate(float, float, float)));
-	disconnect(_comThread, SIGNAL(droneMotorsUpdate(quint32, quint32, quint32, quint32)), this, SLOT(OnDroneMotorsUpdate(quint32, quint32, quint32, quint32)));
+	disconnect(_comThread, SIGNAL(droneMotorsUpdate(quint32, quint32, quint32, quint32, quint32)), this, SLOT(OnDroneMotorsUpdate(quint32, quint32, quint32, quint32, quint32)));
 	disconnect(_comThread, SIGNAL(rollPidParamsUpdate(float, float, float, float, float, float)), this, SLOT(OnRollPidParams(float, float, float, float, float, float)));
 	disconnect(_comThread, SIGNAL(pitchPidParamsUpdate(float, float, float, float, float, float)), this, SLOT(OnPitchPidParams(float, float, float, float, float, float)));
 	disconnect(_comThread, SIGNAL(yawPidParamsUpdate(float, float, float, float, float, float)), this, SLOT(OnYawPidParams(float, float, float, float, float, float)));
