@@ -5,36 +5,25 @@ Joystick::Joystick()
 {
     js = nullptr;
     act_state = js_thread_state_t::IDLE;
-    _ctrlPacket.l3_vaxis = 0;
+    _ctrlPacket.r2_axis = 0;
     _ctrlPacket.r3_haxis = 0;
     _ctrlPacket.r3_vaxis = 0;
+    _l3_vaxis = 0;
 
     JOY_DEAD_CENTER_ZONE = 2000;
     R3_HORIZONTAL_AXIS = 2;
     R3_VERTICAL_AXIS = 3;
     L3_VERTICAL_AXIS = 1;
+    R2_AXIS = 7;
     CROSS_BUTTON = 0;
     SQUARE_BUTTON = 2;
     CIRCLE_BUTTON = 1;
     TRIANGLE_BUTTON = 3;
-}
-
-
-void Joystick::updateState(js_thread_state_t newState)
-{
-    statesMutex.lock();
-    act_state = newState;
-    statesMutex.unlock();
-}
-
-
-Joystick::js_thread_state_t Joystick::acquireState()
-{
-    statesMutex.lock();
-    js_thread_state_t __act_state__ = act_state;
-    statesMutex.unlock();
-
-    return __act_state__;
+    L1_BUTTON = 9;
+    UP_ARROW = 11;
+    RIGHT_ARROW = 14;
+    DOWN_ARROW = 12;
+    LEFT_ARROW = 13;
 }
 
 
@@ -105,10 +94,10 @@ void Joystick::checkJsEvent(SDL_Event event)
     {
         case SDL_JOYAXISMOTION:
         {
-            if (L3_VERTICAL_AXIS == event.jaxis.axis)
+            if (R2_AXIS == event.jaxis.axis)
             {
                 axisRaw = event.jaxis.value;
-                _ctrlPacket.l3_vaxis = deadZone(event.jaxis.value);
+                _ctrlPacket.r2_axis = deadZone(event.jaxis.value);
             }
             else if (R3_VERTICAL_AXIS == event.jaxis.axis)
             {
@@ -120,32 +109,25 @@ void Joystick::checkJsEvent(SDL_Event event)
                 axisRaw = event.jaxis.value;
                 _ctrlPacket.r3_haxis = deadZone(event.jaxis.value);
             }
+            else if (L3_VERTICAL_AXIS == event.jaxis.axis)
+            {
+                axisRaw = event.jaxis.value;
+                _l3_vaxis = deadZone(event.jaxis.value);
+            }
 
             break;
         }
-        case  SDL_JOYBUTTONUP:
+        case  SDL_JOYBUTTONDOWN:
         {
             if (event.jbutton.button == CIRCLE_BUTTON) emit jsBtnPressed(js_button::CIRCLE);
             else if (event.jbutton.button == SQUARE_BUTTON) emit jsBtnPressed(js_button::SQUARE);
             else if (event.jbutton.button == CROSS_BUTTON) emit jsBtnPressed(js_button::CROSS);
             else if (event.jbutton.button == TRIANGLE_BUTTON) emit jsBtnPressed(js_button::TRIANGLE);
-
-            break;
-        }
-        case SDL_JOYHATMOTION:
-        {
-            switch(event.jhat.value)
-            {
-
-            case SDL_HAT_UP: emit jsBtnPressed(js_button::UP); break;
-
-            case SDL_HAT_LEFT: emit jsBtnPressed(js_button::LEFT); break;
-
-            case SDL_HAT_RIGHT: emit jsBtnPressed(js_button::RIGHT); break;
-
-            case SDL_HAT_DOWN: emit jsBtnPressed(js_button::DOWN); break;
-            }
-
+            else if (event.jbutton.button == UP_ARROW) emit jsBtnPressed(js_button::UP);
+            else if (event.jbutton.button == RIGHT_ARROW) emit jsBtnPressed(js_button::RIGHT);
+            else if (event.jbutton.button == DOWN_ARROW) emit jsBtnPressed(js_button::DOWN);
+            else if (event.jbutton.button == LEFT_ARROW) emit jsBtnPressed(js_button::LEFT);
+            else if (event.jbutton.button == L1_BUTTON) emit jsBtnPressed(js_button::L1);
             break;
         }
 
@@ -163,24 +145,19 @@ void Joystick::run()
 
     while (__act_state__ != js_thread_state_t::EXIT)
     {
-        __act_state__ = acquireState();
-
-        switch (act_state)
+        switch (__act_state__)
         {
             case js_thread_state_t::IDLE:
             {
-                _ctrlPacket.l3_vaxis = 0;
+                _ctrlPacket.r2_axis = 0;
                 _ctrlPacket.r3_haxis = 0;
                 _ctrlPacket.r3_vaxis = 0;
+                _l3_vaxis = 0;
 
                 if (initJoystick())
                 {
-                    updateState(js_thread_state_t::OPERATIVE);
+                    __act_state__ = js_thread_state_t::OPERATIVE;
                     emit jsConnected(true);
-                }
-                else
-                {
-                    emit jsConnected(false);
                 }
             }
             break;
@@ -189,21 +166,28 @@ void Joystick::run()
                 SDL_Event event;
                 if (SDL_NumJoysticks() == 0)
                 {
-                    updateState(js_thread_state_t::IDLE);
+                    __act_state__ = js_thread_state_t::IDLE;
+                    emit jsConnected(false);
                 }
                 else
                 {
                     while (SDL_PollEvent(&event))
                     {
-                        Sint16 l3_vaxis = _ctrlPacket.l3_vaxis;
+                        Sint16 r2_axis = _ctrlPacket.r2_axis;
                         Sint16 r3_haxis = _ctrlPacket.r3_haxis;
                         Sint16 r3_vaxis = _ctrlPacket.r3_vaxis;
+                        Sint16 l3_vaxis = _l3_vaxis;
 
                         checkJsEvent(event);
 
-                        if (_ctrlPacket.l3_vaxis != l3_vaxis || _ctrlPacket.r3_haxis != r3_haxis || _ctrlPacket.r3_vaxis != r3_vaxis)
+                        if (_ctrlPacket.r2_axis != r2_axis || _ctrlPacket.r3_haxis != r3_haxis || _ctrlPacket.r3_vaxis != r3_vaxis)
                         {
                             emit jsControl(_ctrlPacket);
+                        }
+
+                        if (_l3_vaxis != 0)
+                        {
+                            emit jsAxisMoved(js_axis::L3_Y_AXIS, _l3_vaxis);
                         }
                     }
                 }
@@ -215,13 +199,7 @@ void Joystick::run()
             default:
                 break;
         }
-        msleep(1);
     }
 
     emit jsThreadExit();
-}
-
-void Joystick::onApplicationQuit()
-{
-    updateState(js_thread_state_t::EXIT);
 }

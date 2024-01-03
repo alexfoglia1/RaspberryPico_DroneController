@@ -60,11 +60,19 @@ static uint64_t armed_override_signal;
 static void put_packet(uint8_t* buf, uint32_t len)
 {
     putchar(MAINT_SYNC_CHAR);
-    uart_putc_raw(uart0, MAINT_SYNC_CHAR);
+
     for (uint32_t i = 0; i < len; i++)
     {
         putchar(buf[i]);
-        uart_putc_raw(uart0, buf[i]);
+    }
+
+    if (uart_is_writable(uart0))
+    {
+        uart_putc_raw(uart0, MAINT_SYNC_CHAR);
+        for (uint32_t i = 0; i < len; i++)
+        {
+            uart_putc_raw(uart0, buf[i]);
+        }
     }
 }
 

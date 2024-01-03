@@ -15,6 +15,15 @@ ${CMAKE_SOURCE_DIR}/src/tunergui.ui
 ${CMAKE_SOURCE_DIR}/src/tunerwindow.h
 ${CMAKE_SOURCE_DIR}/src/tunerwindow.cpp
 
+${CMAKE_SOURCE_DIR}/src/menuwidget.h
+${CMAKE_SOURCE_DIR}/src/menuwidget.cpp
+
+${CMAKE_SOURCE_DIR}/src/rollpitchdisplay.h
+${CMAKE_SOURCE_DIR}/src/rollpitchdisplay.cpp
+
+${CMAKE_SOURCE_DIR}/src/headingdisplay.h
+${CMAKE_SOURCE_DIR}/src/headingdisplay.cpp
+
 ${CMAKE_SOURCE_DIR}/src/proto.h
 
 ${CMAKE_SOURCE_DIR}/src/joystick.h
@@ -23,8 +32,6 @@ ${CMAKE_SOURCE_DIR}/src/joystick.cpp
 ${CMAKE_SOURCE_DIR}/src/comthread.h
 ${CMAKE_SOURCE_DIR}/src/comthread.cpp
 
-${CMAKE_SOURCE_DIR}/src/jscontrol.h
-${CMAKE_SOURCE_DIR}/src/jscontrol.cpp
 
 ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
