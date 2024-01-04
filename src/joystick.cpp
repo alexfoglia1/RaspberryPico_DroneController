@@ -107,6 +107,9 @@ void JOYSTICK_Handler()
                         ((cur_t_us - lastThrottleRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
                         ((cur_t_us - lastArmedRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS));
                     
-    JOYSTICK_MotorsArmed = !JOYSTICK_Timeout;
+    if (JOYSTICK_Timeout)
+    {
+        JOYSTICK_MotorsArmed = false;
+    }
     
 }
