@@ -111,17 +111,17 @@ Values of the header fields determine the expected payload the client will send:
 | All except cmd_id_bit_n  | 0     | Corresponding data is not requested to the server | checksum (uint8_t) | 1 |
 | All except cmd_id_bit_n  | 1     | Corresponding data is requested to the server | checksum (uint8_t) | 1 |
 | set_cmd_id               | 0     | No command requested | checksum (uint8_t) | 1 |
-| set_cmd_id               | 1     | Set motor 1 speed | Pulse width to motor1 in microseconds (uint32_t) + checksum (uint8_t) | 5 |
-| set_cmd_id               | 2     | Set motor 2 speed | Pulse width to motor2 in microseconds (uint32_t) + checksum (uint8_t) | 5 |
-| set_cmd_id               | 3     | Set motor 3 speed | Pulse width to motor3 in microseconds (uint32_t) + checksum (uint8_t) | 5 |
-| set_cmd_id               | 4     | Set motor 4 speed | Pulse width to motor4 in microseconds (uint32_t) + checksum (uint8_t) | 5 |
-| set_cmd_id               | 5     | Set all motors speed | Pulse width to all motors in microseconds (uint32_t) + checksum (uint8_t) | 5 |
-| set_cmd_id               | 6     | Control motors | Maintenance motor control flag (uint32_t) + checksum (uint8_t) | 5 |
+| set_cmd_id               | 1     | Set motor 1 speed | Pulse width to motor1 in microseconds (uint16_t) + checksum (uint8_t) | 3 |
+| set_cmd_id               | 2     | Set motor 2 speed | Pulse width to motor2 in microseconds (uint16_t) + checksum (uint8_t) | 3 |
+| set_cmd_id               | 3     | Set motor 3 speed | Pulse width to motor3 in microseconds (uint16_t) + checksum (uint8_t) | 3 |
+| set_cmd_id               | 4     | Set motor 4 speed | Pulse width to motor4 in microseconds (uint16_t) + checksum (uint8_t) | 3 |
+| set_cmd_id               | 5     | Set all motors speed | Pulse width to all motors in microseconds (uint16_t) + checksum (uint8_t) | 3 |
+| set_cmd_id               | 6     | Control motors | Maintenance motor control flag (uint8_t) + checksum (uint8_t) | 2 |
 | set_cmd_id               | 7     | Flash write parameters | checksum (uint8_t) | 1 |
-| set_cmd_id               | 8     | Update motor 1 parameters | Enabled/Disabled flag (uint32_t) + min pulse width (uint32_t) + max pulse width(uint32_t) + checksum (uint8_t) | 13 |
-| set_cmd_id               | 9     | Update motor 2 parameters | Enabled/Disabled flag (uint32_t) + min pulse width (uint32_t) + max pulse width(uint32_t) + checksum (uint8_t) | 13 |
-| set_cmd_id               | 10    | Update motor 3 parameters | Enabled/Disabled flag (uint32_t) + min pulse width (uint32_t) + max pulse width(uint32_t) + checksum (uint8_t) | 13 |
-| set_cmd_id               | 11    | Update motor 4 parameters | Enabled/Disabled flag (uint32_t) + min pulse width (uint32_t) + max pulse width(uint32_t) + checksum (uint8_t) | 13 |
+| set_cmd_id               | 8     | Update motor 1 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + checksum (uint8_t) | 6 |
+| set_cmd_id               | 9     | Update motor 2 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + checksum (uint8_t) | 6 |
+| set_cmd_id               | 10    | Update motor 3 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + checksum (uint8_t) | 6 |
+| set_cmd_id               | 11    | Update motor 4 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + checksum (uint8_t) | 6 |
 | set_cmd_id               | 12    | Update joystick throttle alpha/beta filter parameters | alpha (float) + beta (float) + checksum (uint8_t) | 9 |
 | set_cmd_id               | 13    | Update joystick roll alpha/beta filter parameters | alpha (float) + beta (float) + checksum (uint8_t) | 9 |
 | set_cmd_id               | 14    | Update joystick pitch alpha/beta filter parameters | alpha (float) + beta (float) + checksum (uint8_t) | 9 |
@@ -131,9 +131,9 @@ Values of the header fields determine the expected payload the client will send:
 | set_cmd_id               | 18    | Update pt1 filter parameters for accelerometer | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + checksum (uint8_t) | 13 |
 | set_cmd_id               | 19    | Update pt1 filter parameters for gyroscope | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + checksum (uint8_t) | 13 |
 | set_cmd_id               | 20    | Update pt1 filter parameters for magnetometer | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + checksum (uint8_t) | 13 |
-| set_cmd_id               | 21    | Update parameter IMU type | imu_type (enum : uint32_t) + checksum (uint8_t) | 5 |
-| set_cmd_id               | 22    | I2C read | i2c channel (uint32_t) + i2c address (uint32_t) + i2c register (uint32_t) + checksum (uint8_t) | 13 |
-| set_cmd_id               | 23    | I2C write | i2c channel (uint32_t) + i2c address (uint32_t) + i2c register (uint32_t) + value (uint32_t) + checksum (uint8_t) | 17 |
+| set_cmd_id               | 21    | Update parameter IMU type | imu_type (enum : uint8_t) + checksum (uint8_t) | 2 |
+| set_cmd_id               | 22    | I2C read | i2c channel (uint8_t) + i2c address (uint8_t) + i2c register (uint8_t) + checksum (uint8_t) | 4 |
+| set_cmd_id               | 23    | I2C write | i2c channel (uint8_t) + i2c address (uint8_t) + i2c register (uint8_t) + value (uint8_t) + checksum (uint8_t) | 5 |
 | set_cmd_id               | 24    | Reset IMU offset | checksum (uint8_t) | 1 |
 
 IMU Type:
@@ -169,10 +169,10 @@ filtered_gyro_z  | pt1 filtered gyroscope z axis | float | 4 |
 filtered_magn_x  | pt1 filtered magnetometer x axis | float | 4 |
 filtered_magn_y | pt1 filtered magnetometer y axis | float | 4 |
 filtered_magn_z | pt1 filtered magnetometer z axis | float | 4 |
-throttle_signal | radio channel 3 (throttle) pulse width | uint32_t | 4 |
-roll_signal | radio channel 1 (roll) pulse width | uint32_t | 4 |
-pitch_signal | radio channel 2 (pitch) pulse width | uint32_t | 4 |
-throttle_set_point | desired motors signal pulse width | uint32_t | 4 |
+throttle_signal | radio channel 3 (throttle) pulse width | uint16_t | 2 |
+roll_signal | radio channel 1 (roll) pulse width | uint16_t | 2 |
+pitch_signal | radio channel 2 (pitch) pulse width | uint16_t | 2 |
+throttle_set_point | desired motors signal pulse width | uint16_t | 2 |
 roll_set_point | roll angle set point | float | 4 |
 pitch_set_point | pitch angle set point | float | 4 |
 body_roll | quadcopter roll angle | float | 4 |
@@ -193,18 +193,18 @@ yaw_pid_p | yaw pid proportional term | float | 4 |
 yaw_pid_i | yaw pid integral term | float | 4 |
 yaw_pid_d | yaw pid derivative term | float | 4 |
 yaw_pid_u | yaw pid output | float | 4 |
-motor1_signal | current motor 1 pulse width | uint32_t | 4 |
-motor2_signal | current motor 2 pulse width | uint32_t | 4 |
-motor3_signal | current motor 3 pulse width | uint32_t | 4 |
-motor4_signal | current motor 4 pulse width | uint32_t | 4 |
-motors_armed | motors armed flag | uint32_t | 4 |
+motor1_signal | current motor 1 pulse width | uint16_t | 2 |
+motor2_signal | current motor 2 pulse width | uint16_t | 2 |
+motor3_signal | current motor 3 pulse width | uint16_t | 2 |
+motor4_signal | current motor 4 pulse width | uint16_t | 2 |
+motors_armed | motors armed flag | uint8_t | 1 |
 builtin_test_status | continous builtin test status | enum : uint32_t | 4 |
 motor_params | (Foreach motor) Enabled/Disabled flag + min pulse width + max pulse width | uint32_t[4][3] | 48 |
 js_params | (Foreach joystick channel but armed) joystick alpha + joystick beta | float[3][2] | 24 |
 pid_params | (Foreach euler angle) KP KI KT SAT AD BD | float[3][6] | 72 |
 pt1f_params | (Foreach IMU sensor) pt1 filter time constant x axis + pt1 filter time constant y axis + pt1 filter time constant z axis  | float[3][3] | 36 | 
-imu_type | IMU type | enum : uint32_t | 4 |
-i2c_read | value read after the i2c read command | uint32_t | 4 |
+imu_type | IMU type | enum : uint8_t | 1 |
+i2c_read | value read after the i2c read command | uint8_t | 1 |
 sw_ver | software version | struct : uint8_t[4] | 4 |
 imu_offset | current IMU offset | Offset roll + Offset pitch | float[2] | 12 |
 
