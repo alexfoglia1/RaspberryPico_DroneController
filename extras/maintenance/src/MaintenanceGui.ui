@@ -463,7 +463,7 @@
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QComboBox" name="comboSetCommandId">
+       <widget class="QComboBox" name="comboSetMotors">
         <item>
          <property name="text">
           <string>Motor 1</string>
@@ -497,7 +497,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="spinSetMaintenanceValue">
+       <widget class="QSpinBox" name="spinSetMotorsValue">
         <property name="maximum">
          <number>20000</number>
         </property>
@@ -510,14 +510,14 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnSendMaintenanceCommand">
+       <widget class="QPushButton" name="btnSendSetMotors">
         <property name="text">
          <string>Send</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="checkSpinOnChange">
+       <widget class="QCheckBox" name="checkSetMotorsOnChange">
         <property name="text">
          <string>On change</string>
         </property>

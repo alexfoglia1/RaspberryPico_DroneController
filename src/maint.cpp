@@ -101,10 +101,9 @@ static void data_ingest(uint8_t rx_cks, uint32_t data_len)
         shall_tx = true;
         shall_set = (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id) != MAINT_CMD_ID::MAINT_CMD_NONE);
 
-
         REMOTE_CONTROL_TAG* rem_ctrl = reinterpret_cast<REMOTE_CONTROL_TAG*>(&rx_buf[data_len - sizeof(REMOTE_CONTROL_TAG) - 1]);
-        override_radio = rem_ctrl->override_radio == 1 ? true : false;
 
+        override_radio = rem_ctrl->override_radio == 1 ? true : false;
         if (override_radio)
         {
             override_armed_signal = rem_ctrl->armed_signal;
@@ -164,59 +163,8 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
 }
 
 
-static const char* status_tostr(MAINT_STATUS status)
-{
-    switch (status)
-    {
-        case MAINT_STATUS::WAIT_SYNC:
-        {
-            return "WAIT_SYNC";
-        }
-        case MAINT_STATUS::WAIT_HEADER_BYTE_0:
-        {
-            return "WAIT_HEADER_BYTE_0";
-        }
-        case MAINT_STATUS::WAIT_HEADER_BYTE_1:
-        {
-            return "WAIT_HEADER_BYTE_1";
-        }
-        case MAINT_STATUS::WAIT_HEADER_BYTE_2:
-        {
-            return "WAIT_HEADER_BYTE_2";
-        }
-        case MAINT_STATUS::WAIT_HEADER_BYTE_3:
-        {
-            return "WAIT_HEADER_BYTE_3";
-        }
-        case MAINT_STATUS::WAIT_HEADER_BYTE_4:
-        {
-            return "WAIT_HEADER_BYTE_4";
-        }
-        case MAINT_STATUS::WAIT_HEADER_BYTE_5:
-        {
-            return "WAIT_HEADER_BYTE_5";
-        }
-        case MAINT_STATUS::WAIT_HEADER_BYTE_6:
-        {
-            return "WAIT_HEADER_BYTE_6";
-        }
-        case MAINT_STATUS::WAIT_HEADER_BYTE_7:
-        {
-            return "WAIT_HEADER_BYTE_7";
-        }
-        case MAINT_STATUS::WAIT_PAYLOAD:
-        {
-            return "WAIT_PAYLOAD";
-        }
-    }
-    
-    return "";
-}
-
-
 static void update_fsm(uint8_t byte_rx)
 {
-    //printf("\nstatus(%s), rxByte(%d)", status_tostr(status), byte_rx);
     switch (status)
     {
         case MAINT_STATUS::WAIT_SYNC:
@@ -273,7 +221,6 @@ static void update_fsm(uint8_t byte_rx)
         {
             rx_buf[7] = byte_rx;
             expected_bytes = calc_exp_bytes(reinterpret_cast<MAINT_HEADER_T*>(&rx_buf[0]));
-            //printf(", expected payload size(%d)", expected_bytes);
             rx_payload_idx = 0;
 
             status = MAINT_STATUS::WAIT_PAYLOAD;
@@ -505,7 +452,7 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                 }
                 break;
             case MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS:
-                controlling_motors = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 1);
+                controlling_motors = (*reinterpret_cast<uint8_t*>(&rx_message.payload[0]) == 1);
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS:
                 MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint8_t*>(&rx_message.payload[0]));

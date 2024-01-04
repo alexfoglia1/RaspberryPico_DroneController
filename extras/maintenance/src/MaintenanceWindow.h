@@ -91,7 +91,7 @@ private slots:
 	void OnComboTrack3TextChanged(const QString& newText);
 	void OnHeaderChanged();
 
-	void OnBtnSendMaintenanceCommand();
+	void OnBtnSendSetMotors();
 	void OnBtnSendMaintenanceParams();
 	void OnBtnSendJsParams();
 	void OnBtnSendPidParams();
@@ -99,7 +99,7 @@ private slots:
 	void OnBtnSendImuType();
 	void OnBtnFlashWrite();
 	void OnBtnRefreshParams();
-	void OnSpinSetMaintenanceValue(int newValue);
+	void OnSpinSetMotorsValue(int newValue);
 	void OnBtnI2CRead();
 	void OnBtnI2CWrite();
 	void OnBtnTxImuOffset();

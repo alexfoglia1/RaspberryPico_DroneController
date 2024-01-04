@@ -146,7 +146,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
 	connect(_ui.btnOpenBoot, SIGNAL(clicked()), this, SLOT(OnBtnOpenBoot()));
 	connect(_ui.btnRescanPorts, SIGNAL(clicked()), this, SLOT(OnBtnRescanPorts()));
-	connect(_ui.btnSendMaintenanceCommand, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceCommand()));
+	connect(_ui.btnSendSetMotors, SIGNAL(clicked()), this, SLOT(OnBtnSendSetMotors()));
 	connect(_ui.btnSendMaintenanceParams, SIGNAL(clicked()), this, SLOT(OnBtnSendMaintenanceParams()));
 	connect(_ui.btnSendMaintenanceJsParams, SIGNAL(clicked()), this, SLOT(OnBtnSendJsParams()));
 	connect(_ui.btnSendPidParams, SIGNAL(clicked()), this, SLOT(OnBtnSendPidParams()));
@@ -159,7 +159,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnTxImuOffset, SIGNAL(clicked()), this, SLOT(OnBtnTxImuOffset()));
 	connect(_ui.btnImuAutoOffset, SIGNAL(clicked()), this, SLOT(OnBtnImuAutoOffset()));
 
-	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
+	connect(_ui.spinSetMotorsValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMotorsValue(int)));
 
 	connect(_ui.plotTimeSlider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotSliderValueChanged(int)));
 	connect(_ui.plotTrack1Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack1ValueChanged(int)));
@@ -1138,18 +1138,27 @@ void MaintenanceWindow::OnHeaderChanged()
 
 	if (_maintHandler)
 	{
-		_maintHandler->SetTxHeader(header);
+		_maintHandler->UpdateGetMessageHeader(header);
 	}
 }
 
 
-void MaintenanceWindow::OnBtnSendMaintenanceCommand()
+void MaintenanceWindow::OnBtnSendSetMotors()
 {
 	if (_maintHandler)
 	{
-		uint32_t data = _ui.spinSetMaintenanceValue->value();
+		uint16_t data = static_cast<uint16_t>(_ui.spinSetMotorsValue->value() & 0xFFFF);
 
-		_maintHandler->TxSetMotors(_ui.comboSetCommandId->currentIndex() + 1, data);
+		int motorNo = _ui.comboSetMotors->currentIndex() + 1;
+
+		if (motorNo < 6)
+		{
+			_maintHandler->TxSetMotors(motorNo, data);
+		}
+		else
+		{
+			_maintHandler->TxControlMotors(data > 0);
+		}
 	}
 }
 
@@ -1324,11 +1333,21 @@ void MaintenanceWindow::OnBtnRefreshParams()
 }
 
 
-void MaintenanceWindow::OnSpinSetMaintenanceValue(int newValue)
+void MaintenanceWindow::OnSpinSetMotorsValue(int newValue)
 {
-	if (_maintHandler && _ui.checkSpinOnChange->isChecked())
+	if (_maintHandler && _ui.checkSetMotorsOnChange->isChecked())
 	{
-		_maintHandler->TxSetMotors(_ui.comboSetCommandId->currentIndex() + 1, newValue);
+		int motorNo = _ui.comboSetMotors->currentIndex() + 1;
+		uint16_t data = static_cast<uint16_t>(newValue & 0xFFFF);
+
+		if (motorNo < 6)
+		{
+			_maintHandler->TxSetMotors(motorNo, newValue);
+		}
+		else
+		{
+			_maintHandler->TxControlMotors(newValue > 0);
+		}
 	}
 }
 

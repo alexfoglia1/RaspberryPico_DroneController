@@ -7,8 +7,8 @@
 
 Maint::Maintenance::Maintenance()
 {
-    _txHeader.All = 0;
-    _txCommand.All = 0;
+    _txMessageGet.All = 0;
+    _txMessageSet.All = 0;
 
     _serialPort = new QSerialPort();
     _txTimer = new QTimer();
@@ -105,9 +105,9 @@ void Maint::Maintenance::EnableTx(int delayMillis)
 }
 
 
-void Maint::Maintenance::SetTxHeader(MAINT_HEADER_T txHeader)
+void Maint::Maintenance::UpdateGetMessageHeader(MAINT_HEADER_T txHeader)
 {
-    _txHeader.All = txHeader.All;
+    _txMessageGet.All = txHeader.All;
 }
 
 
@@ -121,47 +121,48 @@ void Maint::Maintenance::UpdateRemoteControlTag(bool override_radio, uint16_t ar
 }
 
 
+void Maint::Maintenance::TxControlMotors(bool control_motors)
+{
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS);
+
+    uint8_t data = control_motors ? 1 : 0;
+    _txSetParams.clear();
+    pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint8_t));
+    
+    _txStatus = Maint::TX_STATUS::TX_SET;
+}
+
+
 void Maint::Maintenance::TxSetMotors(uint32_t motorNo, uint16_t data)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1) :
-                                    (motorNo == 2) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M2) :
-                                    (motorNo == 3) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M3) :
-                                    (motorNo == 4) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M4) :
-                                    (motorNo == uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_MALL)) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_MALL) :
-                                    (motorNo == uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS)) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS) : uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE);
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1) :
+                                      (motorNo == 2) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M2) :
+                                      (motorNo == 3) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M3) :
+                                      (motorNo == 4) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M4) : uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_MALL);
     
-    if (_txCommand.Bits.maint_cmd_id == uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    if (_txMessageSet.Bits.maint_cmd_id == uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
         return;
     }
 
-    if (_txCommand.Bits.maint_cmd_id == uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS))
-    {
-        _txSetParams.clear();
-        pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint8_t));
+    _txSetParams.clear();
+    pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint16_t));
 
-        _txStatus = Maint::TX_STATUS::TX_SET;
-    }
-    else
-    {
-        _txSetParams.clear();
-        pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint16_t));
-
-        _txStatus = Maint::TX_STATUS::TX_SET;
-    }
+    _txStatus = Maint::TX_STATUS::TX_SET;
 }
 
 
 void Maint::Maintenance::TxMotorParams(uint32_t motorNo, uint8_t enabled, uint16_t minSignalParam, uint16_t maxSignalParam)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS) :
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS) :
                                     (motorNo == 2) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS) :
                                     (motorNo == 3) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS) :
                                     (motorNo == 4) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS) : uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE);
 
-    if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    if (_txMessageSet.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
 
         _txSetParams.clear();
@@ -174,12 +175,12 @@ void Maint::Maintenance::TxMotorParams(uint32_t motorNo, uint8_t enabled, uint16
 
 void Maint::Maintenance::TxJoystickParams(uint32_t jsChannel, float alpha, float beta)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = (jsChannel == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA) :
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = (jsChannel == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA) :
         (jsChannel == 2) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_JS_ROLL_ALPHA_BETA) :
         (jsChannel == 3) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_JS_PITCH_ALPHA_BETA) : uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE);
 
-    if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    if (_txMessageSet.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
         _txSetParams.clear();
         pushParams(reinterpret_cast<uint8_t*>(&alpha), sizeof(float));
@@ -192,12 +193,12 @@ void Maint::Maintenance::TxJoystickParams(uint32_t jsChannel, float alpha, float
 
 void Maint::Maintenance::TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = (eulerAngle == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS) :
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = (eulerAngle == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS) :
         (eulerAngle == 2) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS) :
         (eulerAngle == 3) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS) : uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE);
 
-    if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    if (_txMessageSet.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
         _txSetParams.clear();
         pushParams(reinterpret_cast<uint8_t*>(&kp), sizeof(float));
@@ -215,12 +216,12 @@ void Maint::Maintenance::TxPidParams(uint32_t eulerAngle, float kp, float ki, fl
 
 void Maint::Maintenance::TxPtf1params(uint32_t sensorSource, float x, float y, float z)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = (sensorSource == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS) :
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = (sensorSource == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS) :
         (sensorSource == 2) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS) :
         (sensorSource == 3) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS) : uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE);
 
-    if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    if (_txMessageSet.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
         _txSetParams.clear();
         pushParams(reinterpret_cast<uint8_t*>(&x), sizeof(float));
@@ -235,8 +236,8 @@ void Maint::Maintenance::TxPtf1params(uint32_t sensorSource, float x, float y, f
 
 void Maint::Maintenance::TxImuType(IMU_TYPE imuType)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE);
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE);
 
     uint32_t iImuType = static_cast<uint32_t>(imuType);
 
@@ -250,8 +251,8 @@ void Maint::Maintenance::TxImuType(IMU_TYPE imuType)
 
 void Maint::Maintenance::I2CRead(uint8_t i2c, uint8_t addr, uint8_t reg)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_READ);
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_READ);
 
     _txSetParams.clear();
     pushParams(reinterpret_cast<uint8_t*>(&i2c), sizeof(uint8_t));
@@ -266,8 +267,8 @@ void Maint::Maintenance::I2CRead(uint8_t i2c, uint8_t addr, uint8_t reg)
 
 void Maint::Maintenance::I2CWrite(uint8_t i2c, uint8_t addr, uint8_t reg, uint8_t val)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_WRITE);
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_WRITE);
 
     _txSetParams.clear();
     pushParams(reinterpret_cast<uint8_t*>(&i2c), sizeof(uint8_t));
@@ -282,8 +283,8 @@ void Maint::Maintenance::I2CWrite(uint8_t i2c, uint8_t addr, uint8_t reg, uint8_
 
 void Maint::Maintenance::TxWriteToFlash()
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE);
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE);
 
     _txSetParams.clear();
 
@@ -293,8 +294,8 @@ void Maint::Maintenance::TxWriteToFlash()
 
 void Maint::Maintenance::TxImuOffset(float roll_offset, float pitch_offset)
 {
-    _txCommand.All = 0;
-    _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET);
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET);
 
     _txSetParams.clear();
     pushParams(reinterpret_cast<uint8_t*>(&roll_offset), sizeof(float));
@@ -347,11 +348,11 @@ void Maint::Maintenance::Tx()
 
     if (_txStatus == Maint::TX_STATUS::TX_GET)
     {
-        qba = txMsg(&_txHeader);
+        qba = txMsg(&_txMessageGet);
     }
     else
     {
-        qba = txMsg(&_txCommand);
+        qba = txMsg(&_txMessageSet);
         _txStatus = Maint::TX_STATUS::TX_GET;
     }
 

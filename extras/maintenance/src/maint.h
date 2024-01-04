@@ -200,8 +200,9 @@ public:
     bool Open(QString serialPortName, enum QSerialPort::BaudRate baud = QSerialPort::Baud38400);
     void Close();
     void EnableTx(int delayMillis);
-    void SetTxHeader(MAINT_HEADER_T txHeader);
+    void UpdateGetMessageHeader(MAINT_HEADER_T txHeader);
     void UpdateRemoteControlTag(bool override_radio, uint16_t armed_signal, uint16_t roll_signal, uint16_t pitch_signal, uint16_t throttle_signal);
+    void TxControlMotors(bool control_motors);
     void TxSetMotors(uint32_t motorNo, uint16_t data);
     void TxMotorParams(uint32_t motorNo, uint8_t enabled, uint16_t minParam, uint16_t maxParam);
     void TxJoystickParams(uint32_t jsChannel, float alpha, float beta);
@@ -293,8 +294,8 @@ private:
     uint32_t _expected_bytes;
     uint32_t _rx_payload_idx;
     uint8_t _rx_buf[1024];
-    Maint::MAINT_HEADER_T _txHeader;
-    Maint::MAINT_HEADER_T _txCommand;
+    Maint::MAINT_HEADER_T _txMessageGet;
+    Maint::MAINT_HEADER_T _txMessageSet;
     Maint::REMOTE_CONTROL_TAG _remCtrl;
 
     QList<uint8_t> _txSetParams;
