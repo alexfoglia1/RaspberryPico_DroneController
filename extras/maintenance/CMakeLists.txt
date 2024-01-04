@@ -9,8 +9,6 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 
-add_compile_definitions(SDL_SUPPORTED)
-
 add_executable(DroneMaintenance
 
 ${CMAKE_SOURCE_DIR}/3rdparty/QJoysticks/Joysticks/JoysticksCommon.h
@@ -53,7 +51,14 @@ ${CMAKE_SOURCE_DIR}/src/main.cpp
 
 find_package(Threads REQUIRED)
 find_package(Qt5 COMPONENTS Core Gui Widgets SerialPort REQUIRED)
-find_package(SDL2 REQUIRED)
 
-target_include_directories(DroneMaintenance PUBLIC ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/3rdparty/QJoysticks/ ${SDL2_INCLUDE_DIRS})
-target_link_libraries(DroneMaintenance Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort ${SDL2_LIBRARIES})
+find_package(SDL2)
+
+if (SDL2_FOUND)
+    target_include_directories(DroneMaintenance PUBLIC ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(DroneMaintenance ${SDL2_LIBRARIES})
+    add_compile_definitions(SDL_SUPPORTED)
+endif()
+
+target_include_directories(DroneMaintenance PUBLIC ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/3rdparty/QJoysticks/)
+target_link_libraries(DroneMaintenance Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort)
