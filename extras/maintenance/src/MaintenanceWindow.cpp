@@ -189,10 +189,10 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedFilteredMagnY(float)), this, SLOT(OnReceivedFilteredMagnY(float)));
 	connect(_maintHandler, SIGNAL(receivedFilteredMagnZ(float)), this, SLOT(OnReceivedFilteredMagnZ(float)));
 
-	connect(_maintHandler, SIGNAL(receivedThrottleSgn(uint32_t)), this, SLOT(OnReceivedThrottleSgn(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedPitchSgn(uint32_t)), this, SLOT(OnReceivedPitchSgn(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedRollSgn(uint32_t)), this, SLOT(OnReceivedRollSgn(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedCmdThr(float)), this, SLOT(OnReceivedCmdThr(float)));
+	connect(_maintHandler, SIGNAL(receivedThrottleSgn(uint16_t)), this, SLOT(OnReceivedThrottleSgn(uint16_t)));
+	connect(_maintHandler, SIGNAL(receivedPitchSgn(uint16_t)), this, SLOT(OnReceivedPitchSgn(uint16_t)));
+	connect(_maintHandler, SIGNAL(receivedRollSgn(uint16_t)), this, SLOT(OnReceivedRollSgn(uint16_t)));
+	connect(_maintHandler, SIGNAL(receivedCmdThr(uint16_t)), this, SLOT(OnReceivedCmdThr(uint16_t)));
 	connect(_maintHandler, SIGNAL(receivedCmdPitch(float)), this, SLOT(OnReceivedCmdPitch(float)));
 	connect(_maintHandler, SIGNAL(receivedCmdRoll(float)), this, SLOT(OnReceivedCmdRoll(float)));
 
@@ -200,11 +200,11 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedBodyPitch(float)), this, SLOT(OnReceivedBodyPitch(float)));
 	connect(_maintHandler, SIGNAL(receivedBodyYaw(float)), this, SLOT(OnReceivedBodyYaw(float)));
 
-	connect(_maintHandler, SIGNAL(receivedMotor1(uint32_t)), this, SLOT(OnReceivedMotor1(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedMotor2(uint32_t)), this, SLOT(OnReceivedMotor2(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedMotor3(uint32_t)), this, SLOT(OnReceivedMotor3(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedMotor4(uint32_t)), this, SLOT(OnReceivedMotor4(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedMotorsArmed(uint32_t)), this, SLOT(OnReceivedMotorsArmed(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedMotor1(uint16_t)), this, SLOT(OnReceivedMotor1(uint16_t)));
+	connect(_maintHandler, SIGNAL(receivedMotor2(uint16_t)), this, SLOT(OnReceivedMotor2(uint16_t)));
+	connect(_maintHandler, SIGNAL(receivedMotor3(uint16_t)), this, SLOT(OnReceivedMotor3(uint16_t)));
+	connect(_maintHandler, SIGNAL(receivedMotor4(uint16_t)), this, SLOT(OnReceivedMotor4(uint16_t)));
+	connect(_maintHandler, SIGNAL(receivedMotorsArmed(uint8_t)), this, SLOT(OnReceivedMotorsArmed(uint8_t)));
 
 	connect(_maintHandler, SIGNAL(receivedRollPidErr(float)), this, SLOT(OnReceivedRollPidErr(float)));
 	connect(_maintHandler, SIGNAL(receivedRollPidP(float)), this, SLOT(OnReceivedRollPidP(float)));
@@ -224,12 +224,12 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(_maintHandler, SIGNAL(receivedCbit(uint32_t)), this, SLOT(OnReceivedCbit(uint32_t)));
 
-	connect(_maintHandler, SIGNAL(receivedMotorsParams(uint32_t, bool, uint32_t, uint32_t)), this, SLOT(OnReceivedMotorsParams(uint32_t, bool, uint32_t, uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedMotorsParams(uint32_t, bool, uint16_t, uint16_t)), this, SLOT(OnReceivedMotorsParams(uint32_t, bool, uint16_t, uint16_t)));
 	connect(_maintHandler, SIGNAL(receivedJsParams(uint32_t, float, float)), this, SLOT(OnReceivedJsParams(uint32_t, float, float)));
 	connect(_maintHandler, SIGNAL(receivedPidParams(uint32_t, float, float, float, float, float, float)), this, SLOT(OnReceivedPidParams(uint32_t, float, float, float, float, float, float)));
 	connect(_maintHandler, SIGNAL(receivedPtf1Params(uint32_t, float, float, float)), this, SLOT(OnReceivedPtf1Params(uint32_t, float, float, float)));
-	connect(_maintHandler, SIGNAL(receivedImuType(uint32_t)), this, SLOT(OnReceivedImuType(uint32_t)));
-	connect(_maintHandler, SIGNAL(receivedI2CRead(uint32_t)), this, SLOT(OnReceivedI2CRead(uint32_t)));
+	connect(_maintHandler, SIGNAL(receivedImuType(uint8_t)), this, SLOT(OnReceivedImuType(uint8_t)));
+	connect(_maintHandler, SIGNAL(receivedI2CRead(uint8_t)), this, SLOT(OnReceivedI2CRead(uint8_t)));
 	connect(_maintHandler, SIGNAL(receivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)), this, SLOT(OnReceivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)));
 	connect(_maintHandler, SIGNAL(receivedImuOffset(float, float)), this, SLOT(OnReceivedImuOffset(float, float)));
 
@@ -1548,7 +1548,7 @@ void MaintenanceWindow::OnReceivedFilteredMagnZ(float data)
 }
 
 
-void MaintenanceWindow::OnReceivedThrottleSgn(uint32_t data)
+void MaintenanceWindow::OnReceivedThrottleSgn(uint16_t data)
 {
 	_ui.checkRxThrottleSignal->setChecked(true);
 	_ui.lineRxThrottleSignal->setText(QString::number(data));
@@ -1557,7 +1557,7 @@ void MaintenanceWindow::OnReceivedThrottleSgn(uint32_t data)
 }
 
 
-void MaintenanceWindow::OnReceivedRollSgn(uint32_t data)
+void MaintenanceWindow::OnReceivedRollSgn(uint16_t data)
 {
 	_ui.checkRxRollSignal->setChecked(true);
 	_ui.lineRxRollSignal->setText(QString::number(data));
@@ -1566,7 +1566,7 @@ void MaintenanceWindow::OnReceivedRollSgn(uint32_t data)
 }
 
 
-void MaintenanceWindow::OnReceivedPitchSgn(uint32_t data)
+void MaintenanceWindow::OnReceivedPitchSgn(uint16_t data)
 {
 	_ui.checkRxPitchSignal->setChecked(true);
 	_ui.lineRxPitchSignal->setText(QString::number(data));
@@ -1575,7 +1575,7 @@ void MaintenanceWindow::OnReceivedPitchSgn(uint32_t data)
 }
 
 
-void MaintenanceWindow::OnReceivedCmdThr(float data)
+void MaintenanceWindow::OnReceivedCmdThr(uint16_t data)
 {
 	_ui.checkRxCmdThrottle->setChecked(true);
 	_ui.lineRxCmdThrottle->setText(QString::number(data));
@@ -1754,7 +1754,7 @@ void MaintenanceWindow::OnReceivedYawPidU(float data)
 	checkPlot("YAW_PID_U", data);
 }
 
-void MaintenanceWindow::OnReceivedMotor1(uint32_t data)
+void MaintenanceWindow::OnReceivedMotor1(uint16_t data)
 {
 	_ui.checkRxMotor1Signal->setChecked(true);
 	_ui.lineRxMotor1Signal->setText(QString::number(data));
@@ -1763,7 +1763,7 @@ void MaintenanceWindow::OnReceivedMotor1(uint32_t data)
 }
 
 
-void MaintenanceWindow::OnReceivedMotor2(uint32_t data)
+void MaintenanceWindow::OnReceivedMotor2(uint16_t data)
 {
 	_ui.checkRxMotor2Signal->setChecked(true);
 	_ui.lineRxMotor2Signal->setText(QString::number(data));
@@ -1772,7 +1772,7 @@ void MaintenanceWindow::OnReceivedMotor2(uint32_t data)
 }
 
 
-void MaintenanceWindow::OnReceivedMotor3(uint32_t data)
+void MaintenanceWindow::OnReceivedMotor3(uint16_t data)
 {
 	_ui.checkRxMotor3Signal->setChecked(true);
 	_ui.lineRxMotor3Signal->setText(QString::number(data));
@@ -1781,7 +1781,7 @@ void MaintenanceWindow::OnReceivedMotor3(uint32_t data)
 }
 
 
-void MaintenanceWindow::OnReceivedMotor4(uint32_t data)
+void MaintenanceWindow::OnReceivedMotor4(uint16_t data)
 {
 	_ui.checkRxMotor4Signal->setChecked(true);
 	_ui.lineRxMotor4Signal->setText(QString::number(data));
@@ -1790,7 +1790,7 @@ void MaintenanceWindow::OnReceivedMotor4(uint32_t data)
 }
 
 
-void MaintenanceWindow::OnReceivedMotorsArmed(uint32_t data)
+void MaintenanceWindow::OnReceivedMotorsArmed(uint8_t data)
 {
 	_ui.checkRxMotorsArmed->setChecked(true);
 	_ui.lineRxMotorsArmed->setText(QString::number(data));
@@ -1809,7 +1809,7 @@ void MaintenanceWindow::OnReceivedCbit(uint32_t data)
 
 
 
-void MaintenanceWindow::OnReceivedMotorsParams(uint32_t motor_no, bool enabled, uint32_t min_signal, uint32_t max_signal)
+void MaintenanceWindow::OnReceivedMotorsParams(uint32_t motor_no, bool enabled, uint16_t min_signal, uint16_t max_signal)
 {
 	_ui.checkTxMotorParams->setChecked(false);
 
@@ -1850,7 +1850,7 @@ void MaintenanceWindow::OnReceivedPtf1Params(uint32_t source_no, float x, float 
 }
 
 
-void MaintenanceWindow::OnReceivedImuType(uint32_t imu_type)
+void MaintenanceWindow::OnReceivedImuType(uint8_t imu_type)
 {
 	_rxImuType = Maint::IMU_TYPE(imu_type);
 	_ui.lineSetI2cAddress->setText(QString::number(_imuTypeToI2CAddr[_rxImuType], 16));
@@ -1858,7 +1858,7 @@ void MaintenanceWindow::OnReceivedImuType(uint32_t imu_type)
 }
 
 
-void MaintenanceWindow::OnReceivedI2CRead(uint32_t imu_type)
+void MaintenanceWindow::OnReceivedI2CRead(uint8_t imu_type)
 {
 	_ui.checkRxI2CRead->setChecked(true);
 	_ui.lineRxI2CRead->setText(QString::number(imu_type, 16));

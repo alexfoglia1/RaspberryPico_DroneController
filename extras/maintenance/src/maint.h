@@ -6,9 +6,15 @@
 #include <qmutex.h>
 #include <qtimer.h>
 
+#define FLASH_MOTORS_PARAMS_SIZE   48
+#define FLASH_JOYSTICK_PARAMS_SIZE 32
+#define FLASH_PID_PARAMS_SIZE      72
+#define FLASH_PTF1_PARAMS_SIZE     36
+#define FLASH_IMU_TYPE_SIZE         1
+
 namespace Maint
 {
-    enum class IMU_TYPE : uint32_t
+    enum class IMU_TYPE : uint8_t
     {
         FIRST = 0,
         LSM9DS1 = FIRST,
@@ -186,14 +192,14 @@ public:
     void Close();
     void EnableTx(int delayMillis);
     void SetTxHeader(MAINT_HEADER_T txHeader);
-    void TxSetMotors(uint32_t motorNo, uint32_t data);
-    void TxMotorParams(uint32_t motorNo, bool enabled, uint32_t minParam, uint32_t maxParam);
+    void TxSetMotors(uint32_t motorNo, uint16_t data);
+    void TxMotorParams(uint32_t motorNo, uint8_t enabled, uint16_t minParam, uint16_t maxParam);
     void TxJoystickParams(uint32_t jsChannel, float alpha, float beta);
     void TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd);
     void TxPtf1params(uint32_t sensorSource, float x, float y, float z);
     void TxImuType(IMU_TYPE imuType);
-    void I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg);
-    void I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val);
+    void I2CRead(uint8_t i2c, uint8_t addr, uint8_t reg);
+    void I2CWrite(uint8_t i2c, uint8_t addr, uint8_t reg, uint8_t val);
     void TxWriteToFlash();
     void TxImuOffset(float roll_offset, float pitch_offset);
     int ClearLogs();
@@ -230,10 +236,10 @@ signals:
     void receivedFilteredMagnX(float data);
     void receivedFilteredMagnY(float data);
     void receivedFilteredMagnZ(float data);
-    void receivedThrottleSgn(uint32_t data);
-    void receivedRollSgn(uint32_t data);
-    void receivedPitchSgn(uint32_t data);
-    void receivedCmdThr(float data);
+    void receivedThrottleSgn(uint16_t data);
+    void receivedRollSgn(uint16_t data);
+    void receivedPitchSgn(uint16_t data);
+    void receivedCmdThr(uint16_t data);
     void receivedCmdRoll(float data);
     void receivedCmdPitch(float data);
     void receivedBodyRoll(float data);
@@ -254,18 +260,18 @@ signals:
     void receivedYawPidI(float data);
     void receivedYawPidD(float data);
     void receivedYawPidU(float data);
-    void receivedMotor1(uint32_t data);
-    void receivedMotor2(uint32_t data);
-    void receivedMotor3(uint32_t data);
-    void receivedMotor4(uint32_t data);
-    void receivedMotorsArmed(uint32_t data);
+    void receivedMotor1(uint16_t data);
+    void receivedMotor2(uint16_t data);
+    void receivedMotor3(uint16_t data);
+    void receivedMotor4(uint16_t data);
+    void receivedMotorsArmed(uint8_t data);
     void receivedCbit(uint32_t data);
-    void receivedMotorsParams(uint32_t motor_no, bool enabled, uint32_t min_signal, uint32_t max_signal);
+    void receivedMotorsParams(uint32_t motor_no, bool enabled, uint16_t min_signal, uint16_t max_signal);
     void receivedJsParams(uint32_t channel_no, float alpha, float beta);
     void receivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
     void receivedPtf1Params(uint32_t source_no, float x, float y, float z);
-    void receivedImuType(uint32_t imu_type);
-    void receivedI2CRead(uint32_t i2c_read);
+    void receivedImuType(uint8_t imu_type);
+    void receivedI2CRead(uint8_t i2c_read);
     void receivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
     void receivedImuOffset(float offset_roll, float offset_pitch);
 

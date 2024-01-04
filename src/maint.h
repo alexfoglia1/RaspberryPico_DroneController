@@ -203,7 +203,7 @@ enum class EUCLIDEAN_AXES
     SIZE
 };
 
-enum class IMU_TYPE : uint32_t
+enum class IMU_TYPE : uint8_t
 {
     FIRST = 0,
     LSM9DS1 = FIRST,

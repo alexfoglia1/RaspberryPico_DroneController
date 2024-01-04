@@ -105,7 +105,7 @@ void Maint::Maintenance::SetTxHeader(MAINT_HEADER_T txHeader)
 }
 
 
-void Maint::Maintenance::TxSetMotors(uint32_t motorNo, uint32_t data)
+void Maint::Maintenance::TxSetMotors(uint32_t motorNo, uint16_t data)
 {
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1) :
@@ -118,14 +118,14 @@ void Maint::Maintenance::TxSetMotors(uint32_t motorNo, uint32_t data)
     if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
         _txSetParams.clear();
-        pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint32_t));
+        pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint16_t));
 
         _txStatus = Maint::TX_STATUS::TX_SET;
     }
 }
 
 
-void Maint::Maintenance::TxMotorParams(uint32_t motorNo, bool enabled, uint32_t minSignalParam, uint32_t maxSignalParam)
+void Maint::Maintenance::TxMotorParams(uint32_t motorNo, uint8_t enabled, uint16_t minSignalParam, uint16_t maxSignalParam)
 {
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS) :
@@ -135,12 +135,11 @@ void Maint::Maintenance::TxMotorParams(uint32_t motorNo, bool enabled, uint32_t 
 
     if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
-        uint32_t iEnabled = enabled ? 1 : 0;
 
         _txSetParams.clear();
-        pushParams(reinterpret_cast<uint8_t*>(&iEnabled), sizeof(uint32_t));
-        pushParams(reinterpret_cast<uint8_t*>(&minSignalParam), sizeof(uint32_t));
-        pushParams(reinterpret_cast<uint8_t*>(&maxSignalParam), sizeof(uint32_t));
+        pushParams(reinterpret_cast<uint8_t*>(&enabled), sizeof(uint8_t));
+        pushParams(reinterpret_cast<uint8_t*>(&minSignalParam), sizeof(uint16_t));
+        pushParams(reinterpret_cast<uint8_t*>(&maxSignalParam), sizeof(uint16_t));
         _txStatus = Maint::TX_STATUS::TX_SET;
     }
 }
@@ -221,15 +220,15 @@ void Maint::Maintenance::TxImuType(IMU_TYPE imuType)
 }
 
 
-void Maint::Maintenance::I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg)
+void Maint::Maintenance::I2CRead(uint8_t i2c, uint8_t addr, uint8_t reg)
 {
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_READ);
 
     _txSetParams.clear();
-    pushParams(reinterpret_cast<uint8_t*>(&i2c), sizeof(uint32_t));
-    pushParams(reinterpret_cast<uint8_t*>(&addr), sizeof(uint32_t));
-    pushParams(reinterpret_cast<uint8_t*>(&reg), sizeof(uint32_t));
+    pushParams(reinterpret_cast<uint8_t*>(&i2c), sizeof(uint8_t));
+    pushParams(reinterpret_cast<uint8_t*>(&addr), sizeof(uint8_t));
+    pushParams(reinterpret_cast<uint8_t*>(&reg), sizeof(uint8_t));
 
     
     _txStatus = Maint::TX_STATUS::TX_SET;
@@ -237,16 +236,16 @@ void Maint::Maintenance::I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg)
 }
 
 
-void Maint::Maintenance::I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val)
+void Maint::Maintenance::I2CWrite(uint8_t i2c, uint8_t addr, uint8_t reg, uint8_t val)
 {
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_WRITE);
 
     _txSetParams.clear();
-    pushParams(reinterpret_cast<uint8_t*>(&i2c), sizeof(uint32_t));
-    pushParams(reinterpret_cast<uint8_t*>(&addr), sizeof(uint32_t));
-    pushParams(reinterpret_cast<uint8_t*>(&reg), sizeof(uint32_t));
-    pushParams(reinterpret_cast<uint8_t*>(&val), sizeof(uint32_t));
+    pushParams(reinterpret_cast<uint8_t*>(&i2c), sizeof(uint8_t));
+    pushParams(reinterpret_cast<uint8_t*>(&addr), sizeof(uint8_t));
+    pushParams(reinterpret_cast<uint8_t*>(&reg), sizeof(uint8_t));
+    pushParams(reinterpret_cast<uint8_t*>(&val), sizeof(uint8_t));
     
     _txStatus = Maint::TX_STATUS::TX_SET;
     
@@ -630,36 +629,34 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
         }
         if (rx_header->Bits.throttle_sgn)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint16_t idata = *(reinterpret_cast<uint16_t*>(pPayload));
 
             emit receivedThrottleSgn(idata);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint16_t);
         }
         if (rx_header->Bits.roll_sgn)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint16_t idata = *(reinterpret_cast<uint16_t*>(pPayload));
 
             emit receivedRollSgn(idata);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint16_t);
         }
         if (rx_header->Bits.pitch_sgn)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint16_t idata = *(reinterpret_cast<uint16_t*>(pPayload));
 
             emit receivedPitchSgn(idata);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint16_t);
         }
         if (rx_header->Bits.cmd_thr)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
-            float fdata = *(reinterpret_cast<float*>(&idata));
+            uint16_t idata = *(reinterpret_cast<uint16_t*>(pPayload));
+            emit receivedCmdThr(idata);
 
-            emit receivedCmdThr(fdata);
-
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint16_t);
         }
         if (rx_header->Bits.cmd_roll)
         {
@@ -843,43 +840,43 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
         }
         if (rx_header->Bits.motor1)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint16_t idata = *(reinterpret_cast<uint16_t*>(pPayload));
 
             emit receivedMotor1(idata);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint16_t);
         }
         if (rx_header->Bits.motor2)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint16_t idata = *(reinterpret_cast<uint16_t*>(pPayload));
 
             emit receivedMotor2(idata);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint16_t);
         }
         if (rx_header->Bits.motor3)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint16_t idata = *(reinterpret_cast<uint16_t*>(pPayload));
 
             emit receivedMotor3(idata);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint16_t);
         }
         if (rx_header->Bits.motor4)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint16_t idata = *(reinterpret_cast<uint16_t*>(pPayload));
 
             emit receivedMotor4(idata);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint16_t);
         }
         if (rx_header->Bits.motors_armed)
         {
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint8_t idata = *(reinterpret_cast<uint8_t*>(pPayload));
 
             emit receivedMotorsArmed(idata);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint8_t);
         }
         if (rx_header->Bits.cbit)
         {
@@ -891,25 +888,25 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
         }
         if (rx_header->Bits.motor_params)
         {
-            uint32_t m1_enabled = *(reinterpret_cast<uint32_t*>(pPayload + 0));
-            uint32_t m1_min = *(reinterpret_cast<uint32_t*>(pPayload + 4));
-            uint32_t m1_max = *(reinterpret_cast<uint32_t*>(pPayload + 8));
-            uint32_t m2_enabled = *(reinterpret_cast<uint32_t*>(pPayload + 12));
-            uint32_t m2_min = *(reinterpret_cast<uint32_t*>(pPayload + 16));
-            uint32_t m2_max = *(reinterpret_cast<uint32_t*>(pPayload + 20));
-            uint32_t m3_enabled = *(reinterpret_cast<uint32_t*>(pPayload + 24));
-            uint32_t m3_min = *(reinterpret_cast<uint32_t*>(pPayload + 28));
-            uint32_t m3_max = *(reinterpret_cast<uint32_t*>(pPayload + 32));
-            uint32_t m4_enabled = *(reinterpret_cast<uint32_t*>(pPayload + 36));
-            uint32_t m4_min = *(reinterpret_cast<uint32_t*>(pPayload + 40));
-            uint32_t m4_max = *(reinterpret_cast<uint32_t*>(pPayload + 44));
+            uint8_t  m1_enabled = *(reinterpret_cast<uint32_t*>(pPayload + 0));
+            uint16_t m1_min = *(reinterpret_cast<uint32_t*>(pPayload + 4));
+            uint16_t m1_max = *(reinterpret_cast<uint32_t*>(pPayload + 8));
+            uint8_t  m2_enabled = *(reinterpret_cast<uint32_t*>(pPayload + 12));
+            uint16_t m2_min = *(reinterpret_cast<uint32_t*>(pPayload + 16));
+            uint16_t m2_max = *(reinterpret_cast<uint32_t*>(pPayload + 20));
+            uint8_t  m3_enabled = *(reinterpret_cast<uint32_t*>(pPayload + 24));
+            uint16_t m3_min = *(reinterpret_cast<uint32_t*>(pPayload + 28));
+            uint16_t m3_max = *(reinterpret_cast<uint32_t*>(pPayload + 32));
+            uint8_t  m4_enabled = *(reinterpret_cast<uint32_t*>(pPayload + 36));
+            uint16_t m4_min = *(reinterpret_cast<uint32_t*>(pPayload + 40));
+            uint16_t m4_max = *(reinterpret_cast<uint32_t*>(pPayload + 44));
 
             emit receivedMotorsParams(1, m1_enabled > 0, m1_min, m1_max);
             emit receivedMotorsParams(2, m2_enabled > 0, m2_min, m2_max);
             emit receivedMotorsParams(3, m3_enabled > 0, m3_min, m3_max);
             emit receivedMotorsParams(4, m4_enabled > 0, m4_min, m4_max);
 
-            pPayload += 12 * sizeof(uint32_t);
+            pPayload += (4 * sizeof(uint8_t) + 8 * sizeof(uint16_t));
         }
         if (rx_header->Bits.js_params)
         {
@@ -978,19 +975,19 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
         }
         if (rx_header->Bits.imu_type)
         {
-            uint32_t imu_type = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint8_t imu_type = *(reinterpret_cast<uint8_t*>(pPayload));
 
             emit receivedImuType(imu_type);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint8_t);
         }
         if (rx_header->Bits.i2c_read)
         {
-            uint32_t i2c_read = *(reinterpret_cast<uint32_t*>(pPayload));
+            uint8_t i2c_read = *(reinterpret_cast<uint8_t*>(pPayload));
 
             emit receivedI2CRead(i2c_read);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(uint8_t);
         }
         if (rx_header->Bits.sw_ver)
         {
@@ -998,7 +995,7 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 
             emit receivedSwVer(sw_ver->major_v, sw_ver->minor_v, sw_ver->stage_v, sw_ver->rel_type);
 
-            pPayload += sizeof(uint32_t);
+            pPayload += sizeof(SW_VER_TAG);
         }
         if (rx_header->Bits.imu_offset)
         {
@@ -1014,40 +1011,234 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 
 uint32_t Maint::Maintenance::calc_exp_bytes(Maint::MAINT_HEADER_T* header)
 {
-    int bit_sets = 0;
-    uint64_t ulong = header->All;
-    while (ulong)
-    {
-        bit_sets += (ulong & 0x01) ? 1 : 0;
-        ulong >>= 1;
-    }
+    uint32_t rx_payload_idx = 0;
 
+    if (header->Bits.accel_x)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.accel_y)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.accel_z)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.gyro_x)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.gyro_y)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.gyro_z)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.magn_x)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.magn_y)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.magn_z)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.accel_x_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.accel_y_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.accel_z_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.gyro_x_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.gyro_y_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.gyro_z_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.magn_x_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.magn_y_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.magn_z_f)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.throttle_sgn)
+    {
+        rx_payload_idx += sizeof(uint16_t);
+    }
+    if (header->Bits.roll_sgn)
+    {
+        rx_payload_idx += sizeof(uint16_t);
+    }
+    if (header->Bits.pitch_sgn)
+    {
+        rx_payload_idx += sizeof(uint16_t);
+    }
+    if (header->Bits.cmd_thr)
+    {
+        rx_payload_idx += sizeof(uint16_t);
+    }
+    if (header->Bits.cmd_roll)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.cmd_pitch)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.body_roll)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.body_pitch)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.body_yaw)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.roll_pid_err)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.roll_pid_p)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.roll_pid_i)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.roll_pid_d)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.roll_pid_u)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.pitch_pid_err)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.pitch_pid_p)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.pitch_pid_i)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.pitch_pid_d)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.pitch_pid_u)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.yaw_pid_err)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.yaw_pid_p)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.yaw_pid_i)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.yaw_pid_d)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.yaw_pid_u)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
+    if (header->Bits.motor1)
+    {
+        rx_payload_idx += sizeof(uint16_t);
+    }
+    if (header->Bits.motor2)
+    {
+        rx_payload_idx += sizeof(uint16_t);
+    }
+    if (header->Bits.motor3)
+    {
+        rx_payload_idx += sizeof(uint16_t);
+    }
+    if (header->Bits.motor4)
+    {
+        rx_payload_idx += sizeof(uint16_t);
+    }
+    if (header->Bits.motors_armed)
+    {
+        rx_payload_idx += sizeof(uint8_t);
+    }
+    if (header->Bits.cbit)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
     if (header->Bits.motor_params)
     {
-        bit_sets += 11; // Expecting 4 blocks of 3 integer = 12, 1 still counted
+        rx_payload_idx += FLASH_MOTORS_PARAMS_SIZE;
     }
-
     if (header->Bits.js_params)
     {
-        bit_sets += 7; // Expecting 4 blocks of 2 float = 8, 1 still counted
+        rx_payload_idx += FLASH_JOYSTICK_PARAMS_SIZE;
     }
-
     if (header->Bits.pid_params)
     {
-        bit_sets += 17; // Expecting 3 blocks of 6 float = 18, 1 still counted
+        rx_payload_idx += FLASH_PID_PARAMS_SIZE;
     }
-
     if (header->Bits.ptf1_params)
     {
-        bit_sets += 8; // Expecting 3 blocks of 3 float = 9, 1 still counted
+        rx_payload_idx += FLASH_PTF1_PARAMS_SIZE;
     }
-
+    if (header->Bits.imu_type)
+    {
+        rx_payload_idx += sizeof(uint8_t);
+    }
+    if (header->Bits.i2c_read)
+    {
+        rx_payload_idx += sizeof(uint8_t);
+    }
+    if (header->Bits.sw_ver)
+    {
+        rx_payload_idx += sizeof(uint32_t);
+    }
     if (header->Bits.imu_offset)
     {
-        bit_sets += 1; // Expecting 1 block of 2 float = 2, 1 still counted
+        rx_payload_idx += (2 * sizeof(uint32_t));
     }
 
-    return 1 + sizeof(uint32_t) * bit_sets;
+    return rx_payload_idx + 1;
 }
 
 

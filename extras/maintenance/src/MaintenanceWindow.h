@@ -122,10 +122,10 @@ private slots:
 	void OnReceivedFilteredMagnY(float data);
 	void OnReceivedFilteredMagnZ(float data);
 
-	void OnReceivedThrottleSgn(uint32_t data);
-	void OnReceivedPitchSgn(uint32_t data);
-	void OnReceivedRollSgn(uint32_t data);
-	void OnReceivedCmdThr(float data);
+	void OnReceivedThrottleSgn(uint16_t data);
+	void OnReceivedPitchSgn(uint16_t data);
+	void OnReceivedRollSgn(uint16_t data);
+	void OnReceivedCmdThr(uint16_t data);
 	void OnReceivedCmdPitch(float data);
 	void OnReceivedCmdRoll(float data);
 
@@ -149,19 +149,19 @@ private slots:
 	void OnReceivedYawPidD(float data);
 	void OnReceivedYawPidU(float data);
 
-	void OnReceivedMotor1(uint32_t data);
-	void OnReceivedMotor2(uint32_t data);
-	void OnReceivedMotor3(uint32_t data);
-	void OnReceivedMotor4(uint32_t data);
-	void OnReceivedMotorsArmed(uint32_t data);
+	void OnReceivedMotor1(uint16_t data);
+	void OnReceivedMotor2(uint16_t data);
+	void OnReceivedMotor3(uint16_t data);
+	void OnReceivedMotor4(uint16_t data);
+	void OnReceivedMotorsArmed(uint8_t data);
 	void OnReceivedCbit(uint32_t data);
 
-	void OnReceivedMotorsParams(uint32_t motor_no, bool enabled, uint32_t min_signal, uint32_t max_signal);
+	void OnReceivedMotorsParams(uint32_t motor_no, bool enabled, uint16_t min_signal, uint16_t max_signal);
 	void OnReceivedJsParams(uint32_t channel_no, float alpha, float beta);
 	void OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
 	void OnReceivedPtf1Params(uint32_t source_no, float x, float y, float z);
-	void OnReceivedImuType(uint32_t imu_type);
-	void OnReceivedI2CRead(uint32_t i2c_read);
+	void OnReceivedImuType(uint8_t imu_type);
+	void OnReceivedI2CRead(uint8_t i2c_read);
 	void OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
 	void OnReceivedImuOffset(float, float);
 };

@@ -28,7 +28,7 @@
 #define FLASH_JOYSTICK_PARAMS_SIZE 32
 #define FLASH_PID_PARAMS_SIZE      72
 #define FLASH_PTF1_PARAMS_SIZE     36
-#define FLASH_IMU_TYPE_SIZE         4
+#define FLASH_IMU_TYPE_SIZE         1
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
@@ -114,33 +114,34 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
         case MAINT_CMD_ID::MAINT_CMD_SET_M3:
         case MAINT_CMD_ID::MAINT_CMD_SET_M4:
         case MAINT_CMD_ID::MAINT_CMD_SET_MALL:
+            return 3;
         case MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS:
-            return 5; /** 4 data bytes + checksum **/
+            return 2;
         case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS:
-            return 13; /** 3 * 4 = 12 data bytes + checksum **/
+            return 6;
         case MAINT_CMD_ID::MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA:
         case MAINT_CMD_ID::MAINT_CMD_SET_JS_ROLL_ALPHA_BETA:
         case MAINT_CMD_ID::MAINT_CMD_SET_JS_PITCH_ALPHA_BETA:
-            return 9; /** 2 * 4 = 8 data bytes + checksum **/
+            return 9;
         case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS:
-            return 25; /** 6 * 4 = 24 data bytes + checksum*/
+            return 25;
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS:
-            return 13; /** 3 * 4 = 12 bytes + checksum **/
+            return 13;
         case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE:
-            return 5;  /** 1 * 4 = 4  bytes + checksum **/
+            return 2;
         case MAINT_CMD_ID::MAINT_CMD_I2C_READ:
-            return 13;  /** 3 * 4 = 12  bytes + checksum **/
+            return 4;
         case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
-            return 17;  /** 4 * 4 = 16  bytes + checksum **/
+            return 5;
         case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET:
-            return 9;  /** 2 * 4 = 8 bytes + checksum **/                                                   
+            return 9;                                                  
     }
 
     return 1;
@@ -352,7 +353,7 @@ void MAINT_Init()
         eeprom_offset += (int(EUCLIDEAN_AXES::SIZE) * sizeof(uint32_t));
     }
 
-    MAINT_ImuType = IMU_TYPE(*reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset]));
+    MAINT_ImuType = IMU_TYPE(*reinterpret_cast<const uint8_t*>(&flash_target_contents[eeprom_offset]));
     eeprom_offset += sizeof(uint32_t);
 
     CBIT_TAG fail_code;
@@ -462,48 +463,48 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
             case MAINT_CMD_ID::MAINT_CMD_NONE:
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M1:
-                if (controlling_motors) motor1.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                if (controlling_motors) motor1.writeMicroseconds(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M2:
-                if (controlling_motors) motor2.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                if (controlling_motors) motor2.writeMicroseconds(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M3:
-                if (controlling_motors) motor3.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                if (controlling_motors) motor3.writeMicroseconds(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M4:
-                if (controlling_motors) motor4.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                if (controlling_motors) motor4.writeMicroseconds(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_MALL:
                 if (controlling_motors) 
                 {
-                    motor1.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                    motor2.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                    motor3.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                    motor4.writeMicroseconds(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                    motor1.writeMicroseconds(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
+                    motor2.writeMicroseconds(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
+                    motor3.writeMicroseconds(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
+                    motor4.writeMicroseconds(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
                 }
                 break;
             case MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS:
                 controlling_motors = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 1);
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS:
-                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint8_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[1]));
+                MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[3]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS:
-                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint8_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[1]));
+                MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[3]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS:
-                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint8_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[1]));
+                MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[3]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS:
-                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
-                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] = (*reinterpret_cast<uint8_t*>(&rx_message.payload[0]));
+                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[1]));
+                MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[3]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE:
                 MAINT_FlashWriteRequested = true;
@@ -560,18 +561,18 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                 MAINT_Ptf1Parameters[int(SENSOR_SOURCE::MAGNETOMETER)][int(EUCLIDEAN_AXES::Z)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE:
-                MAINT_ImuType = IMU_TYPE(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
+                MAINT_ImuType = IMU_TYPE(*reinterpret_cast<uint8_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_I2C_READ:
-                MAINT_I2CRead = i2cReadByteFromRegister(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 0 ? i2c0 : i2c1,
-                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[4]) & 0xFF),
-                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[8]) & 0xFF));
+                MAINT_I2CRead = i2cReadByteFromRegister(*reinterpret_cast<uint8_t*>(&rx_message.payload[0]) == 0 ? i2c0 : i2c1,
+                                                        rx_message.payload[1],
+                                                        rx_message.payload[2]);
                 break;
             case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
-                i2cWriteByteToRegister(*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 0 ? i2c0 : i2c1,
-                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[4])  & 0xFF),
-                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[8])  & 0xFF),
-                                                        (uint8_t)(*reinterpret_cast<uint32_t*>(&rx_message.payload[12]) & 0xFF));
+                i2cWriteByteToRegister(*reinterpret_cast<uint8_t*>(&rx_message.payload[0]) == 0 ? i2c0 : i2c1,
+                                                        rx_message.payload[1],
+                                                        rx_message.payload[2],
+                                                        rx_message.payload[3]);
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET:
                 ATTITUDE_Roll0 = (*reinterpret_cast<float*>(&rx_message.payload[0]));
@@ -715,28 +716,27 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.throttle_sgn)
         {
-            uint32_t idata = throttle_signal.pulseIn();
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint16_t idata = throttle_signal.pulseIn();
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
+            tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.roll_sgn)
         {
-            uint32_t idata = roll_signal.pulseIn();
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint16_t idata = roll_signal.pulseIn();
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
+            tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.pitch_sgn)
         {
-            uint32_t idata = pitch_signal.pulseIn();
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint16_t idata = pitch_signal.pulseIn();
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
+            tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.cmd_thr)
         {
-            float fdata = JOYSTICK_Throttle;
-            uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint16_t idata = JOYSTICK_Throttle & 0xFFFF;
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
+            tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.cmd_roll)
         {
@@ -880,33 +880,33 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.motor1)
         {
-            uint32_t idata = motor1.currentSignal();
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint16_t idata = motor1.currentSignal();
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
+            tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.motor2)
         {
-            uint32_t idata = motor2.currentSignal();
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint16_t idata = motor2.currentSignal();
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
+            tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.motor3)
         {
-            uint32_t idata = motor3.currentSignal();
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint16_t idata = motor3.currentSignal();
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
+            tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.motor4)
         {
-            uint32_t idata = motor4.currentSignal();
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint16_t idata = motor4.currentSignal();
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
+            tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.motors_armed)
         {
-            uint32_t idata = JOYSTICK_MotorsArmed;
-            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint8_t idata = JOYSTICK_MotorsArmed > 0 ? 1 : 0;
+            memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint8_t));
+            tx_payload_idx += sizeof(uint8_t);
         }
         if (tx_message.header.Bits.cbit)
         {
@@ -936,15 +936,14 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.imu_type)
         {
-            uint32_t idata = static_cast<uint32_t>(MAINT_ImuType);
-            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&idata), sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            uint8_t idata = static_cast<uint8_t>(MAINT_ImuType);
+            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&idata), sizeof(uint8_t));
+            tx_payload_idx += sizeof(uint8_t);
         }
         if (tx_message.header.Bits.i2c_read)
         {
-            uint32_t idata = static_cast<uint32_t>(MAINT_I2CRead);
-            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint32_t*>(&idata), sizeof(uint32_t));
-            tx_payload_idx += sizeof(uint32_t);
+            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint8_t*>(&MAINT_I2CRead), sizeof(uint8_t));
+            tx_payload_idx += sizeof(uint8_t);
         }
         if (tx_message.header.Bits.sw_ver)
         {
