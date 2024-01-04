@@ -51,11 +51,6 @@ static bool shall_tx;
 static bool shall_set;
 static uint64_t last_msg_us;
 static bool controlling_motors;
-static bool overriding_radio;
-static uint64_t throttle_override_signal;
-static uint64_t roll_override_signal;
-static uint64_t pitch_override_signal;
-static uint64_t armed_override_signal;
 
 static void put_packet(uint8_t* buf, uint32_t len)
 {
@@ -104,48 +99,11 @@ static void data_ingest(uint8_t rx_cks, uint32_t data_len)
     }
 }
 
-static const char* maint_cmd_id_tostr(uint64_t cmd_id)
-{
-    switch (static_cast<MAINT_CMD_ID>(cmd_id))
-    {
-        case MAINT_CMD_ID::MAINT_CMD_NONE: return "NONE";
-        case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE: return "FLASH WRITE";
-        case MAINT_CMD_ID::MAINT_CMD_SET_M1: return "SET MOTOR 1";
-        case MAINT_CMD_ID::MAINT_CMD_SET_M2: return "SET MOTOR 2";
-        case MAINT_CMD_ID::MAINT_CMD_SET_M3: return "SET MOTOR 3";
-        case MAINT_CMD_ID::MAINT_CMD_SET_M4: return "SET MOTOR 4";
-        case MAINT_CMD_ID::MAINT_CMD_SET_MALL: return "SET MOTORS";
-        case MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS: return "CONTROL MOTORS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS: return "SET M1 PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS: return "SET M2 PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS: return "SET M3 PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS: return "SET M4 PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA: return "SET JS THROTTLE A/B";
-        case MAINT_CMD_ID::MAINT_CMD_SET_JS_ROLL_ALPHA_BETA: return "SET JS ROLL A/B";
-        case MAINT_CMD_ID::MAINT_CMD_SET_JS_PITCH_ALPHA_BETA: return "SET JS PITCH A/B";
-        case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS: return "SET ROLL PID PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS: return "SET PITCH PID PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS: return "SET YAW PID PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS: return "SET ACC PTF1 PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS: return "SET GYRO PTF1 PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS: return "SET MAGN PTF1 PARAMS";
-        case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE: return "SET IMU TYPE";
-        case MAINT_CMD_ID::MAINT_CMD_I2C_READ: return "I2C READ";
-        case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE: return "I2C WRITE";
-        case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET: return "SET IMU OFFSET";
-        case MAINT_CMD_ID::MAINT_CMD_SET_OVERRIDE_RADIO: return "SET RADIO OVERRIDDEN";
-        case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PITCH_THROTTLE_SIGNAL: return "SET ROLL PITCH THROTTLE SIGNAL";
-        case MAINT_CMD_ID::MAINT_CMD_SET_ARMED_SIGNAL: return "SET ARMED SIGNAL";
-    }
-    return "";     
-}
-
 
 static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
 {
     uint64_t cmd_id = header->Bits.maint_cmd_id;
     
-    //printf(", set: %s", maint_cmd_id_tostr(cmd_id));
     switch (static_cast<MAINT_CMD_ID>(cmd_id))
     {
         case MAINT_CMD_ID::MAINT_CMD_NONE:
@@ -182,13 +140,7 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
         case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
             return 17;  /** 4 * 4 = 16  bytes + checksum **/
         case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET:
-            return 9;  /** 2 * 4 = 8 bytes + checksum **/
-        case MAINT_CMD_ID::MAINT_CMD_SET_OVERRIDE_RADIO:
-            return 5;  /** 1 * 4 = 4 bytes + checksum **/
-        case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PITCH_THROTTLE_SIGNAL:
-            return 7;  /** 6 bytes + checksum **/
-        case MAINT_CMD_ID::MAINT_CMD_SET_ARMED_SIGNAL:
-            return 3;  /** 1 * 2 = 2 bytes + checksum **/                                                    
+            return 9;  /** 2 * 4 = 8 bytes + checksum **/                                                   
     }
 
     return 1;
@@ -354,12 +306,6 @@ void MAINT_Init()
     last_msg_us = 0;
     MAINT_I2CRead = 0;
     controlling_motors = false;
-    overriding_radio = false;
-
-    throttle_override_signal = RADIO_MIN_SIGNAL;
-    roll_override_signal = RADIO_MIN_SIGNAL;
-    pitch_override_signal = RADIO_MIN_SIGNAL;
-    armed_override_signal = RADIO_MIN_SIGNAL;
 
     memset(rx_buf, 0x00, sizeof(MAINT_MESSAGE_TAG));
     memset(&rx_message, 0x00, sizeof(MAINT_MESSAGE_TAG));
@@ -631,17 +577,6 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                 ATTITUDE_Roll0 = (*reinterpret_cast<float*>(&rx_message.payload[0]));
                 ATTITUDE_Pitch0 = (*reinterpret_cast<float*>(&rx_message.payload[4]));
                 break;
-            case MAINT_CMD_ID::MAINT_CMD_SET_OVERRIDE_RADIO:
-                overriding_radio = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]) == 1);
-                break;
-            case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PITCH_THROTTLE_SIGNAL:
-                roll_override_signal = saturate(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
-                pitch_override_signal = saturate(*reinterpret_cast<uint16_t*>(&rx_message.payload[2]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
-                throttle_override_signal = saturate(*reinterpret_cast<uint16_t*>(&rx_message.payload[4]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
-                break;
-            case MAINT_CMD_ID::MAINT_CMD_SET_ARMED_SIGNAL:
-                armed_override_signal = saturate(*reinterpret_cast<uint16_t*>(&rx_message.payload[0]), RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL);
-                break;
         }
 
         shall_set = false;
@@ -780,19 +715,19 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.throttle_sgn)
         {
-            uint32_t idata = overriding_radio ? throttle_override_signal : throttle_signal.pulseIn();
+            uint32_t idata = throttle_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.roll_sgn)
         {
-            uint32_t idata = overriding_radio ? roll_override_signal : roll_signal.pulseIn();
+            uint32_t idata = roll_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
         if (tx_message.header.Bits.pitch_sgn)
         {
-            uint32_t idata = overriding_radio ? pitch_override_signal : pitch_signal.pulseIn();
+            uint32_t idata = pitch_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
         }
@@ -1084,34 +1019,4 @@ void MAINT_Handler()
 bool MAINT_IsControllingMotors()
 {
     return controlling_motors;
-}
-
-
-bool MAINT_IsOverridingRadio()
-{
-    return overriding_radio;
-}
-
-
-uint64_t MAINT_ThrottleSignal()
-{
-    return throttle_override_signal;
-}
-
-
-uint64_t MAINT_RollSignal()
-{
-    return roll_override_signal;
-}
-
-
-uint64_t MAINT_PitchSignal()
-{
-    return pitch_override_signal;
-}
-
-
-uint64_t MAINT_ArmedSignal()
-{
-    return armed_override_signal;
 }

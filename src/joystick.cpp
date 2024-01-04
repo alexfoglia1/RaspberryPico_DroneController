@@ -70,32 +70,17 @@ void JOYSTICK_Handler()
 {
     uint64_t cur_t_us = time_us_64();
 
-    if (MAINT_IsOverridingRadio())
-    {
-        roll_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::ROLL)][int(MAINT_JS_PARAM::ALPHA)]) * roll_signal_value +
-                            *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::ROLL)][int(MAINT_JS_PARAM::BETA)]) * MAINT_RollSignal();
 
-        pitch_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::PITCH)][int(MAINT_JS_PARAM::ALPHA)]) * pitch_signal_value +
-                            *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::PITCH)][int(MAINT_JS_PARAM::BETA)]) * MAINT_PitchSignal();
-
-        throttle_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::THROTTLE)][int(MAINT_JS_PARAM::ALPHA)]) * throttle_signal_value +
-                                *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::THROTTLE)][int(MAINT_JS_PARAM::BETA)]) * MAINT_ThrottleSignal();
-
-        armed_signal_value = MAINT_ArmedSignal();
-    }
-    else
-    {
-        roll_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::ROLL)][int(MAINT_JS_PARAM::ALPHA)]) * roll_signal_value +
+    roll_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::ROLL)][int(MAINT_JS_PARAM::ALPHA)]) * roll_signal_value +
                             *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::ROLL)][int(MAINT_JS_PARAM::BETA)]) * roll_signal.pulseIn();
 
-        pitch_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::PITCH)][int(MAINT_JS_PARAM::ALPHA)]) * pitch_signal_value +
+    pitch_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::PITCH)][int(MAINT_JS_PARAM::ALPHA)]) * pitch_signal_value +
                             *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::PITCH)][int(MAINT_JS_PARAM::BETA)]) * pitch_signal.pulseIn();
 
-        throttle_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::THROTTLE)][int(MAINT_JS_PARAM::ALPHA)]) * throttle_signal_value +
+    throttle_signal_value = *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::THROTTLE)][int(MAINT_JS_PARAM::ALPHA)]) * throttle_signal_value +
                                 *reinterpret_cast<float*>(&MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::THROTTLE)][int(MAINT_JS_PARAM::BETA)]) * throttle_signal.pulseIn();
 
-        armed_signal_value = armed_signal.pulseIn();
-    }
+    armed_signal_value = armed_signal.pulseIn();
 
     JOYSTICK_MotorsArmed = (armed_signal_value > ((RADIO_MAX_SIGNAL + RADIO_MIN_SIGNAL) / 2));
     if (JOYSTICK_MotorsArmed)
@@ -122,12 +107,6 @@ void JOYSTICK_Handler()
                         ((cur_t_us - lastThrottleRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
                         ((cur_t_us - lastArmedRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS));
                     
-    if (!MAINT_IsOverridingRadio())
-    {
-        JOYSTICK_MotorsArmed = !JOYSTICK_Timeout;
-    }
-    else
-    {
-        JOYSTICK_MotorsArmed = (JOYSTICK_MotorsArmed && MAINT_IsPresent());
-    }
+    JOYSTICK_MotorsArmed = !JOYSTICK_Timeout;
+    
 }
