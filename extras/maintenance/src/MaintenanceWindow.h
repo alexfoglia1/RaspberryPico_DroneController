@@ -96,7 +96,7 @@ private slots:
 	void OnSpinSetMaintenanceValue(int newValue);
 	void OnBtnI2CRead();
 	void OnBtnI2CWrite();
-	void OnBtnSetImuOffset();
+	void OnBtnTxImuOffset();
 	void OnBtnImuAutoOffset();
 
 	void OnRxRawData(bool valid, quint8* data, int size);

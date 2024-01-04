@@ -153,7 +153,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnRefreshParams, SIGNAL(clicked()), this, SLOT(OnBtnRefreshParams()));
 	connect(_ui.btnI2CRead, SIGNAL(clicked()), this, SLOT(OnBtnI2CRead()));
 	connect(_ui.btnI2CWrite, SIGNAL(clicked()), this, SLOT(OnBtnI2CWrite()));
-	connect(_ui.btnSetImuOffset, SIGNAL(clicked()), this, SLOT(OnBtnSetImuOffset()));
+	connect(_ui.btnTxImuOffset, SIGNAL(clicked()), this, SLOT(OnBtnTxImuOffset()));
 	connect(_ui.btnImuAutoOffset, SIGNAL(clicked()), this, SLOT(OnBtnImuAutoOffset()));
 
 	connect(_ui.spinSetMaintenanceValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMaintenanceValue(int)));
@@ -416,7 +416,7 @@ void MaintenanceWindow::OnBtnOpenSerialPort()
 			_ui.TxMaintenanceGroup->setEnabled(true);
 			_ui.TxMaintenanceGroup_2->setEnabled(true);
 			_ui.TxMaintenanceGroup_3->setEnabled(true);
-			_ui.TxMaintenanceParamsGroup->setEnabled(true);
+			_ui.TxMotorParamsGroup->setEnabled(true);
 
 			_ui.btnOpenSerialPort->setText("Close");
 			_ui.btnRescanPorts->setEnabled(false);
@@ -1110,7 +1110,7 @@ void MaintenanceWindow::OnBtnSendMaintenanceCommand()
 	{
 		uint32_t data = _ui.spinSetMaintenanceValue->value();
 
-		_maintHandler->TxMaintenanceCommand(_ui.comboSetCommandId->currentIndex() + 1, data);
+		_maintHandler->TxSetMotors(_ui.comboSetCommandId->currentIndex() + 1, data);
 	}
 }
 
@@ -1149,14 +1149,14 @@ void MaintenanceWindow::OnBtnI2CWrite()
 }
 
 
-void MaintenanceWindow::OnBtnSetImuOffset()
+void MaintenanceWindow::OnBtnTxImuOffset()
 {
 	if (_maintHandler)
 	{
 		float roll_offset = _ui.spinRollOffset->value();
 		float pitch_offset = _ui.spinPitchOffset->value();
 
-		_maintHandler->SetImuOffset(roll_offset, pitch_offset);
+		_maintHandler->TxImuOffset(roll_offset, pitch_offset);
 	}
 }
 
@@ -1169,7 +1169,7 @@ void MaintenanceWindow::OnBtnImuAutoOffset()
 	_ui.spinRollOffset->setValue(auto_offset_roll);
 	_ui.spinPitchOffset->setValue(auto_offset_pitch);
 
-	OnBtnSetImuOffset();
+	OnBtnTxImuOffset();
 }
 
 
@@ -1181,7 +1181,7 @@ void MaintenanceWindow::OnBtnSendMaintenanceParams()
 		uint32_t minSignalParam = _ui.spinSetMinParam->value();
 		uint32_t maxSignalParam = _ui.spinSetMaxParam->value();
 		
-		_maintHandler->TxMaintenanceParams(_ui.comboSetParamId->currentIndex() + 1, enabledParam, minSignalParam, maxSignalParam);
+		_maintHandler->TxMotorParams(_ui.comboSetParamId->currentIndex() + 1, enabledParam, minSignalParam, maxSignalParam);
 	}
 }
 
@@ -1289,7 +1289,7 @@ void MaintenanceWindow::OnSpinSetMaintenanceValue(int newValue)
 {
 	if (_maintHandler && _ui.checkSpinOnChange->isChecked())
 	{
-		_maintHandler->TxMaintenanceCommand(_ui.comboSetCommandId->currentIndex() + 1, newValue);
+		_maintHandler->TxSetMotors(_ui.comboSetCommandId->currentIndex() + 1, newValue);
 	}
 }
 

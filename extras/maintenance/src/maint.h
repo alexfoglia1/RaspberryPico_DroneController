@@ -132,16 +132,7 @@ namespace Maint
     enum class TX_STATUS
     {
         TX_GET = 0,
-        TX_SET_CMD,
-        TX_SET_PARAMS,
-        TX_SET_JS_PARAMS,
-        TX_SET_PID_PARAMS,
-        TX_SET_PTF1_PARAMS,
-        TX_SET_IMU_TYPE,
-        TX_I2C_READ,
-        TX_I2C_WRITE,
-        TX_WRITE_TO_FLASH,
-        TX_SET_IMU_OFFSET,
+        TX_SET
     };
 
     enum class MAINT_CMD_ID
@@ -195,8 +186,8 @@ public:
     void Close();
     void EnableTx(int delayMillis);
     void SetTxHeader(MAINT_HEADER_T txHeader);
-    void TxMaintenanceCommand(uint32_t motorNo, uint32_t data);
-    void TxMaintenanceParams(uint32_t motorNo, bool enabled, uint32_t minParam, uint32_t maxParam);
+    void TxSetMotors(uint32_t motorNo, uint32_t data);
+    void TxMotorParams(uint32_t motorNo, bool enabled, uint32_t minParam, uint32_t maxParam);
     void TxJoystickParams(uint32_t jsChannel, float alpha, float beta);
     void TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd);
     void TxPtf1params(uint32_t sensorSource, float x, float y, float z);
@@ -204,7 +195,7 @@ public:
     void I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg);
     void I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uint32_t val);
     void TxWriteToFlash();
-    void SetImuOffset(float roll_offset, float pitch_offset);
+    void TxImuOffset(float roll_offset, float pitch_offset);
     int ClearLogs();
 
 public slots:
@@ -288,38 +279,19 @@ private:
     uint8_t _rx_buf[1024];
     Maint::MAINT_HEADER_T _txHeader;
     Maint::MAINT_HEADER_T _txCommand;
-    uint32_t _tx_data;
-    uint32_t _tx_param_enabled;
-    uint32_t _tx_param_min_signal;
-    uint32_t _tx_param_max_signal;
-    uint32_t _tx_param_js_alpha;
-    uint32_t _tx_param_js_beta;
-    uint32_t _tx_param_kp;
-    uint32_t _tx_param_ki;
-    uint32_t _tx_param_kt;
-    uint32_t _tx_param_sat;
-    uint32_t _tx_param_ad;
-    uint32_t _tx_param_bd;
-    uint32_t _tx_param_x;
-    uint32_t _tx_param_y;
-    uint32_t _tx_param_z;
-    uint32_t _tx_param_imu;
-    uint32_t _tx_param_i2c_chan;
-    uint32_t _tx_param_i2c_addr;
-    uint32_t _tx_param_i2c_reg;
-    uint32_t _tx_param_i2c_val;
-    float _tx_param_roll_offset;
-    float _tx_param_pitch_offset;
 
-    QMutex _txMutex;
+    QList<uint8_t> _txSetParams;
+
     QTimer* _txTimer;
     QString _logFileName;
     FILE* _logFile;
 
-
+    void pushParams(uint8_t* bytes, int size);
     void update_fsm(uint8_t byte_rx);
     void data_ingest(uint8_t rx_cks, uint32_t data_len);
     uint32_t calc_exp_bytes(Maint::MAINT_HEADER_T* header);
+    QByteArray txSet(Maint::MAINT_HEADER_T* header);
+    QByteArray txGet(Maint::MAINT_HEADER_T* header);
 };
 
 };

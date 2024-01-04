@@ -20,22 +20,6 @@ Maint::Maintenance::Maintenance()
     _rx_payload_idx = 0;
     memset(&_rx_buf, 0x00, 1024);
 
-    _tx_data = 0;
-    _tx_param_enabled = 0;
-    _tx_param_min_signal = 0;
-    _tx_param_max_signal = 0;
-    _tx_param_js_alpha = 0;
-    _tx_param_js_beta = 0;
-    _tx_param_kp = 0;
-    _tx_param_ki = 0;
-    _tx_param_kt = 0;
-    _tx_param_sat = 0;
-    _tx_param_ad = 0;
-    _tx_param_bd = 0;
-    _tx_param_x = 0;
-    _tx_param_y = 0;
-    _tx_param_z = 0;
-
     _checkDownlink = new QTimer();
 }
 
@@ -117,15 +101,11 @@ void Maint::Maintenance::EnableTx(int delayMillis)
 
 void Maint::Maintenance::SetTxHeader(MAINT_HEADER_T txHeader)
 {
-    _txMutex.lock();
-
     _txHeader.All = txHeader.All;
-
-    _txMutex.unlock();
 }
 
 
-void Maint::Maintenance::TxMaintenanceCommand(uint32_t motorNo, uint32_t data)
+void Maint::Maintenance::TxSetMotors(uint32_t motorNo, uint32_t data)
 {
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1) :
@@ -137,16 +117,15 @@ void Maint::Maintenance::TxMaintenanceCommand(uint32_t motorNo, uint32_t data)
     
     if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
-        _tx_data = data;
+        _txSetParams.clear();
+        pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint32_t));
 
-        _txMutex.lock();
-        _txStatus = Maint::TX_STATUS::TX_SET_CMD;
-        _txMutex.unlock();
+        _txStatus = Maint::TX_STATUS::TX_SET;
     }
 }
 
 
-void Maint::Maintenance::TxMaintenanceParams(uint32_t motorNo, bool enabled, uint32_t minSignalParam, uint32_t maxSignalParam)
+void Maint::Maintenance::TxMotorParams(uint32_t motorNo, bool enabled, uint32_t minSignalParam, uint32_t maxSignalParam)
 {
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id =  (motorNo == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS) :
@@ -156,13 +135,13 @@ void Maint::Maintenance::TxMaintenanceParams(uint32_t motorNo, bool enabled, uin
 
     if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
-        _tx_param_enabled = (enabled) ? 1 : 0;
-        _tx_param_min_signal = minSignalParam;
-        _tx_param_max_signal = maxSignalParam;
+        uint32_t iEnabled = enabled ? 1 : 0;
 
-        _txMutex.lock();
-        _txStatus = Maint::TX_STATUS::TX_SET_PARAMS;
-        _txMutex.unlock();
+        _txSetParams.clear();
+        pushParams(reinterpret_cast<uint8_t*>(&iEnabled), sizeof(uint32_t));
+        pushParams(reinterpret_cast<uint8_t*>(&minSignalParam), sizeof(uint32_t));
+        pushParams(reinterpret_cast<uint8_t*>(&maxSignalParam), sizeof(uint32_t));
+        _txStatus = Maint::TX_STATUS::TX_SET;
     }
 }
 
@@ -175,12 +154,11 @@ void Maint::Maintenance::TxJoystickParams(uint32_t jsChannel, float alpha, float
 
     if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
-        _tx_param_js_alpha = *reinterpret_cast<uint32_t*>(&alpha);
-        _tx_param_js_beta = *reinterpret_cast<uint32_t*>(&beta);
+        _txSetParams.clear();
+        pushParams(reinterpret_cast<uint8_t*>(&alpha), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&beta), sizeof(float));
 
-        _txMutex.lock();
-        _txStatus = Maint::TX_STATUS::TX_SET_JS_PARAMS;
-        _txMutex.unlock();
+        _txStatus = Maint::TX_STATUS::TX_SET;
     }
 }
 
@@ -194,16 +172,16 @@ void Maint::Maintenance::TxPidParams(uint32_t eulerAngle, float kp, float ki, fl
 
     if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
-        _tx_param_kp = *reinterpret_cast<uint32_t*>(&kp);
-        _tx_param_ki = *reinterpret_cast<uint32_t*>(&ki);
-        _tx_param_kt = *reinterpret_cast<uint32_t*>(&kt);
-        _tx_param_sat = *reinterpret_cast<uint32_t*>(&sat);
-        _tx_param_ad = *reinterpret_cast<uint32_t*>(&ad);
-        _tx_param_bd = *reinterpret_cast<uint32_t*>(&bd);
-
-        _txMutex.lock();
-        _txStatus = Maint::TX_STATUS::TX_SET_PID_PARAMS;
-        _txMutex.unlock();
+        _txSetParams.clear();
+        pushParams(reinterpret_cast<uint8_t*>(&kp), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&ki), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&kt), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&sat), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&ad), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&bd), sizeof(float));
+        
+        _txStatus = Maint::TX_STATUS::TX_SET;
+        
     }
 }
 
@@ -217,13 +195,13 @@ void Maint::Maintenance::TxPtf1params(uint32_t sensorSource, float x, float y, f
 
     if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
     {
-        _tx_param_x = *reinterpret_cast<uint32_t*>(&x);
-        _tx_param_y = *reinterpret_cast<uint32_t*>(&y);
-        _tx_param_z = *reinterpret_cast<uint32_t*>(&z);
-
-        _txMutex.lock();
-        _txStatus = Maint::TX_STATUS::TX_SET_PTF1_PARAMS;
-        _txMutex.unlock();
+        _txSetParams.clear();
+        pushParams(reinterpret_cast<uint8_t*>(&x), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&y), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&z), sizeof(float));
+        
+        _txStatus = Maint::TX_STATUS::TX_SET;
+        
     }
 }
 
@@ -233,11 +211,13 @@ void Maint::Maintenance::TxImuType(IMU_TYPE imuType)
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE);
 
-    _tx_param_imu = uint32_t(imuType);
+    uint32_t iImuType = static_cast<uint32_t>(imuType);
 
-    _txMutex.lock();
-    _txStatus = Maint::TX_STATUS::TX_SET_IMU_TYPE;
-    _txMutex.unlock();
+    _txSetParams.clear();
+    pushParams(reinterpret_cast<uint8_t*>(&iImuType), sizeof(uint32_t));
+    
+    _txStatus = Maint::TX_STATUS::TX_SET;
+    
 }
 
 
@@ -246,13 +226,14 @@ void Maint::Maintenance::I2CRead(uint32_t i2c, uint32_t addr, uint32_t reg)
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_READ);
 
-    _tx_param_i2c_chan = uint32_t(i2c);
-    _tx_param_i2c_addr = uint32_t(addr);
-    _tx_param_i2c_reg  = uint32_t(reg);
+    _txSetParams.clear();
+    pushParams(reinterpret_cast<uint8_t*>(&i2c), sizeof(uint32_t));
+    pushParams(reinterpret_cast<uint8_t*>(&addr), sizeof(uint32_t));
+    pushParams(reinterpret_cast<uint8_t*>(&reg), sizeof(uint32_t));
 
-    _txMutex.lock();
-    _txStatus = Maint::TX_STATUS::TX_I2C_READ;
-    _txMutex.unlock();
+    
+    _txStatus = Maint::TX_STATUS::TX_SET;
+    
 }
 
 
@@ -261,14 +242,14 @@ void Maint::Maintenance::I2CWrite(uint32_t i2c, uint32_t addr, uint32_t reg, uin
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_I2C_WRITE);
 
-    _tx_param_i2c_chan = uint32_t(i2c);
-    _tx_param_i2c_addr = uint32_t(addr);
-    _tx_param_i2c_reg  = uint32_t(reg);
-    _tx_param_i2c_val  = uint32_t(val);
-
-    _txMutex.lock();
-    _txStatus = Maint::TX_STATUS::TX_I2C_WRITE;
-    _txMutex.unlock();
+    _txSetParams.clear();
+    pushParams(reinterpret_cast<uint8_t*>(&i2c), sizeof(uint32_t));
+    pushParams(reinterpret_cast<uint8_t*>(&addr), sizeof(uint32_t));
+    pushParams(reinterpret_cast<uint8_t*>(&reg), sizeof(uint32_t));
+    pushParams(reinterpret_cast<uint8_t*>(&val), sizeof(uint32_t));
+    
+    _txStatus = Maint::TX_STATUS::TX_SET;
+    
 }
 
 
@@ -277,446 +258,96 @@ void Maint::Maintenance::TxWriteToFlash()
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE);
 
-    _txMutex.lock();
-    _txStatus = Maint::TX_STATUS::TX_WRITE_TO_FLASH;
-    _txMutex.unlock();
+    _txSetParams.clear();
 
+    _txStatus = Maint::TX_STATUS::TX_SET;
 }
 
 
-void Maint::Maintenance::SetImuOffset(float roll_offset, float pitch_offset)
+void Maint::Maintenance::TxImuOffset(float roll_offset, float pitch_offset)
 {
     _txCommand.All = 0;
     _txCommand.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET);
 
-    _tx_param_roll_offset = roll_offset;
-    _tx_param_pitch_offset = pitch_offset;
+    _txSetParams.clear();
+    pushParams(reinterpret_cast<uint8_t*>(&roll_offset), sizeof(float));
+    pushParams(reinterpret_cast<uint8_t*>(&pitch_offset), sizeof(float));
+    
+    _txStatus = Maint::TX_STATUS::TX_SET;
 
-    _txMutex.lock();
-    _txStatus = Maint::TX_STATUS::TX_SET_IMU_OFFSET;
-    _txMutex.unlock();
+}
 
+
+QByteArray Maint::Maintenance::txSet(Maint::MAINT_HEADER_T* header)
+{
+    QByteArray qba;
+    
+    qba.push_back(header->Bytes[0]);
+    qba.push_back(header->Bytes[1]);
+    qba.push_back(header->Bytes[2]);
+    qba.push_back(header->Bytes[3]);
+    qba.push_back(header->Bytes[4]);
+    qba.push_back(header->Bytes[5]);
+    qba.push_back(header->Bytes[6]);
+    qba.push_back(header->Bytes[7]);
+
+    while (!_txSetParams.isEmpty())
+    {
+        qba.push_back(_txSetParams.takeFirst());
+    }
+
+    uint8_t cks = checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size());
+
+    qba.push_back(cks);
+    qba.push_front(SYNC_CHAR);
+
+    _serialPort->write(qba);
+    _serialPort->flush();
+
+    return qba;
+}
+
+
+QByteArray Maint::Maintenance::txGet(Maint::MAINT_HEADER_T* header)
+{
+    QByteArray qba;
+
+    qba.push_back(header->Bytes[0]);
+    qba.push_back(header->Bytes[1]);
+    qba.push_back(header->Bytes[2]);
+    qba.push_back(header->Bytes[3]);
+    qba.push_back(header->Bytes[4]);
+    qba.push_back(header->Bytes[5]);
+    qba.push_back(header->Bytes[6]);
+    qba.push_back(header->Bytes[7]);
+
+    uint8_t cks = checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size());
+
+    qba.push_back(cks);
+    qba.push_front(SYNC_CHAR);
+
+    _serialPort->write(qba);
+    _serialPort->flush();
+
+    return qba;
 }
 
 
 void Maint::Maintenance::Tx()
 {
-    _txMutex.lock();
-
     QByteArray qba;
-    int bytesWritten = 0;
 
     if (_txStatus == Maint::TX_STATUS::TX_GET)
     {
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(&_txHeader), sizeof(Maint::MAINT_HEADER_T), false);
-
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txHeader.Bytes[0]);
-        qba.push_back(_txHeader.Bytes[1]);
-        qba.push_back(_txHeader.Bytes[2]);
-        qba.push_back(_txHeader.Bytes[3]);
-        qba.push_back(_txHeader.Bytes[4]);
-        qba.push_back(_txHeader.Bytes[5]);
-        qba.push_back(_txHeader.Bytes[6]);
-        qba.push_back(_txHeader.Bytes[7]);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
+        qba = txGet(&_txHeader);
     }
-    else if (_txStatus == Maint::TX_STATUS::TX_SET_CMD)
+    else
     {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* dataBytes = reinterpret_cast<uint8_t*>(&_tx_data);
-        qba.push_back(dataBytes[0]);
-        qba.push_back(dataBytes[1]);
-        qba.push_back(dataBytes[2]);
-        qba.push_back(dataBytes[3]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-    }
-    else if (_txStatus == Maint::TX_STATUS::TX_SET_PARAMS)
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* enabledParamBytes = reinterpret_cast<uint8_t*>(&_tx_param_enabled);
-        qba.push_back(enabledParamBytes[0]);
-        qba.push_back(enabledParamBytes[1]);
-        qba.push_back(enabledParamBytes[2]);
-        qba.push_back(enabledParamBytes[3]);
-
-        uint8_t* minSignalParamBytes = reinterpret_cast<uint8_t*>(&_tx_param_min_signal);
-        qba.push_back(minSignalParamBytes[0]);
-        qba.push_back(minSignalParamBytes[1]);
-        qba.push_back(minSignalParamBytes[2]);
-        qba.push_back(minSignalParamBytes[3]);
-
-        uint8_t* maxSignalParamBytes = reinterpret_cast<uint8_t*>(&_tx_param_max_signal);
-        qba.push_back(maxSignalParamBytes[0]);
-        qba.push_back(maxSignalParamBytes[1]);
-        qba.push_back(maxSignalParamBytes[2]);
-        qba.push_back(maxSignalParamBytes[3]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-    }
-    else if (_txStatus == Maint::TX_STATUS::TX_SET_JS_PARAMS)
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* alphaBytes = reinterpret_cast<uint8_t*>(&_tx_param_js_alpha);
-        qba.push_back(alphaBytes[0]);
-        qba.push_back(alphaBytes[1]);
-        qba.push_back(alphaBytes[2]);
-        qba.push_back(alphaBytes[3]);
-
-        uint8_t* betaBytes = reinterpret_cast<uint8_t*>(&_tx_param_js_beta);
-        qba.push_back(betaBytes[0]);
-        qba.push_back(betaBytes[1]);
-        qba.push_back(betaBytes[2]);
-        qba.push_back(betaBytes[3]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-    }
-    else if (_txStatus == Maint::TX_STATUS::TX_SET_PID_PARAMS)
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* kpBytes = reinterpret_cast<uint8_t*>(&_tx_param_kp);
-        qba.push_back(kpBytes[0]);
-        qba.push_back(kpBytes[1]);
-        qba.push_back(kpBytes[2]);
-        qba.push_back(kpBytes[3]);
-
-        uint8_t* kiBytes = reinterpret_cast<uint8_t*>(&_tx_param_ki);
-        qba.push_back(kiBytes[0]);
-        qba.push_back(kiBytes[1]);
-        qba.push_back(kiBytes[2]);
-        qba.push_back(kiBytes[3]);
-
-        uint8_t* ktBytes = reinterpret_cast<uint8_t*>(&_tx_param_kt);
-        qba.push_back(ktBytes[0]);
-        qba.push_back(ktBytes[1]);
-        qba.push_back(ktBytes[2]);
-        qba.push_back(ktBytes[3]);
-
-        uint8_t* satBytes = reinterpret_cast<uint8_t*>(&_tx_param_sat);
-        qba.push_back(satBytes[0]);
-        qba.push_back(satBytes[1]);
-        qba.push_back(satBytes[2]);
-        qba.push_back(satBytes[3]);
-
-        uint8_t* adBytes = reinterpret_cast<uint8_t*>(&_tx_param_ad);
-        qba.push_back(adBytes[0]);
-        qba.push_back(adBytes[1]);
-        qba.push_back(adBytes[2]);
-        qba.push_back(adBytes[3]);
-
-        uint8_t* bdBytes = reinterpret_cast<uint8_t*>(&_tx_param_bd);
-        qba.push_back(bdBytes[0]);
-        qba.push_back(bdBytes[1]);
-        qba.push_back(bdBytes[2]);
-        qba.push_back(bdBytes[3]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-    }
-    else if (_txStatus == Maint::TX_STATUS::TX_SET_PTF1_PARAMS)
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* xBytes = reinterpret_cast<uint8_t*>(&_tx_param_x);
-        qba.push_back(xBytes[0]);
-        qba.push_back(xBytes[1]);
-        qba.push_back(xBytes[2]);
-        qba.push_back(xBytes[3]);
-
-        uint8_t* yBytes = reinterpret_cast<uint8_t*>(&_tx_param_y);
-        qba.push_back(yBytes[0]);
-        qba.push_back(yBytes[1]);
-        qba.push_back(yBytes[2]);
-        qba.push_back(yBytes[3]);
-
-        uint8_t* zBytes = reinterpret_cast<uint8_t*>(&_tx_param_z);
-        qba.push_back(zBytes[0]);
-        qba.push_back(zBytes[1]);
-        qba.push_back(zBytes[2]);
-        qba.push_back(zBytes[3]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-    }
-    else if (_txStatus == Maint::TX_STATUS::TX_SET_IMU_TYPE)
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* imuTypeBytes = reinterpret_cast<uint8_t*>(&_tx_param_imu);
-
-        qba.push_back(imuTypeBytes[0]);
-        qba.push_back(imuTypeBytes[1]);
-        qba.push_back(imuTypeBytes[2]);
-        qba.push_back(imuTypeBytes[3]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-
-    }
-    else if (_txStatus == Maint::TX_STATUS::TX_I2C_READ)
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* i2cChannelBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_chan);
-        uint8_t* i2cAddressBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_addr);
-        uint8_t* i2cRegisterBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_reg);
-
-        qba.push_back(i2cChannelBytes[0]);
-        qba.push_back(i2cChannelBytes[1]);
-        qba.push_back(i2cChannelBytes[2]);
-        qba.push_back(i2cChannelBytes[3]);
-        qba.push_back(i2cAddressBytes[0]);
-        qba.push_back(i2cAddressBytes[1]);
-        qba.push_back(i2cAddressBytes[2]);
-        qba.push_back(i2cAddressBytes[3]);
-        qba.push_back(i2cRegisterBytes[0]);
-        qba.push_back(i2cRegisterBytes[1]);
-        qba.push_back(i2cRegisterBytes[2]);
-        qba.push_back(i2cRegisterBytes[3]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-    }
-    else if (_txStatus == Maint::TX_STATUS::TX_I2C_WRITE)
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* i2cChannelBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_chan);
-        uint8_t* i2cAddressBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_addr);
-        uint8_t* i2cRegisterBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_reg);
-        uint8_t* i2cValBytes = reinterpret_cast<uint8_t*>(&_tx_param_i2c_val);
-
-        qba.push_back(i2cChannelBytes[0]);
-        qba.push_back(i2cChannelBytes[1]);
-        qba.push_back(i2cChannelBytes[2]);
-        qba.push_back(i2cChannelBytes[3]);
-        qba.push_back(i2cAddressBytes[0]);
-        qba.push_back(i2cAddressBytes[1]);
-        qba.push_back(i2cAddressBytes[2]);
-        qba.push_back(i2cAddressBytes[3]);
-        qba.push_back(i2cRegisterBytes[0]);
-        qba.push_back(i2cRegisterBytes[1]);
-        qba.push_back(i2cRegisterBytes[2]);
-        qba.push_back(i2cRegisterBytes[3]);
-        qba.push_back(i2cValBytes[0]);
-        qba.push_back(i2cValBytes[1]);
-        qba.push_back(i2cValBytes[2]);
-        qba.push_back(i2cValBytes[3]);        
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-    }
-    else if (_txStatus == Maint::TX_STATUS::TX_SET_IMU_OFFSET)
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t* rollOffsetBytes = reinterpret_cast<uint8_t*>(&_tx_param_roll_offset);
-        uint8_t* pitchOffsetBytes = reinterpret_cast<uint8_t*>(&_tx_param_pitch_offset);
-
-        qba.push_back(rollOffsetBytes[0]);
-        qba.push_back(rollOffsetBytes[1]);
-        qba.push_back(rollOffsetBytes[2]);
-        qba.push_back(rollOffsetBytes[3]);
-        qba.push_back(pitchOffsetBytes[0]);
-        qba.push_back(pitchOffsetBytes[1]);
-        qba.push_back(pitchOffsetBytes[2]);
-        qba.push_back(pitchOffsetBytes[3]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
-        _txStatus = Maint::TX_STATUS::TX_GET;
-    }
-    else // TX_WRITE_TO_FLASH
-    {
-        qba.push_back(Maint::SYNC_CHAR);
-        qba.push_back(_txCommand.Bytes[0]);
-        qba.push_back(_txCommand.Bytes[1]);
-        qba.push_back(_txCommand.Bytes[2]);
-        qba.push_back(_txCommand.Bytes[3]);
-        qba.push_back(_txCommand.Bytes[4]);
-        qba.push_back(_txCommand.Bytes[5]);
-        qba.push_back(_txCommand.Bytes[6]);
-        qba.push_back(_txCommand.Bytes[7]);
-
-        uint8_t cks = Maint::checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size(), true);
-
-        _txMutex.unlock();
-
-        qba.push_back(cks);
-        bytesWritten = _serialPort->write(qba);
-        _serialPort->flush();
-
-        _tx_data = 0;
-        _txCommand.All = 0;
+        qba = txSet(&_txCommand);
         _txStatus = Maint::TX_STATUS::TX_GET;
     }
 
-    emit txRawData(reinterpret_cast<quint8*>(qba.data()), bytesWritten);
+    emit txRawData(reinterpret_cast<quint8*>(qba.data()), qba.size());
 }
 
 
@@ -734,6 +365,15 @@ void Maint::Maintenance::OnRx()
         //printf("%c", byte);
 		update_fsm(byte);
 	}
+}
+
+
+void Maint::Maintenance::pushParams(uint8_t* bytes, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        _txSetParams.push_back(bytes[i]);
+    }
 }
 
 

@@ -2123,7 +2123,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QGroupBox" name="TxMaintenanceParamsGroup">
+   <widget class="QGroupBox" name="TxMotorParamsGroup">
     <property name="enabled">
      <bool>false</bool>
     </property>
@@ -2450,7 +2450,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnSetImuOffset">
+       <widget class="QPushButton" name="btnTxImuOffset">
         <property name="text">
          <string>Set Offset</string>
         </property>
