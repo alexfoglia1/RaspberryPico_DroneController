@@ -1,5 +1,9 @@
 #include "JoystickBridge.h"
 
+#ifdef __linux__
+#include <cmath>
+#endif
+
 JoystickBridge::JoystickBridge(QObject* parent) : QObject(parent)
 {
 	_isOverride = false;
