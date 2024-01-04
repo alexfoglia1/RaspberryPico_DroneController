@@ -79,6 +79,16 @@ typedef union
 
 typedef struct
 {
+    uint8_t override_radio;
+    uint16_t armed_signal;
+    uint16_t roll_signal;
+    uint16_t pitch_signal;
+    uint16_t throttle_signal;
+} __attribute__((packed)) REMOTE_CONTROL_TAG;
+
+
+typedef struct
+{
     MAINT_HEADER_T header;
     uint8_t payload[MAINT_PAYLOAD_SIZE];
 }__attribute__((packed)) MAINT_MESSAGE_TAG;
@@ -124,7 +134,7 @@ enum class MAINT_CMD_ID
     MAINT_CMD_SET_IMU_TYPE,
     MAINT_CMD_I2C_READ,
     MAINT_CMD_I2C_WRITE,
-    MAINT_CMD_SET_IMU_OFFSET,
+    MAINT_CMD_SET_IMU_OFFSET
 };
 
 enum class MAINT_MOTOR_PARAM
@@ -231,5 +241,7 @@ void MAINT_OnByteReceived(uint8_t byte_rx);
 void MAINT_Handler();
 bool MAINT_IsPresent();
 bool MAINT_IsControllingMotors();
+bool MAINT_IsOverridingRadio();
+void MAINT_ReadOverridenSignals(uint16_t* armed, uint16_t* roll, uint16_t* pitch, uint16_t* throttle);
 
 #endif //MAINT_H

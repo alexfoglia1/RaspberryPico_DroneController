@@ -39,6 +39,12 @@ uint32_t MAINT_Ptf1Parameters[int(SENSOR_SOURCE::SIZE)][int(EUCLIDEAN_AXES::SIZE
 IMU_TYPE MAINT_ImuType;
 uint8_t  MAINT_I2CRead;
 
+static bool override_radio;
+static uint16_t override_armed_signal;
+static uint16_t override_roll_signal;
+static uint16_t override_pitch_signal;
+static uint16_t override_throttle_signal;
+
 bool MAINT_FlashWriteRequested;
 
 static MAINT_STATUS status;
@@ -87,8 +93,6 @@ static void data_ingest(uint8_t rx_cks, uint32_t data_len)
 {
     uint8_t local_cks = checksum(&rx_buf[0], data_len - 1);
 
-            
-    //printf(", expected checksum(%d)\n", local_cks);
     if (local_cks == rx_cks)
     {
         last_msg_us = time_us_64();
@@ -96,6 +100,18 @@ static void data_ingest(uint8_t rx_cks, uint32_t data_len)
         memcpy(&rx_message, &rx_buf[0], data_len);
         shall_tx = true;
         shall_set = (static_cast<MAINT_CMD_ID>(rx_message.header.Bits.maint_cmd_id) != MAINT_CMD_ID::MAINT_CMD_NONE);
+
+
+        REMOTE_CONTROL_TAG* rem_ctrl = reinterpret_cast<REMOTE_CONTROL_TAG*>(&rx_buf[data_len - sizeof(REMOTE_CONTROL_TAG) - 1]);
+        override_radio = rem_ctrl->override_radio == 1 ? true : false;
+
+        if (override_radio)
+        {
+            override_armed_signal = rem_ctrl->armed_signal;
+            override_roll_signal = rem_ctrl->roll_signal;
+            override_pitch_signal = rem_ctrl->pitch_signal;
+            override_throttle_signal = rem_ctrl->throttle_signal;
+        }
     }
 }
 
@@ -108,43 +124,43 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
     {
         case MAINT_CMD_ID::MAINT_CMD_NONE:
         case MAINT_CMD_ID::MAINT_CMD_FLASH_WRITE:
-            return 1; /** Checksum only **/
+            return 1 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_M1: 
         case MAINT_CMD_ID::MAINT_CMD_SET_M2:
         case MAINT_CMD_ID::MAINT_CMD_SET_M3:
         case MAINT_CMD_ID::MAINT_CMD_SET_M4:
         case MAINT_CMD_ID::MAINT_CMD_SET_MALL:
-            return 3;
+            return 3 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS:
-            return 2;
+            return 2 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_M1_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_M2_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_M3_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_M4_PARAMS:
-            return 6;
+            return 6 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_JS_THROTTLE_ALPHA_BETA:
         case MAINT_CMD_ID::MAINT_CMD_SET_JS_ROLL_ALPHA_BETA:
         case MAINT_CMD_ID::MAINT_CMD_SET_JS_PITCH_ALPHA_BETA:
-            return 9;
+            return 9 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS:
-            return 25;
+            return 25 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS:
-            return 13;
+            return 13 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_IMU_TYPE:
-            return 2;
+            return 2 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_I2C_READ:
-            return 4;
+            return 4 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
-            return 5;
+            return 5 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET:
-            return 9;                                                  
+            return 9 + sizeof(REMOTE_CONTROL_TAG);                                              
     }
 
-    return 1;
+    return 1 + sizeof(REMOTE_CONTROL_TAG);
 }
 
 
@@ -307,6 +323,11 @@ void MAINT_Init()
     last_msg_us = 0;
     MAINT_I2CRead = 0;
     controlling_motors = false;
+    override_radio = false;
+    override_armed_signal = 1000;
+    override_roll_signal = 1500;
+    override_pitch_signal = 1500;
+    override_throttle_signal = 1000;
 
     memset(rx_buf, 0x00, sizeof(MAINT_MESSAGE_TAG));
     memset(&rx_message, 0x00, sizeof(MAINT_MESSAGE_TAG));
@@ -716,19 +737,19 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.throttle_sgn)
         {
-            uint16_t idata = throttle_signal.pulseIn();
+            uint16_t idata = override_radio ? override_throttle_signal : throttle_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
             tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.roll_sgn)
         {
-            uint16_t idata = roll_signal.pulseIn();
+            uint16_t idata = override_radio ? override_roll_signal : roll_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
             tx_payload_idx += sizeof(uint16_t);
         }
         if (tx_message.header.Bits.pitch_sgn)
         {
-            uint16_t idata = pitch_signal.pulseIn();
+            uint16_t idata = override_radio ? override_pitch_signal : pitch_signal.pulseIn();
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint16_t));
             tx_payload_idx += sizeof(uint16_t);
         }
@@ -1018,4 +1039,19 @@ void MAINT_Handler()
 bool MAINT_IsControllingMotors()
 {
     return controlling_motors;
+}
+
+
+bool MAINT_IsOverridingRadio()
+{
+    return override_radio;
+}
+
+
+void MAINT_ReadOverridenSignals(uint16_t* armed, uint16_t* roll, uint16_t* pitch, uint16_t* throttle)
+{
+    *armed = override_armed_signal;
+    *roll = override_roll_signal;
+    *pitch = override_pitch_signal;
+    *throttle = override_throttle_signal;
 }

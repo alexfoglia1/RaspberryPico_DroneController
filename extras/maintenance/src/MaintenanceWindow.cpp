@@ -140,6 +140,9 @@ MaintenanceWindow::MaintenanceWindow()
 
 	_maintHandler = new Maint::Maintenance();
 
+	connect(&_js, SIGNAL(overrideRadio(bool)), this, SLOT(OnOverrideRadio(bool)));
+	connect(&_js, SIGNAL(overrideSignals(quint16, quint16, quint16, quint16)), this, SLOT(OnOverrideSignals(quint16, quint16, quint16, quint16)));
+
 	connect(_ui.btnOpenSerialPort, SIGNAL(clicked()), this, SLOT(OnBtnOpenSerialPort()));
 	connect(_ui.btnOpenBoot, SIGNAL(clicked()), this, SLOT(OnBtnOpenBoot()));
 	connect(_ui.btnRescanPorts, SIGNAL(clicked()), this, SLOT(OnBtnRescanPorts()));
@@ -388,6 +391,42 @@ void MaintenanceWindow::OnComboTrack3TextChanged(const QString& newText)
 	if (newText.toUpper().contains("NONE"))
 	{
 		_ui.plot->ClearData(2);
+	}
+}
+
+
+void MaintenanceWindow::OnOverrideRadio(bool radioOverride)
+{
+	_ui.checkRadioOverride->setChecked(radioOverride);
+	_maintHandler->UpdateRemoteControlTag(_ui.checkRadioOverride->isChecked(), 1000, 1500, 1500, 1000);
+
+	if (!radioOverride)
+	{
+		_ui.lineTxArmedSignal->setText("");
+		_ui.lineTxRollSignal->setText("");
+		_ui.lineTxPitchSignal->setText("");
+		_ui.lineTxThrottleSignal->setText("");
+	}
+	else
+	{
+		_ui.lineTxArmedSignal->setText("1000");
+		_ui.lineTxRollSignal->setText("1500");
+		_ui.lineTxPitchSignal->setText("1500");
+		_ui.lineTxThrottleSignal->setText("1000");
+	}
+}
+
+
+void MaintenanceWindow::OnOverrideSignals(quint16 armedSignal, quint16 rollSignal, quint16 pitchSignal, quint16 throttleSignal)
+{
+	_ui.lineTxArmedSignal->setText(QString::number(armedSignal));
+	_ui.lineTxRollSignal->setText(QString::number(rollSignal));
+	_ui.lineTxPitchSignal->setText(QString::number(pitchSignal));
+	_ui.lineTxThrottleSignal->setText(QString::number(throttleSignal));
+
+	if (_maintHandler)
+	{
+		_maintHandler->UpdateRemoteControlTag(_ui.checkRadioOverride->isChecked(), armedSignal, rollSignal, pitchSignal, throttleSignal);
 	}
 }
 

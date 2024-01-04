@@ -109,6 +109,15 @@ namespace Maint
 
     typedef struct
     {
+        uint8_t override_radio;
+        uint16_t armed_signal;
+        uint16_t roll_signal;
+        uint16_t pitch_signal;
+        uint16_t throttle_signal;
+    } REMOTE_CONTROL_TAG;
+
+    typedef struct
+    {
         uint8_t major_v;
         uint8_t minor_v;
         uint8_t stage_v;
@@ -192,6 +201,7 @@ public:
     void Close();
     void EnableTx(int delayMillis);
     void SetTxHeader(MAINT_HEADER_T txHeader);
+    void UpdateRemoteControlTag(bool override_radio, uint16_t armed_signal, uint16_t roll_signal, uint16_t pitch_signal, uint16_t throttle_signal);
     void TxSetMotors(uint32_t motorNo, uint16_t data);
     void TxMotorParams(uint32_t motorNo, uint8_t enabled, uint16_t minParam, uint16_t maxParam);
     void TxJoystickParams(uint32_t jsChannel, float alpha, float beta);
@@ -285,6 +295,7 @@ private:
     uint8_t _rx_buf[1024];
     Maint::MAINT_HEADER_T _txHeader;
     Maint::MAINT_HEADER_T _txCommand;
+    Maint::REMOTE_CONTROL_TAG _remCtrl;
 
     QList<uint8_t> _txSetParams;
 
@@ -296,8 +307,7 @@ private:
     void update_fsm(uint8_t byte_rx);
     void data_ingest(uint8_t rx_cks, uint32_t data_len);
     uint32_t calc_exp_bytes(Maint::MAINT_HEADER_T* header);
-    QByteArray txSet(Maint::MAINT_HEADER_T* header);
-    QByteArray txGet(Maint::MAINT_HEADER_T* header);
+    QByteArray txMsg(Maint::MAINT_HEADER_T* header);
 };
 
 };

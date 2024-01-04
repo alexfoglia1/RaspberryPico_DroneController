@@ -20,6 +20,12 @@ Maint::Maintenance::Maintenance()
     _rx_payload_idx = 0;
     memset(&_rx_buf, 0x00, 1024);
 
+    _remCtrl.override_radio = 0;
+    _remCtrl.armed_signal = 1000;
+    _remCtrl.roll_signal = 1500;
+    _remCtrl.pitch_signal = 1500;
+    _remCtrl.throttle_signal = 1000;
+
     _checkDownlink = new QTimer();
 }
 
@@ -105,6 +111,16 @@ void Maint::Maintenance::SetTxHeader(MAINT_HEADER_T txHeader)
 }
 
 
+void Maint::Maintenance::UpdateRemoteControlTag(bool override_radio, uint16_t armed_signal, uint16_t roll_signal, uint16_t pitch_signal, uint16_t throttle_signal)
+{
+    _remCtrl.override_radio = override_radio ? 1 : 0;
+    _remCtrl.armed_signal = armed_signal;
+    _remCtrl.roll_signal = roll_signal;
+    _remCtrl.pitch_signal = pitch_signal;
+    _remCtrl.throttle_signal = throttle_signal;
+}
+
+
 void Maint::Maintenance::TxSetMotors(uint32_t motorNo, uint16_t data)
 {
     _txCommand.All = 0;
@@ -115,7 +131,19 @@ void Maint::Maintenance::TxSetMotors(uint32_t motorNo, uint16_t data)
                                     (motorNo == uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_MALL)) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_MALL) :
                                     (motorNo == uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS)) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS) : uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE);
     
-    if (_txCommand.Bits.maint_cmd_id != uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    if (_txCommand.Bits.maint_cmd_id == uint64_t(MAINT_CMD_ID::MAINT_CMD_NONE))
+    {
+        return;
+    }
+
+    if (_txCommand.Bits.maint_cmd_id == uint64_t(MAINT_CMD_ID::MAINT_CMD_CTRL_MOTORS))
+    {
+        _txSetParams.clear();
+        pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint8_t));
+
+        _txStatus = Maint::TX_STATUS::TX_SET;
+    }
+    else
     {
         _txSetParams.clear();
         pushParams(reinterpret_cast<uint8_t*>(&data), sizeof(uint16_t));
@@ -277,7 +305,7 @@ void Maint::Maintenance::TxImuOffset(float roll_offset, float pitch_offset)
 }
 
 
-QByteArray Maint::Maintenance::txSet(Maint::MAINT_HEADER_T* header)
+QByteArray Maint::Maintenance::txMsg(Maint::MAINT_HEADER_T* header)
 {
     QByteArray qba;
     
@@ -290,6 +318,11 @@ QByteArray Maint::Maintenance::txSet(Maint::MAINT_HEADER_T* header)
     qba.push_back(header->Bytes[6]);
     qba.push_back(header->Bytes[7]);
 
+    pushParams(reinterpret_cast<uint8_t*>(&_remCtrl.override_radio), sizeof(uint8_t));
+    pushParams(reinterpret_cast<uint8_t*>(&_remCtrl.armed_signal), sizeof(uint16_t));
+    pushParams(reinterpret_cast<uint8_t*>(&_remCtrl.roll_signal), sizeof(uint16_t));
+    pushParams(reinterpret_cast<uint8_t*>(&_remCtrl.pitch_signal), sizeof(uint16_t));
+    pushParams(reinterpret_cast<uint8_t*>(&_remCtrl.throttle_signal), sizeof(uint16_t));
     while (!_txSetParams.isEmpty())
     {
         qba.push_back(_txSetParams.takeFirst());
@@ -307,30 +340,6 @@ QByteArray Maint::Maintenance::txSet(Maint::MAINT_HEADER_T* header)
 }
 
 
-QByteArray Maint::Maintenance::txGet(Maint::MAINT_HEADER_T* header)
-{
-    QByteArray qba;
-
-    qba.push_back(header->Bytes[0]);
-    qba.push_back(header->Bytes[1]);
-    qba.push_back(header->Bytes[2]);
-    qba.push_back(header->Bytes[3]);
-    qba.push_back(header->Bytes[4]);
-    qba.push_back(header->Bytes[5]);
-    qba.push_back(header->Bytes[6]);
-    qba.push_back(header->Bytes[7]);
-
-    uint8_t cks = checksum(reinterpret_cast<uint8_t*>(qba.data()), qba.size());
-
-    qba.push_back(cks);
-    qba.push_front(SYNC_CHAR);
-
-    _serialPort->write(qba);
-    _serialPort->flush();
-
-    return qba;
-}
-
 
 void Maint::Maintenance::Tx()
 {
@@ -338,11 +347,11 @@ void Maint::Maintenance::Tx()
 
     if (_txStatus == Maint::TX_STATUS::TX_GET)
     {
-        qba = txGet(&_txHeader);
+        qba = txMsg(&_txHeader);
     }
     else
     {
-        qba = txSet(&_txCommand);
+        qba = txMsg(&_txCommand);
         _txStatus = Maint::TX_STATUS::TX_GET;
     }
 

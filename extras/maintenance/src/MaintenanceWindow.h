@@ -1,10 +1,13 @@
 #ifndef MAINT_WIN_H
 #define MAINT_WIN_H
 #include <qmainwindow.h>
+#include <QJoysticks.h>
 
 #include "maint.h"
+#include "JoystickBridge.h"
 #include "ui_MaintenanceGui.h"
 #include "ui_AutoscanComPortsGui.h"
+
 
 typedef struct
 {
@@ -45,6 +48,7 @@ public:
 private:
 	Ui_MaintenanceGui _ui;
 	Ui_AutoscanComPortsGui _progressUi;
+	JoystickBridge _js;
 	Maint::Maintenance* _maintHandler;
 
 	const int _txDelayMillis = 25;
@@ -70,6 +74,8 @@ private:
 	void checkPlot(QString expectedText, double value);
 
 private slots:
+	void OnOverrideRadio(bool radioOverride);
+	void OnOverrideSignals(quint16 armedSignal, quint16 rollSignal, quint16 pitchSignal, quint16 throttleSignal);
 
 	void OnBtnOpenSerialPort();
 	void OnBtnOpenBoot();

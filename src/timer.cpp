@@ -40,11 +40,6 @@ bool CPU1_TIMER_Init(int frequency_hz)
 bool CPU0_TIMER_Loop(repeating_timer_t* timer)
 {
     JOYSTICK_Handler();
-
-    if (!MAINT_IsControllingMotors())
-    {
-        MOTORS_Handler();
-    }
     
     CBIT_Handler();
 
@@ -55,7 +50,11 @@ bool CPU0_TIMER_Loop(repeating_timer_t* timer)
 bool CPU1_TIMER_Loop(repeating_timer_t* timer)
 {
     ATTITUDE_Handler();
-    
+    if (!MAINT_IsControllingMotors())
+    {
+        MOTORS_Handler();
+    }
+
     if (MAINT_FlashWriteRequested)
     {
         /** Disable IRQ on CPU1 **/
