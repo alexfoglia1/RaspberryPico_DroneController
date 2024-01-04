@@ -428,16 +428,25 @@ void ComThread::dataIngest()
 
 	if (hdr->All == get_status_msg.All)
 	{
-		emit droneAttitudeUpdate(*reinterpret_cast<float*>(&_rxBuf[8]),
-								 *reinterpret_cast<float*>(&_rxBuf[12]),
-								 *reinterpret_cast<float*>(&_rxBuf[16]));
-
-
-		emit droneMotorsUpdate(*reinterpret_cast<quint32*>(&_rxBuf[20]),
+		printf("roll(%f), pitch(%f), yaw(%f), m1(%d), m2(%d), m3(%d), m4(%d), armed(%d)\r\n", *reinterpret_cast<float*>(&_rxBuf[8]),
+			*reinterpret_cast<float*>(&_rxBuf[12]),
+			*reinterpret_cast<float*>(&_rxBuf[16]),
+			*reinterpret_cast<quint32*>(&_rxBuf[20]),
 			*reinterpret_cast<quint32*>(&_rxBuf[24]),
 			*reinterpret_cast<quint32*>(&_rxBuf[28]),
 			*reinterpret_cast<quint32*>(&_rxBuf[32]),
 			*reinterpret_cast<quint32*>(&_rxBuf[36]));
+
+		//emit droneAttitudeUpdate(*reinterpret_cast<float*>(&_rxBuf[8]),
+		//						 *reinterpret_cast<float*>(&_rxBuf[12]),
+		//						 *reinterpret_cast<float*>(&_rxBuf[16]));
+
+
+		//emit droneMotorsUpdate(*reinterpret_cast<quint32*>(&_rxBuf[20]),
+		//	*reinterpret_cast<quint32*>(&_rxBuf[24]),
+		//	*reinterpret_cast<quint32*>(&_rxBuf[28]),
+		//	*reinterpret_cast<quint32*>(&_rxBuf[32]),
+		//	*reinterpret_cast<quint32*>(&_rxBuf[36]));
 	}
 	else if (hdr->All == get_pid_params_msg.All)
 	{

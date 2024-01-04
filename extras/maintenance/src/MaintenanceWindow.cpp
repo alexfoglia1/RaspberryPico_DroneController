@@ -254,11 +254,6 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(checkHeaderChanged, &QTimer::timeout, this, &MaintenanceWindow::OnHeaderChanged);
 	checkHeaderChanged->start();
 
-	connect(&_jsController, SIGNAL(jsConnected(bool)), this, SLOT(OnJsConnected(bool)));
-	connect(&_jsController, SIGNAL(jsBtnPressed(js_button)), this, SLOT(OnJsBtnPressed(js_button)));
-	connect(&_jsController, SIGNAL(jsControl(js_control_packet)), this, SLOT(OnJsControl(js_control_packet)));
-	connect(&_jsController, SIGNAL(jsThreadExit()), this, SLOT(OnJsThreadExit()));
-
 	const double SAMPLE_PERIOD_S = _txDelayMillis * 1e-3;
 	const double SAMPLE_FREQ = 1 / SAMPLE_PERIOD_S;
 
@@ -266,8 +261,6 @@ MaintenanceWindow::MaintenanceWindow()
 	int samplesInNewValue = SAMPLE_FREQ * _ui.plotTimeSlider->value();
 
 	_ui.plot->SetXSpan(samplesInNewValue);
-
-	_jsController.start();
 }
 
 
@@ -1891,68 +1884,4 @@ void MaintenanceWindow::OnReceivedImuOffset(float roll_offset, float pitch_offse
 
 	_ui.lineRxRollOffset->setText(QString::number(_rxRollOffset));
 	_ui.lineRxPitchOffset->setText(QString::number(_rxPitchOffset));
-}
-
-
-void MaintenanceWindow::OnJsConnected(bool connected)
-{
-	if (connected)
-	{
-		_ui.lblJsPresent->setStyleSheet("background-color: #00FF00");
-	}
-	else
-	{
-		_ui.lblJsPresent->setStyleSheet("background-color: #FF0000");
-	}
-}
-
-
-void MaintenanceWindow::OnJsBtnPressed(js_button button)
-{
-	if (button == js_button::CROSS)
-	{
-		_jsIsControlling = !_jsIsControlling;
-
-		if (_jsIsControlling)
-		{
-			_ui.lblJsControl->setStyleSheet("background-color: #00FF00");
-		}
-		else
-		{
-			_ui.lblJsControl->setStyleSheet("background-color: #FF0000");
-		}
-
-		if (_maintHandler)
-		{
-			_maintHandler->TxOverrideRadio(_jsIsControlling);
-		}
-	}
-	else if (button == js_button::TRIANGLE)
-	{
-		_jsIsArmed = !_jsIsArmed;
-
-		if (_maintHandler)
-		{
-			_maintHandler->TxSetArmedSignal(_jsIsArmed ? 2000 : 1000);
-		}
-	}
-}
-
-
-void MaintenanceWindow::OnJsControl(js_control_packet packet)
-{
-	uint16_t roll_signal = _jsController.remapJsValue(packet.r3_haxis, 1000, 2000);
-	uint16_t pitch_signal = _jsController.remapJsValue(packet.r3_vaxis, 1000, 2000);
-	uint16_t throttle_signal = _jsController.remapJsValue(packet.l3_vaxis, 1000, 2000);
-
-	if (_maintHandler)
-	{
-		_maintHandler->TxSetRollPitchThrottleSignal(roll_signal, pitch_signal, throttle_signal);
-	}
-}
-
-
-void MaintenanceWindow::OnJsThreadExit()
-{
-
 }

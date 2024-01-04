@@ -1,8 +1,8 @@
 #include <qapplication.h>
 
 #include "tunerwindow.h"
-#include "Joystick.h"
-
+#include "joystick.h"
+#include "comthread.h"
 
 uint64_t changeEndianness(const uint64_t n)
 {
@@ -21,12 +21,13 @@ uint64_t changeEndianness(const uint64_t n)
 	return buf[0];
 }
 
+ComThread* txThread;
 
 int main(int argc, char** argv)
 {
 	QApplication* pidTuner;
 	pidTuner = new QApplication(argc, argv);
-
+#if 0
 	qRegisterMetaType<js_control_packet>();
 	qRegisterMetaType<js_button>();
 	qRegisterMetaType<js_axis>();
@@ -45,6 +46,28 @@ int main(int argc, char** argv)
 	tunerWindow->setVisible(true);
 
 	js->start();
+#endif
+
+	txThread = new ComThread();
+	txThread->setSerialPort("COM15", QSerialPort::Baud38400);
+	txThread->setDelay(100);
+
+	QObject foo;
+
+	txThread->start();
+
+	QTimer* t = new QTimer();
+	t->setSingleShot(false);
+	t->setInterval(1000);
+	t->setTimerType(Qt::PreciseTimer);
+	QObject::connect(t, &QTimer::timeout, &foo, []() {
+		quint16 signal = 2000;
+		scanf("%hu", &signal);
+		printf("Overriding armed signal(%hu)\n", signal);
+		//txThread->overrideRadio(true);
+		txThread->overrideArmedSignal(signal);
+	});
+	t->start();
 
 	return pidTuner->exec();
 }

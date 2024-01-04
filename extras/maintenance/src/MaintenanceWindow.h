@@ -3,7 +3,6 @@
 #include <qmainwindow.h>
 
 #include "maint.h"
-#include "Joystick.h"
 #include "ui_MaintenanceGui.h"
 #include "ui_AutoscanComPortsGui.h"
 
@@ -47,7 +46,6 @@ private:
 	Ui_MaintenanceGui _ui;
 	Ui_AutoscanComPortsGui _progressUi;
 	Maint::Maintenance* _maintHandler;
-	Joystick _jsController;
 
 	const int _txDelayMillis = 25;
 	QMap<QString, int> _defaultPlotSpan;
@@ -166,11 +164,6 @@ private slots:
 	void OnReceivedI2CRead(uint32_t i2c_read);
 	void OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
 	void OnReceivedImuOffset(float, float);
-
-	void OnJsConnected(bool connected);
-	void OnJsBtnPressed(js_button button);
-	void OnJsControl(js_control_packet packet);
-	void OnJsThreadExit();
 };
 
 #endif

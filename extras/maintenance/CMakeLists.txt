@@ -19,9 +19,6 @@ ${CMAKE_SOURCE_DIR}/src/MaintenanceWindow.cpp
 ${CMAKE_SOURCE_DIR}/src/maint.h
 ${CMAKE_SOURCE_DIR}/src/maint.cpp
 
-${CMAKE_SOURCE_DIR}/src/Joystick.h
-${CMAKE_SOURCE_DIR}/src/Joystick.cpp
-
 ${CMAKE_SOURCE_DIR}/src/PlotWidget.h
 ${CMAKE_SOURCE_DIR}/src/PlotWidget.cpp
 
