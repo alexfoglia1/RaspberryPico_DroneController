@@ -32,11 +32,17 @@ PlotWidget::PlotWidget(QWidget* parent) : QLabel(parent)
 }
 
 
+void PlotWidget::ForceRepaint()
+{
+    updatePixmap(rect());
+}
+
+
 void PlotWidget::UpdateSamplesPerSecond(double newValue)
 {
 	_samplesPerSecond = newValue;
 
-	repaint();
+    updatePixmap(rect());
 }
 
 

@@ -14,6 +14,12 @@ HeadingDisplay::HeadingDisplay(QWidget* parent) : QLabel(parent)
 }
 
 
+void HeadingDisplay::ForceRepaint()
+{
+    updatePixmap(rect());
+}
+
+
 void HeadingDisplay::UpdateHeading(float heading)
 {
 	_heading = angleSaturation(heading, -180, 180);

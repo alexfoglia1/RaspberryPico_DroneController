@@ -13,6 +13,7 @@ public:
 
 	void UpdateRoll(float roll);
 	void UpdatePitch(float pitch);
+    void ForceRepaint();
 
 protected:
 	void paintEvent(QPaintEvent* evt) override;

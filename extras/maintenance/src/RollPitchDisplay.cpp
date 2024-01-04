@@ -17,6 +17,13 @@ RollPitchDisplay::RollPitchDisplay(QWidget* parent) : QLabel(parent)
 }
 
 
+void RollPitchDisplay::ForceRepaint()
+{
+    updatePixmap(rect());
+}
+
+
+
 void RollPitchDisplay::UpdateRoll(float roll)
 {
 	_roll = angleSaturation(roll, -60, 60);

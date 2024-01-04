@@ -12,6 +12,7 @@ public:
 	HeadingDisplay(QWidget* parent = nullptr);
 
 	void UpdateHeading(float heading);
+    void ForceRepaint();
 
 protected:
 	void paintEvent(QPaintEvent* evt) override;

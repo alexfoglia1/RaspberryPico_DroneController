@@ -264,6 +264,10 @@ MaintenanceWindow::MaintenanceWindow()
 	int samplesInNewValue = SAMPLE_FREQ * _ui.plotTimeSlider->value();
 
 	_ui.plot->SetXSpan(samplesInNewValue);
+
+    _ui.plot->ForceRepaint();
+    _ui.pfdHeading->ForceRepaint();
+    _ui.pfdRollPitch->ForceRepaint();
 }
 
 

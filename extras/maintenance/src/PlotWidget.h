@@ -18,6 +18,7 @@ public:
 	void SetXSpan(int xSpan);
 	void AddValue(int track, double val);
 	void ClearData(int track);
+    void ForceRepaint();
 
 protected:
 	void paintEvent(QPaintEvent* evt) override;
