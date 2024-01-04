@@ -3,7 +3,6 @@
 JoystickBridge::JoystickBridge(QObject* parent) : QObject(parent)
 {
 	_isOverride = false;
-	_deadCenter = 0.1f;
 
 	_js = QJoysticks::getInstance();
 
@@ -17,9 +16,9 @@ JoystickBridge::JoystickBridge(QObject* parent) : QObject(parent)
 }
 
 
-qreal JoystickBridge::deadCenterZone(qreal axisValue, qreal dczValue, qreal minAxisValue, qreal maxAxisValue)
+qreal JoystickBridge::deadCenterZone(qreal axisValue, qreal deadCenter, qreal dczValue, qreal minAxisValue, qreal maxAxisValue)
 {
-	if (fabs(axisValue) < _deadCenter)
+	if (fabs(axisValue) < deadCenter)
 	{
 		return dczValue;
 	}
@@ -31,16 +30,16 @@ qreal JoystickBridge::deadCenterZone(qreal axisValue, qreal dczValue, qreal minA
 		{
 			if (axisValue < 0)
 			{
-				return mapValue(axisValue, minAxisValue, -_deadCenter, 1000.0, 1500.0);
+				return mapValue(axisValue, minAxisValue, -deadCenter, 1000.0, 1500.0);
 			}
 			else
 			{
-				return mapValue(axisValue, _deadCenter, maxAxisValue, 1500.0, 2000.0);
+				return mapValue(axisValue, deadCenter, maxAxisValue, 1500.0, 2000.0);
 			}
 		}
 		else
 		{
-			return mapValue(axisValue, minAxisValue + _deadCenter, maxAxisValue, 1000.0, 2000.0);
+			return mapValue(axisValue, minAxisValue + deadCenter, maxAxisValue, 1000.0, 2000.0);
 		}
 	}
 }
@@ -93,18 +92,18 @@ void JoystickBridge::onAxisEvent(const QJoystickAxisEvent& evt)
 
 		if (evt.axis == 5)
 		{
-			qreal fSignal = deadCenterZone(evtValue, 1000.0, 0.0, 1.0);
+			qreal fSignal = deadCenterZone(evtValue, 0.01, 1000.0, 0.0, 1.0);
 
 			_throttleSignal = (quint16)(fSignal);
 		}
 		else if (evt.axis == 2)
 		{
-			qreal fSignal = deadCenterZone(evtValue, 1500.0, -1.0, 1.0);
+			qreal fSignal = deadCenterZone(evtValue, 0.1, 1500.0, -1.0, 1.0);
 			_rollSignal = (quint16)(fSignal);
 		}
 		else if (evt.axis == 3)
 		{
-			qreal fSignal = deadCenterZone(-evtValue, 1500.0, -1.0, 1.0);
+			qreal fSignal = deadCenterZone(-evtValue, 0.1, 1500.0, -1.0, 1.0);
 			_pitchSignal = (quint16)(fSignal);
 		}
 

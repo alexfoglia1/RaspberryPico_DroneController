@@ -39,16 +39,21 @@ bool CPU1_TIMER_Init(int frequency_hz)
 
 bool CPU0_TIMER_Loop(repeating_timer_t* timer)
 {
+    gpio_put(PROBE_GPIO_CPU0, true);
+
     JOYSTICK_Handler();
     
     CBIT_Handler();
 
+    gpio_put(PROBE_GPIO_CPU0, false);
     return true;
 }
 
 
 bool CPU1_TIMER_Loop(repeating_timer_t* timer)
 {
+    gpio_put(PROBE_GPIO_CPU1, true);
+
     ATTITUDE_Handler();
     if (!MAINT_IsControllingMotors())
     {
@@ -69,5 +74,6 @@ bool CPU1_TIMER_Loop(repeating_timer_t* timer)
         restore_interrupts(ints);
     }
 
+    gpio_put(PROBE_GPIO_CPU1, false);
     return true;
 }

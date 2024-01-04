@@ -972,13 +972,11 @@ void MAINT_Handler()
     {
         MAINT_OnByteReceived((uint8_t)usbRx & 0xFF);
     }
-    else
+    
+    if (UART_IsReadable())
     {
-        while (UART_IsReadable())
-        {
             uint8_t uartRx = UART_ReadByte();
             MAINT_OnByteReceived(uartRx);
-        }
     }
 }
 

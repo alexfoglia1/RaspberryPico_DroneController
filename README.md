@@ -32,8 +32,8 @@ Once executed, software initializes board gpio and device drivers, then it reads
 
 | CPU | Operations | Task frequency |
 | --- | ---------- | -------------- |
-| 0 | Read user input, apply an alpha/beta filter on those, perform builtin test | 500 Hz |
-| 1 | Read raw IMU, filter data with a pt1 filter, estimate body attitude (*), perform a PID loop to control motors | 500 Hz |
+| 0 | Read user input, apply an alpha/beta filter on those, perform builtin test | 100 Hz |
+| 1 | Read raw IMU, filter data with a pt1 filter, estimate body attitude (*), perform a PID loop to control motors | 100 Hz |
 
 (*) If BNO55 is used, attitude estimation is replaced with the absolute orientation given by the sensor. First roll/pitch measured are considered IMU offset to obtain a known zero position.
 
@@ -64,8 +64,8 @@ Asynchronous operations are executed on CPU0 by interrupt handlers:
 | FS-IA6    | Channel3 falling edge | Asynchronous | N/A | 0 | Compute radio channel 3 pulse width to obtain the Throttle set point |
 | FS-IA6    | Channel5 rising edge | Asynchronous | N/A | 0 | Store current milliseconds |
 | FS-IA6    | Channel5 falling edge | Asynchronous | N/A | 0 | Compute radio channel 5 pulse width to decide if motors shall be armed or not |
-| Pico Oscillator    | Timer0 | Synchronous | 500 Hz | 0 | Read user command, perform builtin test  |
-| Pico Oscillator    | Timer1 | Synchronous | 500 Hz | 1 | Read IMU through I2C interface, estimates body attitude and perform PID loop to control motors |
+| Pico Oscillator    | Timer0 | Synchronous | 100 Hz | 0 | Read user command, perform builtin test  |
+| Pico Oscillator    | Timer1 | Synchronous | 100 Hz | 1 | Read IMU through I2C interface, estimates body attitude and perform PID loop to control motors |
 | HC-05 | UART RX | Asynchronous | N/A | 0 | Read one byte from pico UART0 interface for maintenance purposes |
 
 #### Maintenance Protocol

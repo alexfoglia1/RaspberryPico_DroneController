@@ -16,14 +16,13 @@ signals:
 private:
 	QJoysticks* _js;
 	bool _isOverride;
-	qreal _deadCenter;
 
 	quint16 _armedSignal;
 	quint16 _rollSignal;
 	quint16 _pitchSignal;
 	quint16 _throttleSignal;
 
-	qreal deadCenterZone(qreal axisValue, qreal dczValue, qreal minAxisValue, qreal maxAxisValue);
+	qreal deadCenterZone(qreal axisValue, qreal deadCenter, qreal dczValue, qreal minAxisValue, qreal maxAxisValue);
 	qreal mapValue(qreal value, qreal fromMin, qreal fromMax, qreal toMin, qreal toMax);
 	qreal saturate(qreal value, qreal min, qreal max);
 

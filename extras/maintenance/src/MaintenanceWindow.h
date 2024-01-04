@@ -51,7 +51,7 @@ private:
 	JoystickBridge _js;
 	Maint::Maintenance* _maintHandler;
 
-	const int _txDelayMillis = 25;
+	const int _txDelayMillis = 100;
 	QMap<QString, int> _defaultPlotSpan;
 	QMap<Maint::IMU_TYPE, QString> _imuTypeToString;
 	QMap<Maint::IMU_TYPE, uint32_t> _imuTypeToI2CAddr;
