@@ -93,8 +93,8 @@ void JOYSTICK_Handler()
     {
         if (MAINT_IsOverridingRadio())
         {
-            JOYSTICK_Roll = to_range(roll_signal_value, RADIO_MIN_SIGNAL_ROLL, RADIO_MAX_SIGNAL_ROLL, min_roll, max_roll);
-            JOYSTICK_Pitch = -to_range(pitch_signal_value, RADIO_MIN_SIGNAL_PITCH, RADIO_MAX_SIGNAL_PITCH, min_pitch, max_pitch);
+            JOYSTICK_Roll = to_range(roll_signal_value, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_roll, max_roll);
+            JOYSTICK_Pitch = -to_range(pitch_signal_value, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_pitch, max_pitch);
         }
         else
         {
