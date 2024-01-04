@@ -27,12 +27,31 @@ Current setup is using the Adafruit BNO055 IMU but software is compatible with t
 
 ### Controller
 Controller is an interrupt-based multi-core RP2040 application.
-Once executed, software initializes board gpio and device drivers, then it reads runtime parameters from flash memory and it starts one timer foreach CPU on the pico:
+Software execution is divided in timed operations and asynchronous operations.
+Once executed, software initializes board gpio and device drivers, then it reads runtime parameters from flash memory and it starts one timer foreach CPU on the pico to handle timed operations:
 
-1) Attitude Producer: Reads raw IMU, filters data with a pt1 filter and estimates body attitude, on CPU1. If BNO55 is used, attitude estimation is replaced with the absolute orientation given by the sensor. First roll/pitch measured are considered IMU offset to obtain a known zero position.
-2) Attitude Consumer: Reads body attitude and user commands. User commands are alpha/beta filtered and the output is used to perform a PID control loop, on CPU0. PID output is the PWM pulse width actuated to the motors.
+| CPU | Operations | Task frequency |
+| --- | ---------- | -------------- |
+| 0 | Read user input, apply an alpha/beta filter on those, perform builtin test | 500 Hz |
+| 1 | Read raw IMU, filter data with a pt1 filter, estimate body attitude (*), perform a PID loop to control motors | 500 Hz |
 
-After timers have been launched, software eventually waits for flash updates.
+(*) If BNO55 is used, attitude estimation is replaced with the absolute orientation given by the sensor. First roll/pitch measured are considered IMU offset to obtain a known zero position.
+
+
+User input are PWM signals the FS-IA6 module outputs on its channels:
+
+| Radio Channel | Meaning | Signal range (millis) | Command range |
+| ------------- | ------- | --------------------- | ------------- |
+Channel1 | Roll command | (1000, 2000) | (-5.0, 5.0)° |
+Channel2 | Pitch command | (1000, 2000) | (-5.0, 5.0)° |
+Channel3 | Throttle command | (1000, 2000) | (0, 100) % |
+Channel5 | Armed flag | (1000, 2000) | (false, true) |
+
+When Channel5 signal pulse width is greater than 1500 ms the armed flag is true and motors starts spinning at a fixed speed which does not generate enough lift for quadcopter to take-off.
+If motors are armed, Channel1, Channel2 and Channel3 signals are converted into desired setpoint of roll, pitch and throttle. The PID loop starts to control quadcopter flight.
+After timers have been launched, software eventually waits for messages from USB serial interface or UART.
+
+Asynchronous operations are executed on CPU0 by interrupt handlers:
 
 #### Interrupts
 | Source   | Interrupt | Type | Frequency | CPU | Action |
@@ -45,8 +64,8 @@ After timers have been launched, software eventually waits for flash updates.
 | FS-IA6    | Channel3 falling edge | Asynchronous | N/A | 0 | Compute radio channel 3 pulse width to obtain the Throttle set point |
 | FS-IA6    | Channel5 rising edge | Asynchronous | N/A | 0 | Store current milliseconds |
 | FS-IA6    | Channel5 falling edge | Asynchronous | N/A | 0 | Compute radio channel 5 pulse width to decide if motors shall be armed or not |
-| Pico Oscillator    | Timer0 | Synchronous | 500 Hz | 0 | Read attitude and user commands, perform PID control loop and actuates PID output to the motors |
-| Pico Oscillator    | Timer1 | Synchronous | 500 Hz | 1 | Read IMU through I2C interface and estimates body attitude |
+| Pico Oscillator    | Timer0 | Synchronous | 500 Hz | 0 | Read user command, perform builtin test  |
+| Pico Oscillator    | Timer1 | Synchronous | 500 Hz | 1 | Read IMU through I2C interface, estimates body attitude and perform PID loop to control motors |
 | HC-05 | UART RX | Asynchronous | N/A | 0 | Read one byte from pico UART0 interface for maintenance purposes |
 
 #### Maintenance Protocol
@@ -55,7 +74,8 @@ Through the maintenance protocol it is possible to:
 1) See current software-processed data
 2) Independently control motors PWM
 3) Independently communicate with IMU through I2C
-2) Retrieve and update flash-stored control loop parameters
+4) Retrieve and update flash-stored control loop parameters
+5) Override radio signals and flight the quadcopter
 
 ##### Serial parameters
 
@@ -82,59 +102,73 @@ Server expects the following packet:
 | 1 Header byte 0         | raw_accel_x | raw_accel_y | raw_accel_z | raw_gyro_x | raw_gyro_y | raw_gyro_z | raw_magn_x | raw_magn_y |
 | 2 Header byte 1         | raw_magn_z | filtered_accel_x | filtered_accel_y | filtered_accel_z | filtered_gyro_x | filtered_gyro_y | filtered_gyro_z | filtered_magn_x |
 | 3 Header byte 2         | filtered_magn_y | filtered_magn_z | throttle_signal | roll_signal | pitch_signal | throttle_set_point | roll_set_point | pitch_set_point |
-| 4 Header byte 3         | body_roll | body_pitch | body_yaw | roll_pid_error | roll_pid_p | roll_pid_i | roll_pid_d | roll_pid_u |
-| 5 Header byte 4         | pitch_pid_error | pitch_pid_p | pitch_pid_i | pitch_pid_d | pitch_pid_u | yaw_pid_error | yaw_pid_p | yaw_pid_i |
-| 6 Header byte 5         | yaw_pid_d | yaw_pid_u | motor1_signal | motor2_signal | motor3_signal | motor4_signal | motors_armed | builtin_test_status |
-| 7 Header byte 6         | motor_params | js_params | pid_params | ptf1_params | imu_type | i2c_read | sw_ver | imu_offset |
+| 4 Header byte 3         | body_roll | body_pitch | body_yaw | roll_PID_error | roll_PID_p | roll_PID_i | roll_PID_d | roll_PID_u |
+| 5 Header byte 4         | pitch_PID_error | pitch_PID_p | pitch_PID_i | pitch_PID_d | pitch_PID_u | yaw_PID_error | yaw_PID_p | yaw_PID_i |
+| 6 Header byte 5         | yaw_PID_d | yaw_PID_u | motor1_signal | motor2_signal | motor3_signal | motor4_signal | motors_armed | builtin_test_status |
+| 7 Header byte 6         | motor_params | js_params | PID_params | ptf1_params | imu_type | i2c_read | sw_ver | imu_offset |
 | 8 Header byte 7         | cmd_id_bit_7 | cmd_id_bit_6 | cmd_id_bit_5 | cmd_id_bit_4 | cmd_id_bit_3 | cmd_id_bit_2 | cmd_id_bit_1 | cmd_id_bit_0 |
-| 9..N Payload            | payload_data_n_bit_7 | payload_data_n_bit_6 | payload_data_n_bit_5 | payload_data_n_bit_4 | payload_data_n_bit_3 | payload_data_n_bit_2 | payload_data_n_bit_1 | payload_data_n_bit_0 |
+| 9..N Payload            | payload_data_n_bit_7 | payload_data_n_bit_6 | payload_data_n_bit_5 | payload_data_n_bit_4 | payload_data_n_bit_3 | payload_data_n_bit_2 | payload_data_n_bit_1      | payload_data_n_bit_0 |
 | N+1 Checksum            | cks_bit_7 | cks_bit_6 | cks_bit_5 | cks_bit_4 | cks_bit_3 | cks_bit_2 | cks_bit_1 | cks_bit_0 |
 
 Checksum algorithm:
 
-    uint8_t checksum(uint8_t* buf, uint32_t size)
+ ```c++
+uint8_t checksum(uint8_t* buf, uint32_t size)
+{
+    // Buf shall not contain synchronism byte
+    uint8_t cks = 0;
+    for (uint32_t i = 0; i < size; i++)
     {
-        // Buf shall not contain synchronism byte
-        uint8_t cks = 0;
-        for (uint32_t i = 0; i < size; i++)
-        {
-            cks ^= buf[i];
-        }
-        return cks;
+        cks ^= buf[i];
     }
+    return cks;
+}
+```
+The minimal payload servers expects is composed by the REMOTE_CONTROL_TAG data structure + checksum.
+REMOTE_CONTROL_TAG is a 9-bytes length data structure containing informations that the server will use to control the quadcopter flight from maintenance protocol:
 
+| Field | Type | Values | Meaning | Size |
+| ----- | ---- | ------ | ------- | ---- |
+Override radio | uint8_t | 0/1 | Enable quadcpoter flight from maintenance by overriding radio PWM signals | 1 |
+Armed signal | uint16_t | (1000, 2000) | Override armed radio signal | 2 |
+Roll  signal | uint16_t | (1000, 2000) | Override armed radio signal | 2 |
+Pitch signal | uint16_t | (1000, 2000) | Override armed radio signal | 2 |
+Throttle signal | uint16_t | (1000, 2000) | Override armed radio signal | 2 |
+
+REMOTE_CONTROL_TAG is always placed at payload end, immediatly before checksum.
 
 Values of the header fields determine the expected payload the client will send:
 
 | Header field             | Value | Meaning | Expected payload (type) | Payload size (bytes) |
 | ------------------------ | ----- | ------- | ----------------------- | ------------ |
-| All except cmd_id_bit_n  | 0     | Corresponding data is not requested to the server | checksum (uint8_t) | 1 |
-| All except cmd_id_bit_n  | 1     | Corresponding data is requested to the server | checksum (uint8_t) | 1 |
-| set_cmd_id               | 0     | No command requested | checksum (uint8_t) | 1 |
-| set_cmd_id               | 1     | Set motor 1 speed | Pulse width to motor1 in microseconds (uint16_t) + checksum (uint8_t) | 3 |
-| set_cmd_id               | 2     | Set motor 2 speed | Pulse width to motor2 in microseconds (uint16_t) + checksum (uint8_t) | 3 |
-| set_cmd_id               | 3     | Set motor 3 speed | Pulse width to motor3 in microseconds (uint16_t) + checksum (uint8_t) | 3 |
-| set_cmd_id               | 4     | Set motor 4 speed | Pulse width to motor4 in microseconds (uint16_t) + checksum (uint8_t) | 3 |
-| set_cmd_id               | 5     | Set all motors speed | Pulse width to all motors in microseconds (uint16_t) + checksum (uint8_t) | 3 |
-| set_cmd_id               | 6     | Control motors | Maintenance motor control flag (uint8_t) + checksum (uint8_t) | 2 |
-| set_cmd_id               | 7     | Flash write parameters | checksum (uint8_t) | 1 |
-| set_cmd_id               | 8     | Update motor 1 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + checksum (uint8_t) | 6 |
-| set_cmd_id               | 9     | Update motor 2 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + checksum (uint8_t) | 6 |
-| set_cmd_id               | 10    | Update motor 3 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + checksum (uint8_t) | 6 |
-| set_cmd_id               | 11    | Update motor 4 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + checksum (uint8_t) | 6 |
-| set_cmd_id               | 12    | Update joystick throttle alpha/beta filter parameters | alpha (float) + beta (float) + checksum (uint8_t) | 9 |
-| set_cmd_id               | 13    | Update joystick roll alpha/beta filter parameters | alpha (float) + beta (float) + checksum (uint8_t) | 9 |
-| set_cmd_id               | 14    | Update joystick pitch alpha/beta filter parameters | alpha (float) + beta (float) + checksum (uint8_t) | 9 |
-| set_cmd_id               | 15    | Update roll PID parameters | KP (float) + KI (float) + SAT (float) + AD (float) + BD (float) + checksum (uint8_t) | 25 | 
-| set_cmd_id               | 16    | Update pitch PID parameters | KP (float) + KI (float) + SAT (float) + AD (float) + BD (float) + checksum (uint8_t) | 25 | 
-| set_cmd_id               | 17    | Update yaw PID parameters | KP (float) + KI (float) + SAT (float) + AD (float) + BD (float) + checksum (uint8_t) | 25 | 
-| set_cmd_id               | 18    | Update pt1 filter parameters for accelerometer | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + checksum (uint8_t) | 13 |
-| set_cmd_id               | 19    | Update pt1 filter parameters for gyroscope | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + checksum (uint8_t) | 13 |
-| set_cmd_id               | 20    | Update pt1 filter parameters for magnetometer | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + checksum (uint8_t) | 13 |
-| set_cmd_id               | 21    | Update parameter IMU type | imu_type (enum : uint8_t) + checksum (uint8_t) | 2 |
-| set_cmd_id               | 22    | I2C read | i2c channel (uint8_t) + i2c address (uint8_t) + i2c register (uint8_t) + checksum (uint8_t) | 4 |
-| set_cmd_id               | 23    | I2C write | i2c channel (uint8_t) + i2c address (uint8_t) + i2c register (uint8_t) + value (uint8_t) + checksum (uint8_t) | 5 |
-| set_cmd_id               | 24    | Reset IMU offset | checksum (uint8_t) | 1 |
+| All except cmd_id_bit_n  | 0     | Corresponding data is not requested to the server | REMOTE_CONTROL_TAG + checksum (uint8_t) | 10 |
+| All except cmd_id_bit_n  | 1     | Corresponding data is requested to the server | REMOTE_CONTROL_TAG + checksum (uint8_t) | 10 |
+| set_cmd_id               | 0     | No command requested | REMOTE_CONTROL_TAG + checksum (uint8_t) | 10 |
+| set_cmd_id               | 1     | Set motor 1 speed | Pulse width to motor1 in microseconds (uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 12 |
+| set_cmd_id               | 2     | Set motor 2 speed | Pulse width to motor2 in microseconds (uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 12 |
+| set_cmd_id               | 3     | Set motor 3 speed | Pulse width to motor3 in microseconds (uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 12 |
+| set_cmd_id               | 4     | Set motor 4 speed | Pulse width to motor4 in microseconds (uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 12 |
+| set_cmd_id               | 5     | Set all motors speed | Pulse width to all motors in microseconds (uint16_t) + REMOTE_CONTROL_TAG +  checksum (uint8_t) | 12 |
+| set_cmd_id               | 6     | Control motors | Maintenance motor control flag (uint8_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 11 |
+| set_cmd_id               | 7     | Flash write parameters | REMOTE_CONTROL_TAG + checksum (uint8_t) | 10 |
+| set_cmd_id               | 8     | Update motor 1 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 15 |
+| set_cmd_id               | 9     | Update motor 2 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 15 |
+| set_cmd_id               | 10    | Update motor 3 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 15 |
+| set_cmd_id               | 11    | Update motor 4 parameters | Enabled/Disabled flag (uint8_t) + min pulse width (uint16_t) + max pulse width(uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 15 |
+| set_cmd_id               | 12    | Update joystick throttle alpha/beta filter parameters | alpha (float) + beta (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 18 |
+| set_cmd_id               | 13    | Update joystick roll alpha/beta filter parameters | alpha (float) + beta (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 18 |
+| set_cmd_id               | 14    | Update joystick pitch alpha/beta filter parameters | alpha (float) + beta (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 18 |
+| set_cmd_id               | 15    | Update roll PID parameters | KP (float) + KI (float) + SAT (float) + AD (float) + BD (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 34 | 
+| set_cmd_id               | 16    | Update pitch PID parameters | KP (float) + KI (float) + SAT (float) + AD (float) + BD (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 34 | 
+| set_cmd_id               | 17    | Update yaw PID parameters | KP (float) + KI (float) + SAT (float) + AD (float) + BD (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 34 | 
+| set_cmd_id               | 18    | Update pt1 filter parameters for accelerometer | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 22 |
+| set_cmd_id               | 19    | Update pt1 filter parameters for gyroscope | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 22 |
+| set_cmd_id               | 20    | Update pt1 filter parameters for magnetometer | pt1f time constant x axis (float) + pt1f time constant y axis (float) + pt1f time constant z axis (float) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 22 |
+| set_cmd_id               | 21    | Update parameter IMU type | imu_type (enum : uint8_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 11 |
+| set_cmd_id               | 22    | I2C read | i2c channel (uint8_t) + i2c address (uint8_t) + i2c register (uint8_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 13 |
+| set_cmd_id               | 23    | I2C write | i2c channel (uint8_t) + i2c address (uint8_t) + i2c register (uint8_t) + value (uint8_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 14 |
+| set_cmd_id               | 24    | Reset IMU offset | REMOTE_CONTROL_TAG + checksum (uint8_t) | 10 |
+
 
 IMU Type:
 
@@ -178,21 +212,21 @@ pitch_set_point | pitch angle set point | float | 4 |
 body_roll | quadcopter roll angle | float | 4 |
 body_pitch | quadcopter pitch angle | float | 4 |
 body_yaw | quadcopter yaw angle | float | 4 |
-roll_pid_error | difference between roll set point and estimated roll | float | 4
-roll_pid_p | roll pid proportional term | float | 4 |
-roll_pid_i | roll pid integral term | float | 4 |
-roll_pid_d | roll pid derivative term | float | 4 |
-roll_pid_u | roll pid output | float | 4 |
-pitch_pid_error | difference between pitch set point and estimated pitch | float | 4
-pitch_pid_p | pitch pid proportional term | float | 4 |
-pitch_pid_i | pitch pid integral term | float | 4 |
-pitch_pid_d | pitch pid derivative term | float | 4 |
-pitch_pid_u | pitch pid output | float | 4 |
-yaw_pid_error | difference between yaw set point (always 0) and estimated yaw | float | 4
-yaw_pid_p | yaw pid proportional term | float | 4 |
-yaw_pid_i | yaw pid integral term | float | 4 |
-yaw_pid_d | yaw pid derivative term | float | 4 |
-yaw_pid_u | yaw pid output | float | 4 |
+roll_PID_error | difference between roll set point and estimated roll | float | 4
+roll_PID_p | roll PID proportional term | float | 4 |
+roll_PID_i | roll PID integral term | float | 4 |
+roll_PID_d | roll PID derivative term | float | 4 |
+roll_PID_u | roll PID output | float | 4 |
+pitch_PID_error | difference between pitch set point and estimated pitch | float | 4
+pitch_PID_p | pitch PID proportional term | float | 4 |
+pitch_PID_i | pitch PID integral term | float | 4 |
+pitch_PID_d | pitch PID derivative term | float | 4 |
+pitch_PID_u | pitch PID output | float | 4 |
+yaw_PID_error | difference between yaw set point (always 0) and estimated yaw | float | 4
+yaw_PID_p | yaw PID proportional term | float | 4 |
+yaw_PID_i | yaw PID integral term | float | 4 |
+yaw_PID_d | yaw PID derivative term | float | 4 |
+yaw_PID_u | yaw PID output | float | 4 |
 motor1_signal | current motor 1 pulse width | uint16_t | 2 |
 motor2_signal | current motor 2 pulse width | uint16_t | 2 |
 motor3_signal | current motor 3 pulse width | uint16_t | 2 |
@@ -201,7 +235,7 @@ motors_armed | motors armed flag | uint8_t | 1 |
 builtin_test_status | continous builtin test status | enum : uint32_t | 4 |
 motor_params | (Foreach motor) Enabled/Disabled flag + min pulse width + max pulse width | uint32_t[4][3] | 48 |
 js_params | (Foreach joystick channel but armed) joystick alpha + joystick beta | float[3][2] | 24 |
-pid_params | (Foreach euler angle) KP KI KT SAT AD BD | float[3][6] | 72 |
+PID_params | (Foreach euler angle) KP KI KT SAT AD BD | float[3][6] | 72 |
 pt1f_params | (Foreach IMU sensor) pt1 filter time constant x axis + pt1 filter time constant y axis + pt1 filter time constant z axis  | float[3][3] | 36 | 
 imu_type | IMU type | enum : uint8_t | 1 |
 i2c_read | value read after the i2c read command | uint8_t | 1 |
@@ -230,9 +264,14 @@ Release Type:
 
 Under extras/maintenance a cross-platform Qt application is provided as an example of a maintenance protocol client.
 
+[SDL2](https://www.libsdl.org/) libraries are required to control flight with a joystick.
+
+![Screenshot](/extras/joystick.png)
 
 ## Credits
 
 The LSM9DS1 device driver is a porting of the [Arduino LSM9DS1 library](https://github.com/sparkfun/LSM9DS1_Breakout) by Jim Lindblom of [SparkFun Electronics](https://www.sparkfun.com/).
 
 The BNO055 device driver is a porting of the [BNO055 device driver for Raspberry Pi](https://github.com/AngelPerezM/rpi-bno055-drv) developed by [Ángel Pérez Muñoz](https://github.com/AngelPerezM).
+
+The [QJoysticks](https://github.com/alex-spataru/QJoysticks) library by [Alex Spataru](https://github.com/alex-spataru) is used in maintenance client to interface with the joystick.
