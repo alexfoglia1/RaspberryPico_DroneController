@@ -19,16 +19,19 @@
 // Once done, we can access this at XIP_BASE + 256k.
 #define FLASH_TARGET_OFFSET (256 * 1024)
 #define FLASH_PARAMS_OFFSET 0
-#define FLASH_PARAMS_SIZE   192 // 4 blocks of 3 4-bytes length uint32_t + 
+#define FLASH_PARAMS_SIZE   198 // 4 blocks of 3 4-bytes length uint32_t + 
                                 // 4 blocks of 2 4-bytes length uint32_t +
                                 // 3 blocks of 6 4-bytes length uint32_t +
                                 // 3 blocks of 3 4 bytes length uint32_t +
-                                // 1 block of  1 4 bytes length uint32_t = 192
+                                // 1 block of  1 4 bytes length uint32_t +
+                                // 1 block of  3 2 bytes length uint16_t = 198
+
 #define FLASH_MOTORS_PARAMS_SIZE   48
 #define FLASH_JOYSTICK_PARAMS_SIZE 32
 #define FLASH_PID_PARAMS_SIZE      72
 #define FLASH_PTF1_PARAMS_SIZE     36
 #define FLASH_IMU_TYPE_SIZE         1
+#define FLASH_THROTTLE_PARAMS_SIZE  6
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
@@ -37,6 +40,7 @@ uint32_t MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::SIZE)][int(MAINT_JS_PARA
 uint32_t MAINT_PidParameters[int(EULER_ANGLES::SIZE)][int(MAINT_PID_PARAM::SIZE)];
 uint32_t MAINT_Ptf1Parameters[int(SENSOR_SOURCE::SIZE)][int(EUCLIDEAN_AXES::SIZE)];
 IMU_TYPE MAINT_ImuType;
+uint16_t MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::SIZE)];
 uint8_t  MAINT_I2CRead;
 
 static bool override_radio;
@@ -156,7 +160,9 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
         case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
             return 5 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET:
-            return 9 + sizeof(REMOTE_CONTROL_TAG);                                              
+            return 9 + sizeof(REMOTE_CONTROL_TAG);
+        case MAINT_CMD_ID::MAINT_CMD_SET_THROTTLE_PARAMS:
+            return 7 + sizeof(REMOTE_CONTROL_TAG);                                
     }
 
     return 1 + sizeof(REMOTE_CONTROL_TAG);
@@ -254,7 +260,8 @@ static void flash_write_params()
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_PidParameters), FLASH_PID_PARAMS_SIZE);
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_Ptf1Parameters), FLASH_PTF1_PARAMS_SIZE);
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE + FLASH_PTF1_PARAMS_SIZE], reinterpret_cast<uint8_t*>(&MAINT_ImuType), FLASH_IMU_TYPE_SIZE);
-    
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE + FLASH_PTF1_PARAMS_SIZE + 4], reinterpret_cast<uint8_t*>(&MAINT_ThrottleParams), FLASH_THROTTLE_PARAMS_SIZE);
+
     eeprom_img[FLASH_PARAMS_SIZE] = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
 
     flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
@@ -324,6 +331,14 @@ void MAINT_Init()
     MAINT_ImuType = IMU_TYPE(*reinterpret_cast<const uint8_t*>(&flash_target_contents[eeprom_offset]));
     eeprom_offset += sizeof(uint32_t);
 
+    for (int i = int(MAINT_THROTTLE_PARAM::FIRST); i < int(MAINT_THROTTLE_PARAM::SIZE); i++)
+    {
+        MAINT_ThrottleParams[i] = *reinterpret_cast<const uint16_t*>(&flash_target_contents[eeprom_offset]);
+
+        eeprom_offset += sizeof(uint16_t);
+    }
+
+
     CBIT_TAG fail_code;
     fail_code.Dword = 0;
     fail_code.Bits.flash_error = 1;
@@ -339,6 +354,7 @@ void MAINT_Init()
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_PidParameters), FLASH_PID_PARAMS_SIZE);
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE], reinterpret_cast<uint8_t*>(MAINT_Ptf1Parameters), FLASH_PTF1_PARAMS_SIZE);
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE + FLASH_PTF1_PARAMS_SIZE], reinterpret_cast<uint8_t*>(&MAINT_ImuType), FLASH_IMU_TYPE_SIZE);
+    memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE + FLASH_PTF1_PARAMS_SIZE + FLASH_IMU_TYPE_SIZE], reinterpret_cast<uint8_t*>(&MAINT_ThrottleParams), FLASH_THROTTLE_PARAMS_SIZE);
     
     uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
     if (eeprom_cks != current_cks)
@@ -400,7 +416,11 @@ void MAINT_Init()
             MAINT_Ptf1Parameters[i][int(EUCLIDEAN_AXES::Z)] = t_ptf1_s.ival;
         }
 
-        MAINT_ImuType = IMU_TYPE::MPU6050;
+        MAINT_ImuType = IMU_TYPE::BNO055;
+
+        MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::CLIMB)] = 1350;
+        MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::HOVERING)] = 1150;
+        MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::DESCEND)] = 1050;
 
         /** Storing default to flash **/
         flash_write_params();
@@ -546,6 +566,11 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                 ATTITUDE_Roll0 = (*reinterpret_cast<float*>(&rx_message.payload[0]));
                 ATTITUDE_Pitch0 = (*reinterpret_cast<float*>(&rx_message.payload[4]));
                 break;
+            case MAINT_CMD_ID::MAINT_CMD_SET_THROTTLE_PARAMS:
+                MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::DESCEND)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[0]));
+                MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::HOVERING)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[2]));
+                MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::CLIMB)] = (*reinterpret_cast<uint16_t*>(&rx_message.payload[4]));
+                break;         
         }
 
         shall_set = false;
@@ -931,6 +956,12 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
 
             tx_payload_idx += (2 * sizeof(uint32_t));
         }
+        if (tx_message.header.Bits.throttle_params)
+        {
+            memcpy(&tx_message.payload[tx_payload_idx], reinterpret_cast<uint16_t*>(&MAINT_ThrottleParams), FLASH_THROTTLE_PARAMS_SIZE);
+
+            tx_payload_idx += FLASH_THROTTLE_PARAMS_SIZE;
+        }        
 
         tx_message.payload[tx_payload_idx] = checksum(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx);
         put_packet(reinterpret_cast<uint8_t*>(&tx_message), sizeof(MAINT_HEADER_T) + tx_payload_idx + 1);

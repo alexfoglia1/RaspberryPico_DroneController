@@ -69,7 +69,8 @@ typedef union
         uint64_t i2c_read         :1;     //53
         uint64_t sw_ver           :1;     //54
         uint64_t imu_offset       :1;     //55
-        uint64_t maint_cmd_id     :8;     //56, 57, 58, 59, 60, 61, 62, 63
+        uint64_t throttle_params  :1;     //56
+        uint64_t maint_cmd_id     :7;     //57, 58, 59, 60, 61, 62, 63
     } Bits;
     
     uint8_t  Bytes[8];
@@ -134,7 +135,8 @@ enum class MAINT_CMD_ID
     MAINT_CMD_SET_IMU_TYPE,
     MAINT_CMD_I2C_READ,
     MAINT_CMD_I2C_WRITE,
-    MAINT_CMD_SET_IMU_OFFSET
+    MAINT_CMD_SET_IMU_OFFSET,
+    MAINT_CMD_SET_THROTTLE_PARAMS
 };
 
 enum class MAINT_MOTOR_PARAM
@@ -163,6 +165,15 @@ enum class MAINT_PID_PARAM
     PID_SAT,
     PID_AD,
     PID_BD,
+    SIZE
+};
+
+enum class MAINT_THROTTLE_PARAM
+{
+    FIRST = 0,
+    DESCEND = FIRST,
+    HOVERING,
+    CLIMB,
     SIZE
 };
 
@@ -233,6 +244,7 @@ extern uint32_t MAINT_JoystickParameters[int(JOYSTICK_CHANNEL::SIZE)][int(MAINT_
 extern uint32_t MAINT_PidParameters[int(EULER_ANGLES::SIZE)][int(MAINT_PID_PARAM::SIZE)];
 extern uint32_t MAINT_Ptf1Parameters[int(SENSOR_SOURCE::SIZE)][int(EUCLIDEAN_AXES::SIZE)];
 extern IMU_TYPE MAINT_ImuType;
+extern uint16_t MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::SIZE)];
 
 extern bool MAINT_FlashWriteRequested;
 

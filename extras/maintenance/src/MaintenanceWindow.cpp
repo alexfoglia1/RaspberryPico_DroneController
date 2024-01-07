@@ -118,8 +118,11 @@ MaintenanceWindow::MaintenanceWindow()
 	_rxPitchOffset = 0.0f;
 	_rxRoll = 0.0f;
 	_rxPitch = 0.0f;
+	_rxThrottleParams[0] = 1000;
+	_rxThrottleParams[1] = 1000;
+	_rxThrottleParams[2] = 1000;
 
-	_rxImuType = Maint::IMU_TYPE::LSM9DS1;
+	_rxImuType = Maint::IMU_TYPE::BNO055;
 	for (uint32_t i = uint32_t(Maint::IMU_TYPE::FIRST); i < uint32_t(Maint::IMU_TYPE::SIZE); i++)
 	{
 		QString text = _imuTypeToString[Maint::IMU_TYPE(i)];
@@ -158,6 +161,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.btnI2CWrite, SIGNAL(clicked()), this, SLOT(OnBtnI2CWrite()));
 	connect(_ui.btnTxImuOffset, SIGNAL(clicked()), this, SLOT(OnBtnTxImuOffset()));
 	connect(_ui.btnImuAutoOffset, SIGNAL(clicked()), this, SLOT(OnBtnImuAutoOffset()));
+	connect(_ui.btnSendThrottleParams, SIGNAL(clicked()), this, SLOT(OnBtnSendThrottleParams()));
 
 	connect(_ui.spinSetMotorsValue, SIGNAL(valueChanged(int)), this, SLOT(OnSpinSetMotorsValue(int)));
 
@@ -235,6 +239,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedI2CRead(uint8_t)), this, SLOT(OnReceivedI2CRead(uint8_t)));
 	connect(_maintHandler, SIGNAL(receivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)), this, SLOT(OnReceivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)));
 	connect(_maintHandler, SIGNAL(receivedImuOffset(float, float)), this, SLOT(OnReceivedImuOffset(float, float)));
+	connect(_maintHandler, SIGNAL(receivedThrottleParams(uint16_t, uint16_t, uint16_t)), this, SLOT(OnReceivedThrottleParams(uint16_t, uint16_t, uint16_t)));
 
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
@@ -1139,6 +1144,15 @@ void MaintenanceWindow::OnHeaderChanged()
 		header.Bits.imu_type = 0;
 	}
 
+	if (_ui.checkTxThrottleParams->isChecked())
+	{
+		header.Bits.throttle_params = 1;
+	}
+	else
+	{
+		header.Bits.throttle_params = 0;
+	}
+
 
 	if (_maintHandler)
 	{
@@ -1222,6 +1236,19 @@ void MaintenanceWindow::OnBtnImuAutoOffset()
 	_ui.spinPitchOffset->setValue(auto_offset_pitch);
 
 	OnBtnTxImuOffset();
+}
+
+
+void MaintenanceWindow::OnBtnSendThrottleParams()
+{
+	uint16_t descend = _ui.spinDescend->value();
+	uint16_t hovering = _ui.spinHovering->value();
+	uint16_t climb = _ui.spinClimb->value();
+
+	if (_maintHandler)
+	{
+		_maintHandler->TxThrottleParams(descend, hovering, climb);
+	}
 }
 
 
@@ -1333,6 +1360,10 @@ void MaintenanceWindow::OnBtnRefreshParams()
 			break;
 		}
 	}
+
+	_ui.spinDescend->setValue(_rxThrottleParams[0]);
+	_ui.spinHovering->setValue(_rxThrottleParams[1]);
+	_ui.spinClimb->setValue(_rxThrottleParams[2]);
 	
 }
 
@@ -1946,4 +1977,12 @@ void MaintenanceWindow::OnReceivedImuOffset(float roll_offset, float pitch_offse
 
 	_ui.lineRxRollOffset->setText(QString::number(_rxRollOffset));
 	_ui.lineRxPitchOffset->setText(QString::number(_rxPitchOffset));
+}
+
+
+void MaintenanceWindow::OnReceivedThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb)
+{
+	_rxThrottleParams[0] = descend;
+	_rxThrottleParams[1] = hovering;
+	_rxThrottleParams[2] = climb;
 }

@@ -59,6 +59,7 @@ private:
 	QMap<int, js_params_format> _rxJsParams;
 	QMap<int, pid_params_format> _rxPidParams;
 	QMap<int, ptf1_params_format> _rxPtf1Params;
+	uint16_t _rxThrottleParams[3];
 	float _rxRollOffset;
 	float _rxPitchOffset;
 	float _rxRoll;
@@ -104,6 +105,7 @@ private slots:
 	void OnBtnI2CWrite();
 	void OnBtnTxImuOffset();
 	void OnBtnImuAutoOffset();
+	void OnBtnSendThrottleParams();
 
 	void OnRxRawData(bool valid, quint8* data, int size);
 	void OnTxRawData(quint8* data, int size);
@@ -170,6 +172,7 @@ private slots:
 	void OnReceivedI2CRead(uint8_t i2c_read);
 	void OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
 	void OnReceivedImuOffset(float, float);
+	void OnReceivedThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb);
 };
 
 #endif

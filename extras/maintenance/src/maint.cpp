@@ -234,6 +234,20 @@ void Maint::Maintenance::TxPtf1params(uint32_t sensorSource, float x, float y, f
 }
 
 
+void Maint::Maintenance::TxThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb)
+{
+    _txMessageSet.All = 0;
+    _txMessageSet.Bits.maint_cmd_id = uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_THROTTLE_PARAMS);
+
+    _txSetParams.clear();
+    pushParams(reinterpret_cast<uint8_t*>(&descend), sizeof(uint16_t));
+    pushParams(reinterpret_cast<uint8_t*>(&hovering), sizeof(uint16_t));
+    pushParams(reinterpret_cast<uint8_t*>(&climb), sizeof(uint16_t));
+
+    _txStatus = Maint::TX_STATUS::TX_SET;
+}
+
+
 void Maint::Maintenance::TxImuType(IMU_TYPE imuType)
 {
     _txMessageSet.All = 0;
@@ -1015,6 +1029,15 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
             emit receivedImuOffset(offset_roll, offset_pitch);
             pPayload += (2 * sizeof(uint32_t));
         }
+        if (rx_header->Bits.throttle_params)
+        {
+            uint16_t descend = *(reinterpret_cast<uint16_t*>(pPayload));
+            uint16_t hovering = *(reinterpret_cast<uint16_t*>(pPayload + 2));
+            uint16_t climb = *(reinterpret_cast<uint16_t*>(pPayload + 4));
+
+            emit receivedThrottleParams(descend, hovering, climb);
+            pPayload += (3 * sizeof(uint16_t));
+        }
     }
 }
 
@@ -1246,6 +1269,10 @@ uint32_t Maint::Maintenance::calc_exp_bytes(Maint::MAINT_HEADER_T* header)
     if (header->Bits.imu_offset)
     {
         rx_payload_idx += (2 * sizeof(uint32_t));
+    }
+    if (header->Bits.throttle_params)
+    {
+        rx_payload_idx += FLASH_THROTTLE_PARAMS_SIZE;
     }
 
     return rx_payload_idx + 1;

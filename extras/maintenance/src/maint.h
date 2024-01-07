@@ -11,6 +11,7 @@
 #define FLASH_PID_PARAMS_SIZE      72
 #define FLASH_PTF1_PARAMS_SIZE     36
 #define FLASH_IMU_TYPE_SIZE         1
+#define FLASH_THROTTLE_PARAMS_SIZE  6
 
 namespace Maint
 {
@@ -83,7 +84,8 @@ namespace Maint
             uint64_t i2c_read : 1; // 53
             uint64_t sw_ver : 1; // 54
             uint64_t imu_offset : 1; //55
-            uint64_t maint_cmd_id : 8;    //56, 57, 58, 59, 60, 61, 62, 63
+            uint64_t throttle_params : 1;//56
+            uint64_t maint_cmd_id : 7; //57, 58, 59, 60, 61, 62, 63
         } Bits;
 
         uint8_t  Bytes[8];
@@ -177,6 +179,7 @@ namespace Maint
         MAINT_CMD_I2C_READ,
         MAINT_CMD_I2C_WRITE,
         MAINT_CMD_SET_IMU_OFFSET,
+        MAINT_CMD_SET_THROTTLE_PARAMS
     };
 
     static inline uint8_t checksum(uint8_t* buf, uint32_t size, bool firstSync=false)
@@ -208,6 +211,7 @@ public:
     void TxJoystickParams(uint32_t jsChannel, float alpha, float beta);
     void TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd);
     void TxPtf1params(uint32_t sensorSource, float x, float y, float z);
+    void TxThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb);
     void TxImuType(IMU_TYPE imuType);
     void I2CRead(uint8_t i2c, uint8_t addr, uint8_t reg);
     void I2CWrite(uint8_t i2c, uint8_t addr, uint8_t reg, uint8_t val);
@@ -285,6 +289,7 @@ signals:
     void receivedI2CRead(uint8_t i2c_read);
     void receivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
     void receivedImuOffset(float offset_roll, float offset_pitch);
+    void receivedThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb);
 
 private:
 	QSerialPort* _serialPort;

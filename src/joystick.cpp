@@ -86,7 +86,7 @@ static void safe_disarm()
         // Radio link loss while UAS is airborne, descend
         js_rx_status = WAIT_ANY_SIGNAL;
         JOYSTICK_MotorsArmed = true;
-        JOYSTICK_Throttle = DESCEND_SIGNAL;
+        JOYSTICK_Throttle = MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::DESCEND)];
     }
     else
     {
@@ -120,7 +120,7 @@ static uint16_t throttle_to_motor(uint16_t radio_signal)
             if (signal_percentage >= CLIMB_PERCENTAGE_THRESHOLD)
             {
                 js_rx_status = WAIT_ANY_SIGNAL;
-                ret = CLIMB_SIGNAL;
+                ret = MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::CLIMB)];
             }
 
             break;
@@ -130,17 +130,17 @@ static uint16_t throttle_to_motor(uint16_t radio_signal)
             if (signal_percentage < DESCEND_PERCENTAGE_THRESHOLD)
             {
                 js_rx_status = WAIT_ANY_SIGNAL;
-                ret = DESCEND_SIGNAL;
+                ret = MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::DESCEND)];
             }
             else if (signal_percentage >= DESCEND_PERCENTAGE_THRESHOLD && signal_percentage < CLIMB_PERCENTAGE_THRESHOLD)
             {
                 js_rx_status = WAIT_ANY_SIGNAL;
-                ret = HOVERING_SIGNAL;
+                ret = MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::HOVERING)];
             }
             else
             {
                 js_rx_status = WAIT_ANY_SIGNAL;
-                ret = CLIMB_SIGNAL;
+                ret = MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::CLIMB)];
             }
             break;
         }

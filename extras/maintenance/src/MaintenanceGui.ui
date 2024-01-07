@@ -406,13 +406,6 @@
         </property>
        </widget>
       </item>
-      <item row="8" column="5">
-       <widget class="QCheckBox" name="checkTxI2CRead">
-        <property name="text">
-         <string>I2C Read</string>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="3">
        <widget class="QCheckBox" name="checkTxRollPidI">
         <property name="text">
@@ -420,17 +413,31 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="6">
+      <item row="2" column="6">
+       <widget class="QCheckBox" name="checkTxImuOffset">
+        <property name="text">
+         <string>IMU Offset</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="6">
        <widget class="QCheckBox" name="checkTxSwVer">
         <property name="text">
          <string>SW Version</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="6">
-       <widget class="QCheckBox" name="checkTxImuOffset">
+      <item row="0" column="6">
+       <widget class="QCheckBox" name="checkTxI2CRead">
         <property name="text">
-         <string>IMU Offset</string>
+         <string>I2C Read</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="5">
+       <widget class="QCheckBox" name="checkTxThrottleParams">
+        <property name="text">
+         <string>Throttle Params</string>
         </property>
        </widget>
       </item>
@@ -546,7 +553,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>550</y>
+      <y>590</y>
       <width>1081</width>
       <height>281</height>
      </rect>
@@ -2033,7 +2040,7 @@
     <property name="geometry">
      <rect>
       <x>800</x>
-      <y>850</y>
+      <y>880</y>
       <width>16</width>
       <height>16</height>
      </rect>
@@ -2049,7 +2056,7 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>850</y>
+      <y>880</y>
       <width>51</width>
       <height>16</height>
      </rect>
@@ -2062,9 +2069,9 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>870</y>
+      <y>900</y>
       <width>351</width>
-      <height>91</height>
+      <height>61</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -2075,9 +2082,9 @@
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>870</y>
+      <y>900</y>
       <width>361</width>
-      <height>91</height>
+      <height>61</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -2088,7 +2095,7 @@
     <property name="geometry">
      <rect>
       <x>740</x>
-      <y>850</y>
+      <y>880</y>
       <width>51</width>
       <height>16</height>
      </rect>
@@ -2101,7 +2108,7 @@
     <property name="geometry">
      <rect>
       <x>90</x>
-      <y>850</y>
+      <y>880</y>
       <width>16</width>
       <height>16</height>
      </rect>
@@ -2145,7 +2152,7 @@
       <x>400</x>
       <y>310</y>
       <width>711</width>
-      <height>231</height>
+      <height>271</height>
      </rect>
     </property>
     <property name="title">
@@ -2427,7 +2434,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>180</y>
+       <y>220</y>
        <width>691</width>
        <height>41</height>
       </rect>
@@ -2494,6 +2501,76 @@
        <widget class="QPushButton" name="btnRefreshParams">
         <property name="text">
          <string>Refresh</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+    <widget class="QWidget" name="horizontalLayoutWidget_8">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>180</y>
+       <width>691</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <layout class="QHBoxLayout" name="horizontalLayout_8">
+      <item>
+       <widget class="QLabel" name="label_7">
+        <property name="text">
+         <string>Descend Signal</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinDescend">
+        <property name="minimum">
+         <number>1000</number>
+        </property>
+        <property name="maximum">
+         <number>2000</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_8">
+        <property name="text">
+         <string>Hovering Signal</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinHovering">
+        <property name="minimum">
+         <number>1000</number>
+        </property>
+        <property name="maximum">
+         <number>2000</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_9">
+        <property name="text">
+         <string>Climb Signal</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinClimb">
+        <property name="minimum">
+         <number>1000</number>
+        </property>
+        <property name="maximum">
+         <number>2000</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnSendThrottleParams">
+        <property name="text">
+         <string>Send</string>
         </property>
        </widget>
       </item>
@@ -2643,7 +2720,7 @@
     <property name="geometry">
      <rect>
       <x>120</x>
-      <y>850</y>
+      <y>880</y>
       <width>91</width>
       <height>16</height>
      </rect>
@@ -2656,7 +2733,7 @@
     <property name="geometry">
      <rect>
       <x>230</x>
-      <y>850</y>
+      <y>880</y>
       <width>161</width>
       <height>16</height>
      </rect>
