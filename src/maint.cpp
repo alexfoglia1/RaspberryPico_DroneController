@@ -961,7 +961,7 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
 
 bool MAINT_IsPresent()
 {
-    return (time_us_64() - last_msg_us) < MAINT_TIMEOUT_S * SECONDS_TO_MICROSECONDS;
+    return (time_us_64() - last_msg_us) < MAINT_TIMEOUT_MILLIS * MILLISECONDS_TO_MICROSECONDS;
 }
 
 

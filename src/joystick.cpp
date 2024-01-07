@@ -27,6 +27,10 @@ static uint16_t pitch_signal_value;
 static uint16_t throttle_signal_value;
 static uint16_t armed_signal_value;
 
+static rx_throttle_status js_rx_status;
+static bool armed_history[DEBOUNCE_WINDOW_LEN];
+static uint16_t armed_history_ll;
+
 
 static float dead_center(float val)
 {
@@ -41,11 +45,119 @@ static float dead_center(float val)
 }
 
 
+static bool debounce_armed_signal()
+{
+    bool current_armed_status = (armed_signal_value > ((RADIO_MAX_SIGNAL + RADIO_MIN_SIGNAL) / 2));
+    if (armed_history_ll < DEBOUNCE_WINDOW_LEN)
+    {
+        armed_history[armed_history_ll] = current_armed_status;
+        armed_history_ll += 1;
+
+        return JOYSTICK_MotorsArmed;
+    }
+    else
+    {
+        for (int i = 1; i < DEBOUNCE_WINDOW_LEN; i++)
+        {
+            armed_history[i - 1] = armed_history[i];
+        }
+        armed_history[DEBOUNCE_WINDOW_LEN - 1] = current_armed_status;
+    }
+
+    int hist_sum = 0;
+    for (int i = 0; i < DEBOUNCE_WINDOW_LEN; i++)
+    {
+        hist_sum += (int) armed_history[i];
+    }
+
+    if (hist_sum == 0) return false;
+    if (hist_sum == DEBOUNCE_WINDOW_LEN) return true;
+    return JOYSTICK_MotorsArmed;
+}
+
+
+static void safe_disarm()
+{
+    JOYSTICK_Roll = (max_roll + min_roll) / 2.0f;
+    JOYSTICK_Pitch = (max_pitch + min_pitch) / 2.0f;
+
+    if (JOYSTICK_Timeout && js_rx_status == WAIT_ANY_SIGNAL)
+    {
+        // Radio link loss while UAS is airborne, descend
+        js_rx_status = WAIT_ANY_SIGNAL;
+        JOYSTICK_MotorsArmed = true;
+        JOYSTICK_Throttle = DESCEND_SIGNAL;
+    }
+    else
+    {
+        // UAS is not airborne or it is a disarm command, disarm motors
+        js_rx_status = WAIT_HALF_SIGNAL;
+        JOYSTICK_MotorsArmed = false;
+        JOYSTICK_Throttle = RADIO_MIN_SIGNAL;
+    }
+}
+
+
+static uint16_t throttle_to_motor(uint16_t radio_signal)
+{
+    float signal_percentage = to_range(radio_signal, RADIO_MIN_SIGNAL_THROTTLE, RADIO_MAX_SIGNAL_THROTTLE, 0.0f, 1.0f);
+    uint16_t ret = RADIO_MIN_SIGNAL;
+
+    switch (js_rx_status)
+    {
+        case WAIT_HALF_SIGNAL:
+        {
+            if (signal_percentage >= DESCEND_PERCENTAGE_THRESHOLD && signal_percentage < CLIMB_PERCENTAGE_THRESHOLD)
+            {
+                js_rx_status = WAIT_TAKEOFF_SIGNAL;
+                ret = RADIO_MIN_SIGNAL;
+            }
+
+            break;
+        }
+        case WAIT_TAKEOFF_SIGNAL:
+        {
+            if (signal_percentage >= CLIMB_PERCENTAGE_THRESHOLD)
+            {
+                js_rx_status = WAIT_ANY_SIGNAL;
+                ret = CLIMB_SIGNAL;
+            }
+
+            break;
+        }
+        case WAIT_ANY_SIGNAL:
+        {
+            if (signal_percentage < DESCEND_PERCENTAGE_THRESHOLD)
+            {
+                js_rx_status = WAIT_ANY_SIGNAL;
+                ret = DESCEND_SIGNAL;
+            }
+            else if (signal_percentage >= DESCEND_PERCENTAGE_THRESHOLD && signal_percentage < CLIMB_PERCENTAGE_THRESHOLD)
+            {
+                js_rx_status = WAIT_ANY_SIGNAL;
+                ret = HOVERING_SIGNAL;
+            }
+            else
+            {
+                js_rx_status = WAIT_ANY_SIGNAL;
+                ret = CLIMB_SIGNAL;
+            }
+            break;
+        }
+    }
+
+    return ret;
+}
+
+
 void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p)
 {
     JOYSTICK_Roll = 0.0f;
     JOYSTICK_Pitch = 0.0f;
-    JOYSTICK_Throttle = 0.0f;
+    JOYSTICK_Throttle = RADIO_MIN_SIGNAL;
+
+    js_rx_status = WAIT_HALF_SIGNAL;
+
     JOYSTICK_MotorsArmed = false;
     JOYSTICK_Timeout = false;
 
@@ -63,6 +175,8 @@ void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p)
     pitch_signal_value = 0;
     throttle_signal_value = 0;
     armed_signal_value = 0;
+
+    armed_history_ll = 0;
 }
 
 
@@ -88,27 +202,22 @@ void JOYSTICK_Handler()
         armed_signal_value = (uint16_t) (armed_signal.pulseIn() & 0xFFFF);
     }
 
-    JOYSTICK_MotorsArmed = (armed_signal_value > ((RADIO_MAX_SIGNAL + RADIO_MIN_SIGNAL) / 2));
-    if (JOYSTICK_MotorsArmed)
+    
+    if (MAINT_IsOverridingRadio())
     {
-        if (MAINT_IsOverridingRadio())
-        {
-            JOYSTICK_Roll = to_range(roll_signal_value, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_roll, max_roll);
-            JOYSTICK_Pitch = -to_range(pitch_signal_value, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_pitch, max_pitch);
-        }
-        else
-        {
-            JOYSTICK_Roll = dead_center(to_range(roll_signal_value, RADIO_MIN_SIGNAL_ROLL, RADIO_MAX_SIGNAL_ROLL, min_roll, max_roll));
-            JOYSTICK_Pitch = -dead_center(to_range(pitch_signal_value, RADIO_MIN_SIGNAL_PITCH, RADIO_MAX_SIGNAL_PITCH, min_pitch, max_pitch));
-        }
-        JOYSTICK_Throttle = throttle_signal_value;
+        JOYSTICK_Roll = to_range(roll_signal_value, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_roll, max_roll);
+        JOYSTICK_Pitch = -to_range(pitch_signal_value, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_pitch, max_pitch);
+        JOYSTICK_MotorsArmed = (armed_signal_value > ((RADIO_MAX_SIGNAL + RADIO_MIN_SIGNAL) / 2));
     }
     else
     {
-        JOYSTICK_Roll = (max_roll + min_roll) / 2.0f;
-        JOYSTICK_Pitch = (max_pitch + min_pitch) / 2.0f;
-        JOYSTICK_Throttle = RADIO_MIN_SIGNAL;
+        JOYSTICK_Roll = dead_center(to_range(roll_signal_value, RADIO_MIN_SIGNAL_ROLL, RADIO_MAX_SIGNAL_ROLL, min_roll, max_roll));
+        JOYSTICK_Pitch = -dead_center(to_range(pitch_signal_value, RADIO_MIN_SIGNAL_PITCH, RADIO_MAX_SIGNAL_PITCH, min_pitch, max_pitch));
+        JOYSTICK_MotorsArmed = debounce_armed_signal();
     }
+
+    JOYSTICK_Throttle = throttle_to_motor(throttle_signal_value);
+    
 
     /** Check failure **/
     uint64_t lastRollRise_t_us = roll_signal.lastRise_us();
@@ -116,10 +225,10 @@ void JOYSTICK_Handler()
     uint64_t lastThrottleRise_t_us = throttle_signal.lastRise_us();
     uint64_t lastArmedRise_t_us = armed_signal.lastRise_us();
 
-    JOYSTICK_Timeout =  ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
-                        ((cur_t_us - lastPitchRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
-                        ((cur_t_us - lastThrottleRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS)) ||
-                        ((cur_t_us - lastArmedRise_t_us) > (JS_TIMEOUT_S * SECONDS_TO_MICROSECONDS));
+    JOYSTICK_Timeout =  ((cur_t_us - lastRollRise_t_us) > (JS_TIMEOUT_MILLIS * MILLISECONDS_TO_MICROSECONDS)) ||
+                        ((cur_t_us - lastPitchRise_t_us) > (JS_TIMEOUT_MILLIS * MILLISECONDS_TO_MICROSECONDS)) ||
+                        ((cur_t_us - lastThrottleRise_t_us) > (JS_TIMEOUT_MILLIS * MILLISECONDS_TO_MICROSECONDS)) ||
+                        ((cur_t_us - lastArmedRise_t_us) > (JS_TIMEOUT_MILLIS * MILLISECONDS_TO_MICROSECONDS));
     
     if (MAINT_IsOverridingRadio())
     {
@@ -130,5 +239,9 @@ void JOYSTICK_Handler()
     {
         JOYSTICK_MotorsArmed = false;
     }
-    
+
+    if (!JOYSTICK_MotorsArmed)
+    {
+        safe_disarm();
+    }
 }

@@ -5,12 +5,31 @@
 
 #define RADIO_MIN_SIGNAL 1000
 #define RADIO_MAX_SIGNAL 2000
-#define RADIO_MIN_SIGNAL_ROLL 1046
-#define RADIO_MAX_SIGNAL_ROLL 1920
-#define RADIO_MIN_SIGNAL_PITCH 1047
-#define RADIO_MAX_SIGNAL_PITCH 1927
+#define RADIO_MIN_SIGNAL_THROTTLE 1046
+#define RADIO_MAX_SIGNAL_THROTTLE 1920
+#define RADIO_MIN_SIGNAL_ROLL 1000
+#define RADIO_MAX_SIGNAL_ROLL 2000
+#define RADIO_MIN_SIGNAL_PITCH 1046
+#define RADIO_MAX_SIGNAL_PITCH 1935
 
 #define JS_DEAD_CENTER_ZONE_DEGREES 1.0f
+
+#define CLIMB_SIGNAL    1300
+#define HOVERING_SIGNAL 1200
+#define DESCEND_SIGNAL  1100
+
+#define DESCEND_PERCENTAGE_THRESHOLD 0.33333334f
+#define CLIMB_PERCENTAGE_THRESHOLD 0.6666667f
+
+#define DEBOUNCE_WINDOW_LEN 10 // At least 10 period of pwm with equal duty cycle, timeout occurs before because it elapses after one period of pwm with no rising edge detected
+                               // Hence fail-safe due to radio link loss has the priority to disarm motors
+
+typedef enum
+{
+    WAIT_HALF_SIGNAL,
+    WAIT_TAKEOFF_SIGNAL,
+    WAIT_ANY_SIGNAL
+} rx_throttle_status;
 
 extern float JOYSTICK_Roll;
 extern float JOYSTICK_Pitch;
