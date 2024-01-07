@@ -1985,4 +1985,6 @@ void MaintenanceWindow::OnReceivedThrottleParams(uint16_t descend, uint16_t hove
 	_rxThrottleParams[0] = descend;
 	_rxThrottleParams[1] = hovering;
 	_rxThrottleParams[2] = climb;
+
+	_ui.checkTxThrottleParams->setChecked(false);
 }

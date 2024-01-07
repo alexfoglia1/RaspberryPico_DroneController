@@ -44,11 +44,21 @@ User input are PWM signals the FS-IA6 module outputs on its channels:
 | ------------- | ------- | --------------------- | ------------- |
 Channel1 | Roll command | (1000, 2000) | (-5.0, 5.0)° |
 Channel2 | Pitch command | (1000, 2000) | (-5.0, 5.0)° |
-Channel3 | Throttle command | (1000, 2000) | (0, 100) % |
+Channel4 | Throttle command | (1000, 2000) | enum |
 Channel5 | Armed flag | (1000, 2000) | (false, true) |
 
+Throttle command is an enumerative value based on radio channel 4 pulse width duration:
+| Duration | Value |
+| -------- | ----- |
+| 1000ms -| 1332 ms | DESCEND |
+| 1333ms -| 1665 ms | HOVERING |
+| 1666ms -| 2000 ms | CLIMB |
+
+DESCEND, HOVERING and CLIMB are values in the range [1000-2000] stored in flash.
+
 When Channel5 signal pulse width is greater than 1500 ms the armed flag is true and motors starts spinning at a fixed speed which does not generate enough lift for quadcopter to take-off.
-If motors are armed, Channel1, Channel2 and Channel3 signals are converted into desired setpoint of roll, pitch and throttle. The PID loop starts to control quadcopter flight.
+If motors are armed, Channel1, Channel2 signals are converted into desired setpoint of roll and pitch. The PID loop starts to control quadcopter flight.
+Channel4 signal is translated in one of the three possible values (DESCEND, HOVERING or CLIMB).
 After timers have been launched, software eventually waits for messages from USB serial interface or UART.
 
 Asynchronous operations are executed on CPU0 by interrupt handlers:
@@ -60,8 +70,8 @@ Asynchronous operations are executed on CPU0 by interrupt handlers:
 | FS-IA6    | Channel1 falling edge | Asynchronous | N/A | 0 | Compute radio channel 1 pulse width to obtain the Roll set point |
 | FS-IA6    | Channel2 rising edge | Asynchronous | N/A | 0 | Store current milliseconds |
 | FS-IA6    | Channel2 falling edge | Asynchronous | N/A | 0 | Compute radio channel 2 pulse width to obtain the Pitch set point |
-| FS-IA6    | Channel3 rising edge | Asynchronous | N/A | 0 | Store current milliseconds |
-| FS-IA6    | Channel3 falling edge | Asynchronous | N/A | 0 | Compute radio channel 3 pulse width to obtain the Throttle set point |
+| FS-IA6    | Channel4 rising edge | Asynchronous | N/A | 0 | Store current milliseconds |
+| FS-IA6    | Channel4 falling edge | Asynchronous | N/A | 0 | Compute radio channel 3 pulse width to obtain the Throttle command |
 | FS-IA6    | Channel5 rising edge | Asynchronous | N/A | 0 | Store current milliseconds |
 | FS-IA6    | Channel5 falling edge | Asynchronous | N/A | 0 | Compute radio channel 5 pulse width to decide if motors shall be armed or not |
 | Pico Oscillator    | Timer0 | Synchronous | 100 Hz | 0 | Read user command, perform builtin test  |
@@ -106,7 +116,7 @@ Server expects the following packet:
 | 5 Header byte 4         | pitch_PID_error | pitch_PID_p | pitch_PID_i | pitch_PID_d | pitch_PID_u | yaw_PID_error | yaw_PID_p | yaw_PID_i |
 | 6 Header byte 5         | yaw_PID_d | yaw_PID_u | motor1_signal | motor2_signal | motor3_signal | motor4_signal | motors_armed | builtin_test_status |
 | 7 Header byte 6         | motor_params | js_params | PID_params | ptf1_params | imu_type | i2c_read | sw_ver | imu_offset |
-| 8 Header byte 7         | cmd_id_bit_7 | cmd_id_bit_6 | cmd_id_bit_5 | cmd_id_bit_4 | cmd_id_bit_3 | cmd_id_bit_2 | cmd_id_bit_1 | cmd_id_bit_0 |
+| 8 Header byte 7         | throttle_params | cmd_id_bit_6 | cmd_id_bit_5 | cmd_id_bit_4 | cmd_id_bit_3 | cmd_id_bit_2 | cmd_id_bit_1 | cmd_id_bit_0 |
 | 9..N Payload            | payload_data_n_bit_7 | payload_data_n_bit_6 | payload_data_n_bit_5 | payload_data_n_bit_4 | payload_data_n_bit_3 | payload_data_n_bit_2 | payload_data_n_bit_1      | payload_data_n_bit_0 |
 | N+1 Checksum            | cks_bit_7 | cks_bit_6 | cks_bit_5 | cks_bit_4 | cks_bit_3 | cks_bit_2 | cks_bit_1 | cks_bit_0 |
 
@@ -168,7 +178,7 @@ Values of the header fields determine the expected payload the client will send:
 | set_cmd_id               | 22    | I2C read | i2c channel (uint8_t) + i2c address (uint8_t) + i2c register (uint8_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 13 |
 | set_cmd_id               | 23    | I2C write | i2c channel (uint8_t) + i2c address (uint8_t) + i2c register (uint8_t) + value (uint8_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 14 |
 | set_cmd_id               | 24    | Reset IMU offset | REMOTE_CONTROL_TAG + checksum (uint8_t) | 10 |
-
+| set_cmd_id               | 25    | Set throttle params | Descend value (uint16_t) + Hovering value (uint16_t) + Climb value (uint16_t) + REMOTE_CONTROL_TAG + checksum (uint8_t) | 16 |
 
 IMU Type:
 
@@ -241,7 +251,7 @@ imu_type | IMU type | enum : uint8_t | 1 |
 i2c_read | value read after the i2c read command | uint8_t | 1 |
 sw_ver | software version | struct : uint8_t[4] | 4 |
 imu_offset | current IMU offset | Offset roll + Offset pitch | float[2] | 12 |
-
+throttle_params | current descend, hovering and climb signal values | Descend + Hovering + Climb | uint16_t[3] | 6 |
 
 Software version data structure:
 

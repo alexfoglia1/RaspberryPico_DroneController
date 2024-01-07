@@ -98,7 +98,7 @@ static void safe_disarm()
 }
 
 
-static uint16_t throttle_to_motor(uint16_t radio_signal)
+static uint16_t get_throttle_cmd(uint16_t radio_signal)
 {
     float signal_percentage = to_range(radio_signal, RADIO_MIN_SIGNAL_THROTTLE, RADIO_MAX_SIGNAL_THROTTLE, 0.0f, 1.0f);
     uint16_t ret = RADIO_MIN_SIGNAL;
@@ -216,9 +216,8 @@ void JOYSTICK_Handler()
         JOYSTICK_MotorsArmed = debounce_armed_signal();
     }
 
-    JOYSTICK_Throttle = throttle_to_motor(throttle_signal_value);
+    JOYSTICK_Throttle = get_throttle_cmd(throttle_signal_value);
     
-
     /** Check failure **/
     uint64_t lastRollRise_t_us = roll_signal.lastRise_us();
     uint64_t lastPitchRise_t_us = pitch_signal.lastRise_us();
