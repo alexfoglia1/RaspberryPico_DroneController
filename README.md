@@ -50,9 +50,9 @@ Channel5 | Armed flag | (1000, 2000) | (false, true) |
 Throttle command is an enumerative value based on radio channel 4 pulse width duration:
 | Duration | Value |
 | -------- | ----- |
-| 1000ms -| 1332 ms | DESCEND |
-| 1333ms -| 1665 ms | HOVERING |
-| 1666ms -| 2000 ms | CLIMB |
+| 1000ms - 1332ms | DESCEND |
+| 1333ms - 1665ms | HOVERING |
+| 1666ms - 2000ms | CLIMB |
 
 DESCEND, HOVERING and CLIMB are values in the range [1000-2000] stored in flash.
 
