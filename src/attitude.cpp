@@ -192,16 +192,16 @@ bool ATTITUDE_Init()
     {
         case IMU_TYPE::LSM9DS1:
             imu = new LSM9DS1Interface();
-            return imu->begin(i2c0, LSM9DS1_SDA_PIN, LSM9DS1_SCL_PIN);
+            return imu->begin(i2c1, IMU_SDA_PIN, IMU_SCL_PIN);
         case IMU_TYPE::MPU6050:
             imu = new MPU6050Interface();
-            return imu->begin(i2c1, MPU6050_SDA_PIN, MPU6050_SCL_PIN);
+            return imu->begin(i2c1, IMU_SDA_PIN, IMU_SCL_PIN);
         case IMU_TYPE::BNO055:
             imu = new BNO055Interface();
-            return imu->begin(i2c1, BNO055_SDA_PIN, BNO055_SCL_PIN);
+            return imu->begin(i2c1, IMU_SDA_PIN, IMU_SCL_PIN);
         default:
             imu = new MPU6050Interface();
-            return imu->begin(i2c1, MPU6050_SDA_PIN, MPU6050_SCL_PIN);
+            return imu->begin(i2c1, IMU_SDA_PIN, IMU_SCL_PIN);
     }
 }
 

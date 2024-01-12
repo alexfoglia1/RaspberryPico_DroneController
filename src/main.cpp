@@ -57,9 +57,11 @@ void __cpu1_entry_point__()
 }
 
 #include <stdio.h>
+#include "pico/stdlib.h"
+
+
 int main()
 {
-
     /** Initialize gpio directions **/
     InitBoard();
     /** Initialize application **/

@@ -46,6 +46,7 @@
         "cinttypes": "cpp",
         "typeinfo": "cpp",
         "xutility": "cpp",
-        "time.h": "c"
+        "time.h": "c",
+        "pio_i2c.h": "c"
     }
 }

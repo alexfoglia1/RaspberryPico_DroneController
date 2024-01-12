@@ -509,7 +509,7 @@
          <number>20000</number>
         </property>
         <property name="singleStep">
-         <number>1</number>
+         <number>10</number>
         </property>
         <property name="value">
          <number>1000</number>
@@ -2627,6 +2627,11 @@
           <string>i2c1</string>
          </property>
         </item>
+        <item>
+         <property name="text">
+          <string>pio</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item>
@@ -2680,6 +2685,11 @@
         <item>
          <property name="text">
           <string>i2c1</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>pio</string>
          </property>
         </item>
        </widget>

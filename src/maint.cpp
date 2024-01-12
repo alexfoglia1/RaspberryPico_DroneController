@@ -6,6 +6,10 @@
 #include "cbit.h"
 #include "user.h"
 #include "i2c_utils.h"
+extern "C"
+{
+    #include "pio_i2c_utils.h"
+}
 #include "uart.h"
 
 #include <pico/time.h>
@@ -552,15 +556,36 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                 MAINT_ImuType = IMU_TYPE(*reinterpret_cast<uint8_t*>(&rx_message.payload[0]));
                 break;
             case MAINT_CMD_ID::MAINT_CMD_I2C_READ:
-                MAINT_I2CRead = i2cReadByteFromRegister(*reinterpret_cast<uint8_t*>(&rx_message.payload[0]) == 0 ? i2c0 : i2c1,
-                                                        rx_message.payload[1],
-                                                        rx_message.payload[2]);
+                switch (*reinterpret_cast<uint8_t*>(&rx_message.payload[0]))
+                {
+                    case 0:
+                        MAINT_I2CRead = i2cReadByteFromRegister(i2c0, rx_message.payload[1], rx_message.payload[2]);                    
+                        break;
+                    case 1:
+                        MAINT_I2CRead = i2cReadByteFromRegister(i2c1, rx_message.payload[1], rx_message.payload[2]);                    
+                        break;
+                    case 2:
+                        MAINT_I2CRead = pioI2cReadByteFromRegister(pio0, rx_message.payload[1], rx_message.payload[2]);     
+                        break;
+                    default:
+                        break;
+                }
                 break;
             case MAINT_CMD_ID::MAINT_CMD_I2C_WRITE:
-                i2cWriteByteToRegister(*reinterpret_cast<uint8_t*>(&rx_message.payload[0]) == 0 ? i2c0 : i2c1,
-                                                        rx_message.payload[1],
-                                                        rx_message.payload[2],
-                                                        rx_message.payload[3]);
+                switch (*reinterpret_cast<uint8_t*>(&rx_message.payload[0]))
+                {
+                    case 0:
+                        i2cWriteByteToRegister(i2c0, rx_message.payload[1], rx_message.payload[2], rx_message.payload[3]);                    
+                        break;
+                    case 1:
+                        i2cWriteByteToRegister(i2c1, rx_message.payload[1], rx_message.payload[2], rx_message.payload[3]);                       
+                        break;
+                    case 2:
+                        pioI2cWriteByteToRegister(pio0, rx_message.payload[1], rx_message.payload[2], rx_message.payload[3]);        
+                        break;
+                    default:
+                        break;
+                }
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_IMU_OFFSET:
                 ATTITUDE_Roll0 = (*reinterpret_cast<float*>(&rx_message.payload[0]));

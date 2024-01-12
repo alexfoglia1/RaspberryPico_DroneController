@@ -2,11 +2,17 @@
 #include <stdio.h>
 #include <pico/stdlib.h>
 #include <hardware/gpio.h>
+#include <hardware/i2c.h>
+
+extern "C"
+{
+    #include "pio_i2c_utils.h"
+}
 
 
 const uint8_t MAJOR_V = 1;
 const uint8_t MINOR_V = 0;
-const uint8_t STAGE_V = 27;
+const uint8_t STAGE_V = 28;
 const REL_TYPE_TAG REL_TYPE = REL_TYPE_TAG::BETA;
 
 
@@ -24,4 +30,16 @@ void InitBoard()
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
     irq_set_priority(IO_IRQ_BANK0, 0x40);
+
+    i2c_init(i2c1, I2C_FREQUENCY_HZ);
+
+    PIO pio = pio0;
+    uint sm = 0;
+    uint offset = pio_add_program(pio, &i2c_program);
+    i2c_program_init(pio, sm, offset, BARO_SDA_PIN, BARO_SCL_PIN);
+
+    gpio_set_function(IMU_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(IMU_SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(IMU_SDA_PIN);
+    gpio_pull_up(IMU_SCL_PIN);
 }
