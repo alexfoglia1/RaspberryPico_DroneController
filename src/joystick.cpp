@@ -142,6 +142,7 @@ static uint16_t get_throttle_cmd(uint16_t radio_signal)
                 js_rx_status = WAIT_ANY_SIGNAL;
                 ret = MAINT_ThrottleParams[int(MAINT_THROTTLE_PARAM::CLIMB)];
             }
+            
             break;
         }
     }

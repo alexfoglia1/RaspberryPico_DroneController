@@ -2,7 +2,7 @@
 #define USER_H
 
 #define I2C_FREQUENCY_HZ 400000
-#define JS_TIMEOUT_MILLIS 20 // 1 expected pwm period
+#define JS_TIMEOUT_MILLIS 25 // 1 expected pwm period + 5 millis
 #define MAINT_TIMEOUT_MILLIS 1000
 #define MILLISECONDS_TO_MICROSECONDS 1000UL
 #define SECONDS_TO_MICROSECONDS 1000000UL
@@ -34,7 +34,7 @@
 #define PROBE_GPIO_CPU0 20
 #define PROBE_GPIO_CPU1 21
 
-#define MOTOR_ARMED_THRESHOLD 200
+#define MOTOR_ARMED_THRESHOLD 250
 
 #include <stdint.h>
 

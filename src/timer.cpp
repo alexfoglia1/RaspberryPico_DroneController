@@ -54,7 +54,15 @@ bool CPU1_TIMER_Loop(repeating_timer_t* timer)
 {
     gpio_put(PROBE_GPIO_CPU1, true);
 
-    ATTITUDE_Handler();
+    if (JOYSTICK_MotorsArmed)
+    {
+        ATTITUDE_Handler();
+    }
+    else
+    {
+        ATTITUDE_Calibrate();
+    }
+    
     if (!MAINT_IsControllingMotors())
     {
         MOTORS_Handler();

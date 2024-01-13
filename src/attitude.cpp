@@ -167,6 +167,7 @@ static void estimate_attitude()
     wasArmed = JOYSTICK_MotorsArmed;
 }
 
+
 bool ATTITUDE_Init()
 {
     ax_flt_tag = {};
@@ -212,7 +213,6 @@ void ATTITUDE_Handler()
     float gx, gy, gz;
     float mx, my, mz;
     
-
     imu->getAccel(&ax, &ay, &az);
     imu->getGyro(&gx, &gy, &gz);
     imu->getMagneticField(&mx, &my, &mz);
@@ -243,15 +243,17 @@ void ATTITUDE_Handler()
 
 void ATTITUDE_Calibrate()
 {
-    ATTITUDE_Roll0 = 0;
-    ATTITUDE_Pitch0 = 0;
-
-    sleep_ms(2000);
-    
     ATTITUDE_Handler();
 
-    ATTITUDE_Roll0 = body_roll;
-    ATTITUDE_Pitch0 = body_pitch;
+    if (ATTITUDE_RelRoll() != 0.0f)
+    {
+        ATTITUDE_Roll0 = body_roll;
+    }
+    
+    if (ATTITUDE_RelPitch() != 0.0f)
+    {
+        ATTITUDE_Pitch0 = body_pitch;
+    }
 }
 
 
