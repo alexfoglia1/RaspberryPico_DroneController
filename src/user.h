@@ -21,8 +21,6 @@
 
 #define IMU_SDA_PIN 2
 #define IMU_SCL_PIN 3
-#define BARO_SDA_PIN 18
-#define BARO_SCL_PIN 19
 
 #define BAUD_RATE 115200
 #define DATA_BITS 8

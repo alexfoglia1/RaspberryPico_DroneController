@@ -46,6 +46,9 @@ bool Maint::Maintenance::Open(QString serialPortName, enum QSerialPort::BaudRate
 
 	bool ret = _serialPort->open(QSerialPort::OpenModeFlag::ReadWrite);
 
+    _serialPort->setDataTerminalReady(true);
+    _serialPort->setRequestToSend(true);
+
     if (ret)
     {
         _checkDownlink->setInterval(1000);

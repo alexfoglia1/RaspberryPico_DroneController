@@ -10,7 +10,6 @@ pico_sdk_init()
  
 add_executable(DroneController
   src/drivers/i2c_utils/i2c_utils.h
-  src/drivers/i2c_utils/pio_i2c_utils.h
   src/drivers/lsm9ds1/LSM9DS1.h
   src/drivers/lsm9ds1/LSM9DS1_Registers.h
   src/drivers/lsm9ds1/LSM9DS1_Types.h
@@ -18,7 +17,6 @@ add_executable(DroneController
   src/drivers/bno055/bno055.h
   src/drivers/servo/servo.h 
   src/drivers/servo/pulse.h
-  src/drivers/pio/pio_i2c.h
   src/imu_interface.h
   src/mpu6050_interface.h
   src/lsm9ds1_interface.h
@@ -34,13 +32,11 @@ add_executable(DroneController
   src/cbit.h
 
   src/drivers/i2c_utils/i2c_utils.cpp
-  src/drivers/i2c_utils/pio_i2c_utils.cpp
   src/drivers/lsm9ds1/LSM9DS1.cpp
   src/drivers/mpu6050/mpu6050.cpp
   src/drivers/bno055/bno055.cpp
   src/drivers/servo/servo.cpp
   src/drivers/servo/pulse.cpp
-  src/drivers/pio/pio_i2c.c
   src/imu_interface.cpp
   src/lsm9ds1_interface.cpp
   src/mpu6050_interface.cpp
@@ -58,12 +54,11 @@ add_executable(DroneController
 )
 
 message(${CMAKE_CURRENT_LIST_DIR})
-pico_generate_pio_header(DroneController ${CMAKE_CURRENT_LIST_DIR}/src/drivers/pio/i2c.pio)
 
-target_include_directories(DroneController PUBLIC src/drivers/lsm9ds1 src/drivers/servo src/drivers/mpu6050 src/drivers/bno055 src/drivers/i2c_utils src/drivers/pio)
+target_include_directories(DroneController PUBLIC src/drivers/lsm9ds1 src/drivers/servo src/drivers/mpu6050 src/drivers/bno055 src/drivers/i2c_utils)
 
 pico_enable_stdio_usb(DroneController 1)
 
 pico_add_extra_outputs(DroneController)
  
-target_link_libraries(DroneController pico_stdlib hardware_i2c hardware_pwm hardware_pio hardware_flash hardware_sync pico_multicore) 
+target_link_libraries(DroneController pico_stdlib hardware_i2c hardware_pwm hardware_flash hardware_sync pico_multicore) 

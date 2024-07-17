@@ -6,10 +6,6 @@
 #include "cbit.h"
 #include "user.h"
 #include "i2c_utils.h"
-extern "C"
-{
-    #include "pio_i2c_utils.h"
-}
 #include "uart.h"
 
 #include <pico/time.h>
@@ -565,7 +561,6 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                         MAINT_I2CRead = i2cReadByteFromRegister(i2c1, rx_message.payload[1], rx_message.payload[2]);                    
                         break;
                     case 2:
-                        MAINT_I2CRead = pioI2cReadByteFromRegister(pio0, rx_message.payload[1], rx_message.payload[2]);     
                         break;
                     default:
                         break;
@@ -581,7 +576,6 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                         i2cWriteByteToRegister(i2c1, rx_message.payload[1], rx_message.payload[2], rx_message.payload[3]);                       
                         break;
                     case 2:
-                        pioI2cWriteByteToRegister(pio0, rx_message.payload[1], rx_message.payload[2], rx_message.payload[3]);        
                         break;
                     default:
                         break;
