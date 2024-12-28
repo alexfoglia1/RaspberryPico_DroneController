@@ -3,14 +3,15 @@
 
 typedef struct
 {
-    float   ysp;
-    float   y;
-    float   ykm1;
     float   error;
-    float   P;
-    float   I;
-    float   D;
-    float   u;
+    float   integral;
+    float   derivative;
+    float   output;
+    bool    sat_flag;
+
+    float P;
+    float I;
+    float D;
 } PID_CONTROL_TAG;
 
 float pid_controller(PID_CONTROL_TAG* pid, float* gain, float ysp, float y);

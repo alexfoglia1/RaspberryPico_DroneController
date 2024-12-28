@@ -216,6 +216,8 @@ public:
     void I2CRead(uint8_t i2c, uint8_t addr, uint8_t reg);
     void I2CWrite(uint8_t i2c, uint8_t addr, uint8_t reg, uint8_t val);
     void TxWriteToFlash();
+    void ReplayLogFile(const char* path);
+    void CreateMatlabMatrix(const char* path);
     void TxImuOffset(float roll_offset, float pitch_offset);
     int ClearLogs();
 

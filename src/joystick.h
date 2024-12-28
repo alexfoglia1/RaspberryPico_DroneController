@@ -20,12 +20,16 @@
 #define DEBOUNCE_WINDOW_LEN 10 // At least 10 period of pwm with equal duty cycle, timeout occurs before because it elapses after one period of pwm with no rising edge detected
                                // Hence fail-safe due to radio link loss has the priority to disarm motors
 
+
+#ifdef __JOYMODE_2__
 typedef enum
 {
     WAIT_HALF_SIGNAL,
     WAIT_TAKEOFF_SIGNAL,
     WAIT_ANY_SIGNAL
 } rx_throttle_status;
+#endif
+
 
 extern float JOYSTICK_Roll;
 extern float JOYSTICK_Pitch;

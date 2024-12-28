@@ -87,9 +87,11 @@ private slots:
 	void OnPlotTrack1ValueChanged(int newValue);
 	void OnPlotTrack2ValueChanged(int newValue);
 	void OnPlotTrack3ValueChanged(int newValue);
+	void OnPlotTrack4ValueChanged(int newValue);
 	void OnComboTrack1TextChanged(const QString& newText);
 	void OnComboTrack2TextChanged(const QString& newText);
 	void OnComboTrack3TextChanged(const QString& newText);
+	void OnComboTrack4TextChanged(const QString& newText);
 	void OnHeaderChanged();
 
 	void OnBtnSendSetMotors();
@@ -173,6 +175,7 @@ private slots:
 	void OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
 	void OnReceivedImuOffset(float, float);
 	void OnReceivedThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb);
+	void OnActionOpen();
 };
 
 #endif

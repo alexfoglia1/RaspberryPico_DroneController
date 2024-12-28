@@ -27,7 +27,9 @@ static uint16_t pitch_signal_value;
 static uint16_t throttle_signal_value;
 static uint16_t armed_signal_value;
 
+#ifdef __JOYMODE_2__
 static rx_throttle_status js_rx_status;
+#endif
 static bool armed_history[DEBOUNCE_WINDOW_LEN];
 static uint16_t armed_history_ll;
 
@@ -43,7 +45,6 @@ static float dead_center(float val)
         return val;
     }
 }
-
 
 static bool debounce_armed_signal()
 {
@@ -76,6 +77,7 @@ static bool debounce_armed_signal()
 }
 
 
+#ifdef __JOYMODE_2__
 static void safe_disarm()
 {
     JOYSTICK_Roll = (max_roll + min_roll) / 2.0f;
@@ -149,7 +151,7 @@ static uint16_t get_throttle_cmd(uint16_t radio_signal)
 
     return ret;
 }
-
+#endif
 
 void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p)
 {
@@ -157,7 +159,9 @@ void JOYSTICK_Init(float min_r, float max_r, float min_p, float max_p)
     JOYSTICK_Pitch = 0.0f;
     JOYSTICK_Throttle = RADIO_MIN_SIGNAL;
 
+#ifdef __JOYMODE_2__
     js_rx_status = WAIT_HALF_SIGNAL;
+#endif
 
     JOYSTICK_MotorsArmed = false;
     JOYSTICK_Timeout = false;
@@ -217,8 +221,12 @@ void JOYSTICK_Handler()
         JOYSTICK_MotorsArmed = debounce_armed_signal();
     }
 
+#ifdef __JOYMODE_2__
     JOYSTICK_Throttle = get_throttle_cmd(throttle_signal_value);
-    
+#else
+    JOYSTICK_Throttle = throttle_signal_value;
+#endif
+
     /** Check failure **/
     uint64_t lastRollRise_t_us = roll_signal.lastRise_us();
     uint64_t lastPitchRise_t_us = pitch_signal.lastRise_us();
@@ -240,8 +248,10 @@ void JOYSTICK_Handler()
         JOYSTICK_MotorsArmed = false;
     }
 
+#ifdef __JOYMODE_2__
     if (!JOYSTICK_MotorsArmed)
     {
         safe_disarm();
     }
+#endif
 }

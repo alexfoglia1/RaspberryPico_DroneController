@@ -10,10 +10,10 @@
 #include <pico/multicore.h>
 
 
-const float MIN_ROLL_DEGREES = -5.0f;
-const float MAX_ROLL_DEGREES = 5.0f;
-const float MIN_PITCH_DEGREES = -5.0f;
-const float MAX_PITCH_DEGREES = 5.0;
+const float MIN_ROLL_DEGREES = -30.0f;
+const float MAX_ROLL_DEGREES = 30.0f;
+const float MIN_PITCH_DEGREES = -30.0f;
+const float MAX_PITCH_DEGREES = 30.0;
 
 #define CPU_CHECK 0xB0BAF377 // A long time ago, in a galaxy far far away this drone have an hyperguide
 
@@ -91,6 +91,7 @@ int main()
     else
     {
         CBIT_Set_fail_code(fail_code.Dword, false);
+        //ATTITUDE_Calibrate();
     }
     
     JOYSTICK_Init(MIN_ROLL_DEGREES,

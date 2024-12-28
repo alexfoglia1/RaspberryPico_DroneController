@@ -79,6 +79,22 @@ void JoystickBridge::onButtonEvent(const QJoystickButtonEvent& evt)
 
 		emit overrideSignals(_armedSignal, _rollSignal, _pitchSignal, _throttleSignal);
 	}
+	else if (evt.button == 11 && evt.pressed && _isOverride)
+	{
+		if (_throttleSignal <= 1990)
+		{
+			_throttleSignal += 10;
+			emit overrideSignals(_armedSignal, _rollSignal, _pitchSignal, _throttleSignal);
+		}
+	}
+	else if (evt.button == 12 && evt.pressed && _isOverride)
+	{
+		if (_throttleSignal >= 1010)
+		{
+			_throttleSignal -= 10;
+			emit overrideSignals(_armedSignal, _rollSignal, _pitchSignal, _throttleSignal);
+		}
+	}
 	
 }
 
@@ -86,17 +102,18 @@ void JoystickBridge::onButtonEvent(const QJoystickButtonEvent& evt)
 void JoystickBridge::onAxisEvent(const QJoystickAxisEvent& evt)
 {
 	qreal evtValue = saturate(evt.value, -1.0, 1.0);
+	//printf("evt.axis(%d)\n", evt.axis);
 
-	bool isValidAxisEvent = (evt.axis == 1 || evt.axis == 2 || evt.axis == 3);
+	bool isValidAxisEvent = (evt.axis == 5 || evt.axis == 2 || evt.axis == 3);
 	if (isValidAxisEvent)
 	{
 		quint16 throttleSignal = _throttleSignal;
 		quint16 rollSignal = _rollSignal;
 		quint16 pitchSignal = _pitchSignal;
 
-		if (evt.axis == 1)
+		if (evt.axis == 5)
 		{
-			qreal fSignal = deadCenterZone(-evtValue, 0.1, 1500.0, -1.0, 1.0);
+			qreal fSignal = 1000.0 + evtValue * 1000.0;// deadCenterZone(-evtValue, 0.1, 1500.0, -1.0, 1.0);
 
 			_throttleSignal = (quint16)(fSignal);
 		}

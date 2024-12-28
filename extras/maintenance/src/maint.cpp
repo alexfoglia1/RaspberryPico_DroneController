@@ -4,6 +4,9 @@
 #include <qdir.h>
 #include <qdiriterator.h>
 #include <qfile.h>
+#include <qtextstream.h>
+#include <qregularexpression.h>
+#include <qthread.h>
 
 Maint::Maintenance::Maintenance()
 {
@@ -307,6 +310,223 @@ void Maint::Maintenance::TxWriteToFlash()
 
     _txStatus = Maint::TX_STATUS::TX_SET;
 }
+
+
+void Maint::Maintenance::CreateMatlabMatrix(const char* path)
+{
+    QFile file(path);
+    QByteArray byteArray;
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qWarning("Cannot open file: %s", file.errorString().toUtf8().constData());
+        return;
+    }
+
+    QTextStream in(&file);
+    QRegularExpression regex("\\[.*?\\]\\s*(.*)");
+
+    FILE* outputFile = fopen("output.m", "w");
+    fprintf(outputFile, "M = [\n");
+    QVector<QByteArray> binLines;
+    QVector<int> syncIndexes;
+    int byteIdx = 0;
+    Maint::MAINT_STATUS parseStatus = Maint::MAINT_STATUS::WAIT_SYNC;
+    int expectedPayloadSize = 0;
+    int currentPayloadIndex = 0;
+    int currentHeaderIndex = 0;
+    while (!in.atEnd())
+    {
+        QString line = in.readLine();
+        QRegularExpressionMatch match = regex.match(line);
+
+        if (match.hasMatch())
+        {
+            QString byteString = match.captured(1); // Captures the part after the timestamp
+            QStringList byteTokens = byteString.split(" ", Qt::SkipEmptyParts);
+
+            for (const QString& token : byteTokens)
+            {
+                bool ok;
+                int byteValue = token.toInt(&ok, 16); // Convert hex string to int
+                if (ok)
+                {
+                    byteArray.append(static_cast<char>(byteValue));
+
+                    switch (parseStatus)
+                    {
+                    case MAINT_STATUS::WAIT_SYNC:
+                    {
+                        if (byteValue == 0xFF && parseStatus == Maint::MAINT_STATUS::WAIT_SYNC)
+                        {
+                            parseStatus = MAINT_STATUS::WAIT_HEADER_BYTE_0;
+                            syncIndexes.push_back(byteIdx);
+                        }
+                        break;
+                    }
+                    case MAINT_STATUS::WAIT_HEADER_BYTE_0:
+                        currentHeaderIndex = byteIdx;
+                        parseStatus = MAINT_STATUS::WAIT_HEADER_BYTE_1;
+                        break;
+                    case MAINT_STATUS::WAIT_HEADER_BYTE_1:
+                        parseStatus = MAINT_STATUS::WAIT_HEADER_BYTE_2;
+                        break;
+                    case MAINT_STATUS::WAIT_HEADER_BYTE_2:
+                        parseStatus = MAINT_STATUS::WAIT_HEADER_BYTE_3;
+                        break;
+                    case MAINT_STATUS::WAIT_HEADER_BYTE_3:
+                        parseStatus = MAINT_STATUS::WAIT_HEADER_BYTE_4;
+                        break;
+                    case MAINT_STATUS::WAIT_HEADER_BYTE_4:
+                        parseStatus = MAINT_STATUS::WAIT_HEADER_BYTE_5;
+                        break;
+                    case MAINT_STATUS::WAIT_HEADER_BYTE_5:
+                        parseStatus = MAINT_STATUS::WAIT_HEADER_BYTE_6;
+                        break;
+                    case MAINT_STATUS::WAIT_HEADER_BYTE_6:
+                        parseStatus = MAINT_STATUS::WAIT_HEADER_BYTE_7;
+                        break;
+                    case MAINT_STATUS::WAIT_HEADER_BYTE_7:
+                        expectedPayloadSize = calc_exp_bytes(reinterpret_cast<MAINT_HEADER_T*>(byteArray.data() + currentHeaderIndex));
+                        parseStatus = MAINT_STATUS::WAIT_PAYLOAD;
+                        break;
+                    case MAINT_STATUS::WAIT_PAYLOAD:
+                        currentPayloadIndex += 1;
+
+                        if (currentPayloadIndex == expectedPayloadSize)
+                        {
+                            expectedPayloadSize = 0;
+                            currentPayloadIndex = 0;
+                            currentHeaderIndex = 0;
+                            parseStatus = MAINT_STATUS::WAIT_SYNC;
+                        }
+                        break;
+                    }
+
+                    byteIdx += 1;
+                }
+                else
+                {
+                    qWarning("Invalid byte value: %s", token.toUtf8().constData());
+                }
+            }
+        }
+        else
+        {
+            qWarning("Line does not match expected format: %s", line.toUtf8().constData());
+        }
+    }
+
+    int nSyncs = syncIndexes.size();
+    for (int i = 0; i < nSyncs; i++)
+    {
+        binLines.push_back(QByteArray());
+    }
+    for (int i = 0; i < nSyncs; i++)
+    {
+        int startCopy = syncIndexes.at(i) + 1;
+        int endCopy = (i == nSyncs - 1) ? byteArray.size() - 1 : syncIndexes.at(i + 1) - 1;
+        for (int j = startCopy; j < endCopy; j++)
+        {
+            binLines[i].push_back(byteArray.at(j));
+        }
+    }
+
+    int binLineIdx = 0;
+    for (auto& binLine : binLines)
+    {
+        const Maint::MAINT_HEADER_T* pHdr = reinterpret_cast<const Maint::MAINT_HEADER_T*>(binLine.constData());
+
+        uint16_t motor1 = 0;
+        uint16_t motor2 = 0;
+        uint16_t motor3 = 0;
+        uint16_t motor4 = 0;
+
+        float roll = 0.0f;
+        float pitch = 0.0f;
+        if (pHdr->Bits.motor1 &&
+            pHdr->Bits.motor2 &&
+            pHdr->Bits.motor3 &&
+            pHdr->Bits.motor4 &&
+            pHdr->Bits.body_pitch &&
+            pHdr->Bits.body_roll)
+        {
+            const uint8_t* pByte = reinterpret_cast<const uint8_t*>(binLine.constData());
+            roll = *reinterpret_cast<const float*>(pByte + sizeof(Maint::MAINT_HEADER_T) + 0);
+            pitch = *reinterpret_cast<const float*>(pByte + sizeof(Maint::MAINT_HEADER_T) + 1 * sizeof(float));
+            motor1 = *reinterpret_cast<const uint16_t*>(pByte + sizeof(Maint::MAINT_HEADER_T) + 2 * sizeof(float));
+            motor2 = *reinterpret_cast<const uint16_t*>(pByte + sizeof(Maint::MAINT_HEADER_T) + 2 * sizeof(float) + 1 * sizeof(uint16_t));
+            motor3 = *reinterpret_cast<const uint16_t*>(pByte + sizeof(Maint::MAINT_HEADER_T) + 2 * sizeof(float) + 2 * sizeof(uint16_t));
+            motor4 = *reinterpret_cast<const uint16_t*>(pByte + sizeof(Maint::MAINT_HEADER_T) + 2 * sizeof(float) + 3 * sizeof(uint16_t));
+
+            fprintf(outputFile, "%d, %d, %d, %d, %.10f, %.10f;\n", motor1, motor2, motor3, motor4, roll, pitch);
+        }
+
+        binLineIdx += 1;
+    }
+    fprintf(outputFile, "];\n");
+    fclose(outputFile);
+
+    file.close();
+}
+
+
+
+void Maint::Maintenance::ReplayLogFile(const char* path)
+{
+    QFile file(path);
+    QByteArray byteArray;
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        qWarning("Cannot open file: %s", file.errorString().toUtf8().constData());
+        return;
+    }
+
+    QTextStream in(&file);
+    QRegularExpression regex("\\[.*?\\]\\s*(.*)");
+
+    while (!in.atEnd())
+    {
+        QString line = in.readLine();
+        QRegularExpressionMatch match = regex.match(line);
+
+        if (match.hasMatch())
+        {
+            QString byteString = match.captured(1); // Captures the part after the timestamp
+            QStringList byteTokens = byteString.split(" ", Qt::SkipEmptyParts);
+
+            for (const QString& token : byteTokens)
+            {
+                bool ok;
+                int byteValue = token.toInt(&ok, 16); // Convert hex string to int
+                if (ok)
+                {
+                    byteArray.append(static_cast<char>(byteValue));
+                }
+                else
+                {
+                    qWarning("Invalid byte value: %s", token.toUtf8().constData());
+                }
+            }
+
+            for (auto& byte : byteArray)
+            {
+                //printf("%c", byte);
+                update_fsm(byte);
+            }
+            byteArray.clear(); // Clear the QByteArray for the next line
+            QThread::msleep(10);
+        }
+        else
+        {
+            qWarning("Line does not match expected format: %s", line.toUtf8().constData());
+        }
+    }
+
+    file.close();
+}
+
 
 
 void Maint::Maintenance::TxImuOffset(float roll_offset, float pitch_offset)

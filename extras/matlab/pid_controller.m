@@ -1,18 +1,16 @@
-function [pid_u, ykm1, ikm1, dkm1] = pid_controller (ysp, y, kp, ki, kt, sat, ad, bd, ykm1, ikm1, dkm1)
+function [pid_u, ek, ik] = pid_controller (ysp, y, kp, ki, kd, dt, sat, ikm1, ekm1)
     %  updates actual values
-    error = ysp - y;
+    ek = ysp - y;
+    ik = ikm1 + (ek * dt);
+    dk = (ek - ekm1) / dt;
+
     %
-    P = error * kp;
-    D = dkm1 * ad - (y - ykm1) * bd;
-    ftmp = P + ikm1 + D;
+    P = ek * kp;
+    I = ik * ki;
+    D = dk * kd;
+    ftmp = P + I + D;
+
     pid_u = minMax(ftmp, -sat, sat);
-    %
-    I = ikm1 + error * ki;
-    I += (pid_u - ftmp) * kt;
-    %
-    ykm1 = y;
-    ikm1 = I;
-    dkm1 = D;
 
 endfunction
 

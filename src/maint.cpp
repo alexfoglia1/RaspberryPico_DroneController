@@ -393,7 +393,7 @@ void MAINT_Init()
             maint_float_t kp, ki, kt, sat, ad, bd;
             kp.fval = 1.0f;
             ki.fval = 0.0f;
-            kt.fval = 0.0f;
+            kt.fval = 1.0f / static_cast<float>(CTRL_LOOP_FREQUENCY_HZ);
             sat.fval = 50.0f;
             ad.fval = 0.0f;
             bd.fval = 0.0f;
@@ -815,7 +815,7 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.roll_pid_u)
         {
-            float fdata = pid_roll.u;
+            float fdata = pid_roll.output;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
@@ -850,7 +850,7 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.pitch_pid_u)
         {
-            float fdata = pid_pitch.u;
+            float fdata = pid_pitch.output;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);
@@ -885,7 +885,7 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
         }
         if (tx_message.header.Bits.yaw_pid_u)
         {
-            float fdata = pid_yaw.u;
+            float fdata = pid_yaw.output;
             uint32_t idata = *(reinterpret_cast<uint32_t*>(&fdata));
             memcpy(&tx_message.payload[tx_payload_idx], &idata, sizeof(uint32_t));
             tx_payload_idx += sizeof(uint32_t);

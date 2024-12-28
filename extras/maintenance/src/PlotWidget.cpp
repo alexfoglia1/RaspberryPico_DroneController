@@ -16,6 +16,7 @@ PlotWidget::PlotWidget(QWidget* parent) : QLabel(parent)
 	_ySpan[0] = 4000;
 	_ySpan[1] = 4000;
 	_ySpan[2] = 4000;
+	_ySpan[3] = 4000;
 
 	_maxY[0] = -_ySpan[0];
 	_minY[0] = _ySpan[0];
@@ -23,10 +24,13 @@ PlotWidget::PlotWidget(QWidget* parent) : QLabel(parent)
 	_minY[1] = _ySpan[1];
 	_maxY[2] = -_ySpan[2];
 	_minY[2] = _ySpan[2];
+	_maxY[3] = -_ySpan[3];
+	_minY[3] = _ySpan[3];
 
 	_trackColors[0] = QColor(0x55, 0xff, 0xff);
-	_trackColors[1] = QColor(0xff, 0x55, 0xff);
-	_trackColors[2] = QColor(0xff, 0xff, 0x55);
+	_trackColors[1] = QColor(0xff, 0xff, 0x55);
+	_trackColors[2] = QColor(0xff, 0x55, 0xff);
+	_trackColors[3] = QColor(0xff, 0xaa, 0x00);
 
 	_bg = nullptr;
 }
@@ -48,7 +52,7 @@ void PlotWidget::UpdateSamplesPerSecond(double newValue)
 
 void PlotWidget::SetYSpan(int track, int ySpan)
 {
-	if (track >= 0 && track < 3)
+	if (track >= 0 && track < 4)
 	{
 		_ySpan[track] = ySpan;
 	}
@@ -65,7 +69,7 @@ void PlotWidget::SetXSpan(int xSpan)
 	
 	if (dXspan > 0)
 	{
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 4; i++)
 		{
 			size_t samplesToRemove = (size_t)(dXspan);
 			size_t samplesSize = _values[i].size();
@@ -86,7 +90,7 @@ void PlotWidget::AddValue(int track, double val)
 {
 	qint64 t = QDateTime::currentMSecsSinceEpoch();
 
-	if (track >= 0 && track < 3 && val >= -_ySpan[track]/2 && val <= _ySpan[track]/2)
+	if (track >= 0 && track < 4 && val >= -_ySpan[track]/2 && val <= _ySpan[track]/2)
 	{
 		if (_values[track].size() < _xSpan)
 		{
@@ -116,9 +120,10 @@ void PlotWidget::updatePixmap(QRect rectangle, bool repaint)
 	int offsetX = width / 40;
 	int offsetY = height / 40;
 	double xScale = ((double)(width)-2.0 * offsetX) / (double)_xSpan;
-	double yScales[3] = { ((double)(height)-2.0 * offsetY) / (double)_ySpan[0],
+	double yScales[4] = { ((double)(height)-2.0 * offsetY) / (double)_ySpan[0],
 						((double)(height)-2.0 * offsetY) / (double)_ySpan[1],
-						((double)(height)-2.0 * offsetY) / (double)_ySpan[2] };
+						((double)(height)-2.0 * offsetY) / (double)_ySpan[2],
+						((double)(height)-2.0 * offsetY) / (double)_ySpan[3] };
 
 	if (!_bg)
 	{
@@ -128,7 +133,7 @@ void PlotWidget::updatePixmap(QRect rectangle, bool repaint)
 	QPainter painter(_bg);
 	_bg->fill(QColor(0x00, 0x00, 0x00));
 
-	QFont painterFont = QFont("Courier New", 8, 1, false);
+	QFont painterFont = QFont("Courier New", 6, 1, false);
 	painterFont.setBold(true);
 	painter.setFont(painterFont);
 
@@ -144,38 +149,44 @@ void PlotWidget::updatePixmap(QRect rectangle, bool repaint)
 		painter.drawLine(QPoint(offsetX + 1, y), QPoint(width - offsetX - 5, y));
 		painter.drawLine(QPoint(offsetX + 1, height - y), QPoint(width - offsetX - 5, height - y));
 
-		double yValUp[3] = { (qint64(y) - qint64(offsetY)) / yScales[0],
+		double yValUp[4] = { (qint64(y) - qint64(offsetY)) / yScales[0],
 							   (qint64(y) - qint64(offsetY)) / yScales[1],
-							   (qint64(y) - qint64(offsetY)) / yScales[2] };
+							   (qint64(y) - qint64(offsetY)) / yScales[2],
+							   (qint64(y) - qint64(offsetY)) / yScales[3] };
 
-		double yValDown[3] = { (qint64(height) - qint64(y) - qint64(offsetY)) / yScales[0],
-							  (qint64(height) - qint64(y) - qint64(offsetY)) / yScales[1],
-							  (qint64(height) - qint64(y) - qint64(offsetY)) / yScales[2] };
+		double yValDown[4] = { (qint64(height) - qint64(y) - qint64(offsetY)) / yScales[0],
+							   (qint64(height) - qint64(y) - qint64(offsetY)) / yScales[1],
+							   (qint64(height) - qint64(y) - qint64(offsetY)) / yScales[2],
+							   (qint64(height) - qint64(y) - qint64(offsetY)) / yScales[3] };
 
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 4; i++)
 		{
 			yValDown[i] = round((yValDown[i] - _ySpan[i] / 2));
 			yValUp[i] = round((yValUp[i] - _ySpan[i] / 2));
 		}
 
 		painter.setPen(QPen(_trackColors[0]));
-		painter.drawText(QPoint(offsetX + 1, y - 5), QString::number(yValDown[0]));
+		painter.drawText(QPoint(offsetX + 1, y - 8), QString::number(yValDown[0]));
 		painter.setPen(QPen(_trackColors[1]));
-		painter.drawText(QPoint(offsetX + 1, y + 5), QString::number(yValDown[1]));
+		painter.drawText(QPoint(offsetX + 1, y), QString::number(yValDown[1]));
 		painter.setPen(QPen(_trackColors[2]));
-		painter.drawText(QPoint(offsetX + 1, y + 15), QString::number(yValDown[2]));
+		painter.drawText(QPoint(offsetX + 1, y + 8), QString::number(yValDown[2]));
+		painter.setPen(QPen(_trackColors[3]));
+		painter.drawText(QPoint(offsetX + 1, y + 16), QString::number(yValDown[3]));
 		painter.setPen(QPen(QColor(0x55, 0x55, 0x55)));
 
 		painter.setPen(QPen(_trackColors[0]));
-		painter.drawText(QPoint(offsetX + 1, height - y - 5), QString::number(yValUp[0]));
+		painter.drawText(QPoint(offsetX + 1, height - y - 8), QString::number(yValUp[0]));
 		painter.setPen(QPen(_trackColors[1]));
-		painter.drawText(QPoint(offsetX + 1, height - y + 5), QString::number(yValUp[1]));
+		painter.drawText(QPoint(offsetX + 1, height - y), QString::number(yValUp[1]));
 		painter.setPen(QPen(_trackColors[2]));
-		painter.drawText(QPoint(offsetX + 1, height - y + 15), QString::number(yValUp[2]));
+		painter.drawText(QPoint(offsetX + 1, height - y + 8), QString::number(yValUp[2]));
+		painter.setPen(QPen(_trackColors[3]));
+		painter.drawText(QPoint(offsetX + 1, height - y + 16), QString::number(yValUp[3]));
 		painter.setPen(QPen(QColor(0x55, 0x55, 0x55)));
 	}
 
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 4; i++)
 	{
 		painter.setPen(QPen(_trackColors[i]));
 		painter.drawText(QPoint(offsetX + 80, (i+1)*30), QString("MIN(%1),    MAX(%2)").arg(_minY[i]).arg(_maxY[i]));
@@ -198,7 +209,7 @@ void PlotWidget::updatePixmap(QRect rectangle, bool repaint)
 	}
 
 	// Draw values
-	for (int track = 0; track < 3; track++)
+	for (int track = 0; track < 4; track++)
 	{
 		double yScale = yScales[track];
 
@@ -229,7 +240,7 @@ void PlotWidget::updatePixmap(QRect rectangle, bool repaint)
 
 void PlotWidget::ClearData(int track)
 {
-	if (track >= 0 && track < 3)
+	if (track >= 0 && track < 4)
 	{
 		_values[track].clear();
 		_maxY[track] = -_ySpan[track];

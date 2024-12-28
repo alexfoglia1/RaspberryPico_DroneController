@@ -50,7 +50,7 @@ ${CMAKE_SOURCE_DIR}/src/main.cpp
 )
 
 find_package(Threads REQUIRED)
-find_package(Qt5 COMPONENTS Core Gui Widgets SerialPort REQUIRED)
+find_package(Qt5 COMPONENTS Core Gui Widgets SerialPort Concurrent REQUIRED)
 
 find_package(SDL2)
 
@@ -61,4 +61,4 @@ if (SDL2_FOUND)
 endif()
 
 target_include_directories(DroneMaintenance PUBLIC ${CMAKE_SOURCE_DIR}/src/ ${CMAKE_SOURCE_DIR}/3rdparty/QJoysticks/)
-target_link_libraries(DroneMaintenance Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort)
+target_link_libraries(DroneMaintenance Qt5::Core Qt5::Gui Qt5::Widgets Qt5::SerialPort Qt5::Concurrent)

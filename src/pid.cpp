@@ -1,41 +1,69 @@
 #include "pid.h"
 #include "maint.h"
 
-static float minMax(float val, float min, float max)
+static float minMax(float val, float min, float max, bool* in_sat)
 {
-    return (val < min) ? min :
-           (val > max) ? max :
-           val;
+    if (val < min)
+    {
+        *in_sat = true;
+        return min;
+    }
+
+    if (val > max)
+    {
+        *in_sat = true;
+        return max;
+    }
+
+    *in_sat = false;
+    return val;
 }
 
 
 float pid_controller(PID_CONTROL_TAG* pid, float* gain, float ysp, float y)
 {
-    float ftmp;
+    float ftmp = 0.0f;
+    bool  btmp = false;
 
-    //  updates actual values
-    pid->ysp = ysp;
-    pid->y = y;
-    pid->error = pid->ysp - pid->y;
+    // Update actual values
+    ftmp = pid->error;
+    pid->error = ysp - y;
     //
-    pid->P = pid->error * gain[int(MAINT_PID_PARAM::PID_KP)];
-    pid->D = pid->D * gain[int(MAINT_PID_PARAM::PID_AD)] - (pid->y - pid->ykm1) * gain[int(MAINT_PID_PARAM::PID_BD)];
-    ftmp = pid->P + pid->I + pid->D;
-    pid->u = minMax(ftmp, -gain[int(MAINT_PID_PARAM::PID_SAT)], gain[int(MAINT_PID_PARAM::PID_SAT)]);
-    //
-    pid->I += pid->error * gain[int(MAINT_PID_PARAM::PID_KI)];
-    pid->I += (pid->u - ftmp) * gain[int(MAINT_PID_PARAM::PID_KT)];
-    //
-    pid->ykm1 = pid->y;
-    //
-    return pid->u;
+    // Compute integral and derivative of error signal
+    if (!pid->sat_flag)
+    {
+        pid->integral += (pid->error * gain[int(MAINT_PID_PARAM::PID_KT)]);
+    }
+    pid->derivative =  ((pid->error - ftmp) / gain[int(MAINT_PID_PARAM::PID_KT)]);
+
+    // Compute P,I,D terms
+    float KP = gain[int(MAINT_PID_PARAM::PID_KP)];
+    float KI = gain[int(MAINT_PID_PARAM::PID_KI)];
+    float KD = gain[int(MAINT_PID_PARAM::PID_AD)];
+
+    pid->P = KP * pid->error;
+    pid->I = KI * pid->integral;
+    pid->D = KD * pid->derivative;
+
+    // Compute pid output
+    float PID = pid->P + pid->I + pid->D;
+    float SAT = gain[int(MAINT_PID_PARAM::PID_SAT)];
+
+    pid->output = minMax(PID, -SAT, SAT, &btmp);
+    pid->sat_flag = btmp;
+
+    return pid->output;
 }
 
 
 void pid_reset(PID_CONTROL_TAG* pid)
 {
-    pid->error = 0.0f;
+    pid->P = 0.0f;
     pid->I = 0.0f;
     pid->D = 0.0f;
-    pid->u = 0.0f;
+    pid->error = 0.0f;
+    pid->integral = 0.0f;
+    pid->derivative = 0.0f;
+    pid->output = 0.0f;
+    pid->sat_flag = false;
 }

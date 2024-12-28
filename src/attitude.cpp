@@ -186,8 +186,8 @@ bool ATTITUDE_Init()
 
     filter_on = false;
 
-    ATTITUDE_Roll0 = 0;
-    ATTITUDE_Pitch0 = 0;
+    ATTITUDE_Roll0 = 2.4375f;
+    ATTITUDE_Pitch0 = 175.75f;
 
     switch (MAINT_ImuType)
     {

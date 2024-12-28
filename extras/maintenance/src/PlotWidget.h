@@ -29,11 +29,11 @@ private:
 
 	double _samplesPerSecond;
 	int  _xSpan;
-	int  _ySpan[3];
-	std::list<double> _values[3];
-	double _minY[3];
-	double _maxY[3];
-	QColor _trackColors[3];
+	int  _ySpan[4];
+	std::list<double> _values[4];
+	double _minY[4];
+	double _maxY[4];
+	QColor _trackColors[4];
 
 	void updatePixmap(QRect rectangle, bool repaint=true);
 

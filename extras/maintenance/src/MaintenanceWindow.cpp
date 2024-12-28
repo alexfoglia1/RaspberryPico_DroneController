@@ -2,6 +2,8 @@
 #include <qserialport.h>
 #include <qdatetime.h>
 #include <qmessagebox.h>
+#include <qfiledialog.h>
+#include <qtconcurrentrun.h>
 
 
 MaintenanceWindow::MaintenanceWindow()
@@ -169,12 +171,15 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.plotTrack1Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack1ValueChanged(int)));
 	connect(_ui.plotTrack2Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack2ValueChanged(int)));
 	connect(_ui.plotTrack3Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack3ValueChanged(int)));
+	connect(_ui.plotTrack4Slider, SIGNAL(valueChanged(int)), this, SLOT(OnPlotTrack4ValueChanged(int)));
 
 	connect(_ui.comboSelTrack1, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack1TextChanged(const QString&)));
 	connect(_ui.comboSelTrack2, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack2TextChanged(const QString&)));
 	connect(_ui.comboSelTrack3, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack3TextChanged(const QString&)));
+	connect(_ui.comboSelTrack4, SIGNAL(currentTextChanged(const QString&)), this, SLOT(OnComboTrack4TextChanged(const QString&)));
 
 	connect(_ui.actionClear_logs, SIGNAL(triggered()), this, SLOT(OnClearLogs()));
+	connect(_ui.actionOpen, SIGNAL(triggered()), this, SLOT(OnActionOpen()));
 
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
@@ -252,7 +257,7 @@ MaintenanceWindow::MaintenanceWindow()
 	autoscanComPortsTimer->setTimerType(Qt::PreciseTimer);
 
 	connect(autoscanComPortsTimer, &QTimer::timeout, this, [this, autoscanComPortsTimer] { this->autoScanComPorts(); autoscanComPortsTimer->deleteLater(); });
-	autoscanComPortsTimer->start(500);
+	//autoscanComPortsTimer->start(500);
 
 	QTimer* checkHeaderChanged = new QTimer();
 	checkHeaderChanged->setSingleShot(false);
@@ -335,6 +340,11 @@ void MaintenanceWindow::checkPlot(QString expected, double value)
 	{
 		_ui.plot->AddValue(2, value);
 	}
+
+	if (_ui.comboSelTrack4->currentText().toUpper() == expected.toUpper())
+	{
+		_ui.plot->AddValue(3, value);
+	}
 }
 
 
@@ -371,6 +381,12 @@ void MaintenanceWindow::OnPlotTrack3ValueChanged(int newValue)
 }
 
 
+void MaintenanceWindow::OnPlotTrack4ValueChanged(int newValue)
+{
+	_ui.plot->SetYSpan(3, newValue);
+}
+
+
 
 void MaintenanceWindow::OnComboTrack1TextChanged(const QString& newText)
 {
@@ -400,6 +416,16 @@ void MaintenanceWindow::OnComboTrack3TextChanged(const QString& newText)
 	if (newText.toUpper().contains("NONE"))
 	{
 		_ui.plot->ClearData(2);
+	}
+}
+
+void MaintenanceWindow::OnComboTrack4TextChanged(const QString& newText)
+{
+	_ui.plot->SetYSpan(3, _defaultPlotSpan[newText]);
+
+	if (newText.toUpper().contains("NONE"))
+	{
+		_ui.plot->ClearData(3);
 	}
 }
 
@@ -1987,4 +2013,24 @@ void MaintenanceWindow::OnReceivedThrottleParams(uint16_t descend, uint16_t hove
 	_rxThrottleParams[2] = climb;
 
 	_ui.checkTxThrottleParams->setChecked(false);
+}
+
+
+void MaintenanceWindow::OnActionOpen()
+{
+	QString filePath = QFileDialog::getOpenFileName(
+		nullptr,
+		"Open Log File",
+		QDir::currentPath(),
+		"Log Files (log-*.txt);;All Files (*.*)");
+
+	if (!filePath.isEmpty())
+	{
+		auto _run = QtConcurrent::run([this, filePath]() {
+			_maintHandler->CreateMatlabMatrix(filePath.toStdString().c_str());
+			});
+	}
+	else {
+		QMessageBox::warning(this, "Error", QString("No file selected"));
+	}
 }
