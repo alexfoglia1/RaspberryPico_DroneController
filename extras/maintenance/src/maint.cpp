@@ -589,6 +589,7 @@ void Maint::Maintenance::Tx()
     }
     else
     {
+        //motor_speed.html:109 Inviato messaggio al motore 1 con PWM 1080 e checksum : 213
         qba = txMsg(&_txMessageSet);
         _txStatus = Maint::TX_STATUS::TX_GET;
     }

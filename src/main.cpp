@@ -10,10 +10,10 @@
 #include <pico/multicore.h>
 
 
-const float MIN_ROLL_DEGREES = -30.0f;
-const float MAX_ROLL_DEGREES = 30.0f;
-const float MIN_PITCH_DEGREES = -30.0f;
-const float MAX_PITCH_DEGREES = 30.0;
+const float MIN_ROLL_DEGREES = -10.0f;
+const float MAX_ROLL_DEGREES = 10.0f;
+const float MIN_PITCH_DEGREES = -10.0f;
+const float MAX_PITCH_DEGREES = 10.0;
 
 #define CPU_CHECK 0xB0BAF377 // A long time ago, in a galaxy far far away this drone have an hyperguide
 

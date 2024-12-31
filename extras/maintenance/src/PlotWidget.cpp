@@ -267,7 +267,3 @@ void PlotWidget::paintEvent(QPaintEvent* evt)
 		updatePixmap(rectangle, false);
 	}
 }
-
-
-
-

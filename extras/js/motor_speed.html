@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Controllo Seriali Multipli</title>
+</head>
+<body>
+  <h1>Controllo dei Motori</h1>
+
+  <!-- Menu per selezionare le porte seriali -->
+  <button id="connectPico">Connetti Raspberry Pico</button>
+  <button id="connectArduino">Connetti Arduino UNO</button>
+
+  <!-- Combo box per selezionare il motore -->
+  <label for="motorSelect">Seleziona Motore:</label>
+  <select id="motorSelect">
+    <option value="1">Motore 1</option>
+    <option value="2">Motore 2</option>
+    <option value="3">Motore 3</option>
+    <option value="4">Motore 4</option>
+  </select>
+
+  <!-- Text box per impostare il PWM -->
+  <label for="pwmInput">Durata PWM (microsecondi):</label>
+  <input type="number" id="pwmInput" min="0" max="65535" value="1000">
+
+  <!-- Pulsante per avviare -->
+  <button id="start">Avvia</button>
+
+  <!-- Text area per visualizzare gli RPM -->
+  <h2>RPM ricevuti da Arduino:</h2>
+  <textarea id="rpmOutput" cols="50" rows="10" readonly placeholder="RPM dal motore"></textarea>
+
+  <script>
+    let picoPort, arduinoPort; // Le porte seriali
+    let picoWriter, arduinoReader, picoReader; // Writer e Reader
+
+    // Connetti al Raspberry Pico
+    document.getElementById("connectPico").addEventListener("click", async () => {
+      try {
+        picoPort = await navigator.serial.requestPort();
+        await picoPort.open({ baudRate: 115200 });
+
+        // Configura il writer per il Pico
+        picoWriter = picoPort.writable.getWriter();
+
+        console.log("Connesso al Raspberry Pico");
+		
+		// Invia il messaggio per abilitare i motori
+        let enableMotors = new Uint8Array([
+          0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x0C, 0x01, 0x00, 0xE8, 0x03, 0xDC, 0x05, 0xDC, 0x05,
+          0xE8, 0x03
+        ]);
+        const checksumEnable = calculateChecksum(enableMotors);
+        enableMotors = new Uint8Array([...enableMotors, checksumEnable]); // Aggiunge la checksum
+        await picoWriter.write(enableMotors);
+        console.log("Controllo motori abilitato con checksum:", checksumEnable);
+
+      } catch (err) {
+        console.error("Errore durante la connessione al Raspberry Pico:", err);
+      }
+    });
+
+    // Connetti all'Arduino UNO
+    document.getElementById("connectArduino").addEventListener("click", async () => {
+      try {
+        arduinoPort = await navigator.serial.requestPort();
+        await arduinoPort.open({ baudRate: 115200 });
+
+        // Configura il lettore per l'Arduino
+        const decoder = new TextDecoderStream();
+        arduinoPort.readable.pipeTo(decoder.writable);
+        arduinoReader = decoder.readable.getReader();
+
+        // Leggi i dati in arrivo
+        readArduinoData();
+
+        console.log("Connesso all'Arduino UNO");
+      } catch (err) {
+        console.error("Errore durante la connessione all'Arduino UNO:", err);
+      }
+    });
+
+    // Avvia il controllo
+    document.getElementById("start").addEventListener("click", async () => {
+      if (!picoWriter || !arduinoReader) {
+        alert("Assicurati che entrambe le seriali siano connesse!");
+        return;
+      }
+
+      try {
+        // Ottieni i valori dalla combo box e dalla text box
+        const motor = parseInt(document.getElementById("motorSelect").value);
+        const pwmValue = parseInt(document.getElementById("pwmInput").value);
+
+        // Converte il PWM in due byte (LSB e MSB)
+        const s_LSB = pwmValue & 0xFF;
+        const s_MSB = (pwmValue >> 8) & 0xFF;
+
+        // Invia il messaggio di controllo al motore
+        let controlMessage = new Uint8Array([
+          0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          motor * 2, s_LSB, s_MSB, 0x00, 0xE8, 0x03, 0xDC, 0x05,
+          0xDC, 0x05, 0xE8, 0x03
+        ]);
+        const checksumControl = calculateChecksum(controlMessage);
+        controlMessage = new Uint8Array([...controlMessage, checksumControl]); // Aggiunge la checksum
+        await picoWriter.write(controlMessage);
+        console.log(`Inviato messaggio al motore ${motor} con PWM ${pwmValue} (LSB: ${s_LSB}, MSB: ${s_MSB}) e checksum:`, checksumControl);
+      } catch (err) {
+        console.error("Errore durante l'invio al Raspberry Pico:", err);
+      }
+    });
+
+	// Funzione per aggiornare l'autoscroll di una textarea
+	function autoScrollTextArea(textareaId) {
+	  const textarea = document.getElementById(textareaId);
+	  textarea.scrollTop = textarea.scrollHeight;
+	}
+
+	// Funzione per leggere i dati dall'Arduino UNO
+	async function readArduinoData() {
+	  try {
+		while (true) {
+		  const { value, done } = await arduinoReader.read();
+		  if (done) {
+			console.log("Connessione Arduino terminata");
+			break;
+		  }
+
+		  // Filtra e mostra gli RPM
+		  const rpmMatch = value.match(/R(\d+)/);
+		  if (rpmMatch) {
+			const rpmOutput = document.getElementById("rpmOutput");
+			rpmOutput.value += `RPM: ${rpmMatch[1]}\n`;
+
+			// Abilita l'autoscroll
+			autoScrollTextArea("rpmOutput");
+		  }
+		}
+	  } catch (err) {
+		console.error("Errore durante la lettura dall'Arduino UNO:", err);
+	  }
+	}
+
+    // Funzione per calcolare la checksum
+    function calculateChecksum(message) {
+      let checksum = 0;
+      for (let i = 1; i < message.length; i++) { // Esclude il primo byte (0xFF)
+        checksum ^= message[i];
+      }
+      return checksum & 0xFF; // Restituisce solo l'ultimo byte (8 bit)
+    }
+  </script>
+</body>
+</html>

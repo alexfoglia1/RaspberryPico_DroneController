@@ -39,7 +39,7 @@
 #define PROBE_GPIO_CPU0 20
 #define PROBE_GPIO_CPU1 21
 
-#define MOTOR_ARMED_THRESHOLD 80 //TODO: Rimettere 250
+#define MOTOR_ARMED_THRESHOLD 250 //TODO: Rimettere 250
 
 #include <stdint.h>
 

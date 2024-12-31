@@ -4,10 +4,12 @@
 #include <qmessagebox.h>
 #include <qfiledialog.h>
 #include <qtconcurrentrun.h>
+#include <corecrt_math_defines.h>
 
 
 MaintenanceWindow::MaintenanceWindow()
 {
+
 	_ui.setupUi(this);
 	_progressUi.setupUi(&_autoscanProgressWindow);
 	_autoscanProgressWindow.setVisible(false);
@@ -1720,26 +1722,58 @@ void MaintenanceWindow::OnReceivedCmdPitch(float data)
 	checkPlot("CMD_PITCH", data);
 }
 
+#include <cmath>
+static void rotateRollPitch(double roll, double pitch, double yaw, double& newRoll, double& newPitch, double& newYaw) {
+	// Angolo di rotazione in radianti (45°)
+	const double angleZ = M_PI / 4.0;
+
+	// Calcola seno e coseno dell'angolo
+	double cosZ = std::cos(angleZ);
+	double sinZ = std::sin(angleZ);
+
+	// Ruota roll e pitch rispetto all'asse Z
+	newRoll = roll * cosZ - pitch * sinZ;
+	newPitch = roll * sinZ + pitch * cosZ;
+
+	// Lo yaw rimane invariato
+	newYaw = yaw;
+}
+
 
 void MaintenanceWindow::OnReceivedBodyRoll(float data)
 {
-	_ui.checkRxBodyRoll->setChecked(true);
-	_ui.lineRxBodyRoll->setText(QString::number(data));
 	_rxRoll = data;
-	_ui.pfdRollPitch->UpdateRoll(data);
 
-	checkPlot("BODY_ROLL", data);
+	double yaw = 0.0f;
+	double newRoll = 0.0f;
+	double newPitch = 0.0f;
+	double newYaw = 0.0f;
+	rotateRollPitch(_rxRoll, _rxPitch, yaw, newRoll, newPitch, newYaw);
+	//_rxPitch = newPitch;
+
+	_ui.checkRxBodyRoll->setChecked(true);
+	_ui.lineRxBodyRoll->setText(QString::number(newRoll));
+	_ui.pfdRollPitch->UpdateRoll(newRoll);
+
+	checkPlot("BODY_ROLL", newRoll);
 }
 
 
 void MaintenanceWindow::OnReceivedBodyPitch(float data)
 {
-	_ui.checkRxBodyPitch->setChecked(true);
-	_ui.lineRxBodyPitch->setText(QString::number(data));
 	_rxPitch = data;
-	_ui.pfdRollPitch->UpdatePitch(data);
 
-	checkPlot("BODY_PITCH", data);
+	double yaw = 0.0f;
+	double newRoll = 0.0f;
+	double newPitch = 0.0f;
+	double newYaw = 0.0f;
+	rotateRollPitch(_rxRoll, _rxPitch, yaw, newRoll, newPitch, newYaw);
+
+	_ui.checkRxBodyPitch->setChecked(true);
+	_ui.lineRxBodyPitch->setText(QString::number(newPitch));
+	_ui.pfdRollPitch->UpdatePitch(newPitch);
+
+	checkPlot("BODY_PITCH", newPitch);
 }
 
 

@@ -207,6 +207,28 @@ bool ATTITUDE_Init()
 }
 
 
+static void rotateRollPitch(float* roll, float* pitch)
+{
+    // Angolo di rotazione in radianti (45°)
+    const double angleZ = M_PI / 4.0;
+
+    // Calcola seno e coseno dell'angolo
+    double cosZ = cos(angleZ);
+    double sinZ = sin(angleZ);
+
+    float rollRadians = *roll * DEGREES_TO_RADIANS;
+    float pitchRadians = *pitch * DEGREES_TO_RADIANS;
+
+    float newRoll, newPitch;
+
+    // Ruota roll e pitch rispetto all'asse Z
+    newRoll = rollRadians * cosZ - pitchRadians * sinZ;
+    newPitch = rollRadians * sinZ + pitchRadians * cosZ;
+
+    *roll = newRoll * RADIANS_TO_DEGREES;
+    *pitch = newPitch * RADIANS_TO_DEGREES;
+}
+
 void ATTITUDE_Handler()
 {
     float ax, ay, az;
@@ -238,6 +260,8 @@ void ATTITUDE_Handler()
 
         estimate_attitude();
     }
+
+    //rotateRollPitch(&body_roll, &body_pitch);
 }
 
 

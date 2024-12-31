@@ -4,6 +4,7 @@
 #include "joystick.h"
 #include "maint.h"
 
+#include <math.h>
 #include <pico/time.h>
 
 
@@ -40,6 +41,21 @@ void MOTORS_Init()
     init_pwm();    
 }
 
+static void rotateRollPitch(double roll, double pitch, double& newRoll, double& newPitch)
+{
+	// Angolo di rotazione in radianti (45°)
+	const double angleZ = M_PI / 4.0;
+
+	// Calcola seno e coseno dell'angolo
+	double cosZ = std::cos(angleZ);
+	double sinZ = std::sin(angleZ);
+
+	// Ruota roll e pitch rispetto all'asse Z
+	newRoll = roll * cosZ - pitch * sinZ;
+	newPitch = roll * sinZ + pitch * cosZ;
+}
+
+
 
 void MOTORS_Handler()
 {
@@ -75,18 +91,25 @@ void MOTORS_Handler()
     
     if (JOYSTICK_MotorsArmed)
     {
-        pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, ATTITUDE_RelRoll());
-        pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, ATTITUDE_RelPitch());
+        double body_roll = ATTITUDE_RelRoll();
+        double body_pitch = ATTITUDE_RelPitch();
+        double body_roll_rotated = 0.0;
+        double body_pitch_rotated = 0.0;
+
+        rotateRollPitch(body_roll, body_pitch, body_roll_rotated, body_pitch_rotated);
+        
+        pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, body_roll_rotated);
+        pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, body_pitch_rotated);
 
         float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
 
-        if (MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed - pid_pitch.output);
-        if (MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed + pid_roll.output);
-        if (MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed + pid_pitch.output);
-        if (MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed - pid_roll.output);
+        if (MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m1_signal = uint32_t(m1_signal_armed + pid_pitch.output);
+        if (MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m2_signal = uint32_t(m2_signal_armed - pid_roll.output);
+        if (MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m3_signal = uint32_t(m3_signal_armed + pid_roll.output);
+        if (MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::ENABLED)] > 0) m4_signal = uint32_t(m4_signal_armed - pid_pitch.output);
     }
     else
     {
