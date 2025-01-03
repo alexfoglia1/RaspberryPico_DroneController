@@ -106,9 +106,9 @@ MaintenanceWindow::MaintenanceWindow()
 
 	_rxPidParams =
 	{
-		{1, {1.0f, 0.0f, 0.0f, 50.0f, 0.0f, 0.0f}}, //ROLL
-		{2, {1.0f, 0.0f, 0.0f, 50.0f, 0.0f, 0.0f}}, //PITCH
-		{3, {1.0f, 0.0f, 0.0f, 50.0f, 0.0f, 0.0f}}, //YAW
+		{1, {1.0f, 0.0f, 0.0f, 50.0f}}, //ROLL
+		{2, {1.0f, 0.0f, 0.0f, 50.0f}}, //PITCH
+		{3, {1.0f, 0.0f, 0.0f, 50.0f}}, //YAW
 	};
 
 	_rxPtf1Params =
@@ -241,7 +241,7 @@ MaintenanceWindow::MaintenanceWindow()
 
 	connect(_maintHandler, SIGNAL(receivedMotorsParams(uint32_t, bool, uint16_t, uint16_t)), this, SLOT(OnReceivedMotorsParams(uint32_t, bool, uint16_t, uint16_t)));
 	connect(_maintHandler, SIGNAL(receivedJsParams(uint32_t, float, float)), this, SLOT(OnReceivedJsParams(uint32_t, float, float)));
-	connect(_maintHandler, SIGNAL(receivedPidParams(uint32_t, float, float, float, float, float, float)), this, SLOT(OnReceivedPidParams(uint32_t, float, float, float, float, float, float)));
+	connect(_maintHandler, SIGNAL(receivedPidParams(uint32_t, float, float, float, float)), this, SLOT(OnReceivedPidParams(uint32_t, float, float, float, float)));
 	connect(_maintHandler, SIGNAL(receivedPtf1Params(uint32_t, float, float, float)), this, SLOT(OnReceivedPtf1Params(uint32_t, float, float, float)));
 	connect(_maintHandler, SIGNAL(receivedImuType(uint8_t)), this, SLOT(OnReceivedImuType(uint8_t)));
 	connect(_maintHandler, SIGNAL(receivedI2CRead(uint8_t)), this, SLOT(OnReceivedI2CRead(uint8_t)));
@@ -1311,12 +1311,10 @@ void MaintenanceWindow::OnBtnSendPidParams()
 	{
 		float kp = _ui.spinSetKp->value();
 		float ki = _ui.spinSetKi->value();
-		float kt = _ui.spinSetKt->value();
+		float kd = _ui.spinSetKd->value();
 		float sat = _ui.spinSetSat->value();
-		float ad = _ui.spinSetAd->value();
-		float bd = _ui.spinSetBd->value();
 
-		_maintHandler->TxPidParams(_ui.comboSetPidParam->currentIndex() + 1, kp, ki, kt, sat, ad, bd);
+		_maintHandler->TxPidParams(_ui.comboSetPidParam->currentIndex() + 1, kp, ki, kd, sat);
 	}
 }
 
@@ -1369,10 +1367,8 @@ void MaintenanceWindow::OnBtnRefreshParams()
 
 	_ui.spinSetKp->setValue(_rxPidParams[currentPidAngle].kp);
 	_ui.spinSetKi->setValue(_rxPidParams[currentPidAngle].ki);
-	_ui.spinSetKt->setValue(_rxPidParams[currentPidAngle].kt);
+	_ui.spinSetKd->setValue(_rxPidParams[currentPidAngle].kd);
 	_ui.spinSetSat->setValue(_rxPidParams[currentPidAngle].sat);
-	_ui.spinSetAd->setValue(_rxPidParams[currentPidAngle].ad);
-	_ui.spinSetBd->setValue(_rxPidParams[currentPidAngle].bd);
 
 	_ui.spinSetPtf1X->setValue(_rxPtf1Params[currentPtf1Source].x);
 	_ui.spinSetPtf1Y->setValue(_rxPtf1Params[currentPtf1Source].y);
@@ -1983,13 +1979,13 @@ void MaintenanceWindow::OnReceivedJsParams(uint32_t channel_no, float alpha, flo
 	}
 }
 
-void MaintenanceWindow::OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd)
+void MaintenanceWindow::OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kd, float sat)
 {
 	_ui.checkTxPidParams->setChecked(false);
 
 	if (_rxPidParams.keys().indexOf(angle_no) != -1)
 	{
-		_rxPidParams[angle_no] = { kp, ki, kt, sat, ad, bd };
+		_rxPidParams[angle_no] = { kp, ki, kd, sat };
 	}
 }
 

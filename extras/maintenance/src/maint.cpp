@@ -198,7 +198,7 @@ void Maint::Maintenance::TxJoystickParams(uint32_t jsChannel, float alpha, float
 }
 
 
-void Maint::Maintenance::TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd)
+void Maint::Maintenance::TxPidParams(uint32_t eulerAngle, float kp, float ki, float kd, float sat)
 {
     _txMessageSet.All = 0;
     _txMessageSet.Bits.maint_cmd_id = (eulerAngle == 1) ? uint64_t(MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS) :
@@ -210,10 +210,8 @@ void Maint::Maintenance::TxPidParams(uint32_t eulerAngle, float kp, float ki, fl
         _txSetParams.clear();
         pushParams(reinterpret_cast<uint8_t*>(&kp), sizeof(float));
         pushParams(reinterpret_cast<uint8_t*>(&ki), sizeof(float));
-        pushParams(reinterpret_cast<uint8_t*>(&kt), sizeof(float));
+        pushParams(reinterpret_cast<uint8_t*>(&kd), sizeof(float));
         pushParams(reinterpret_cast<uint8_t*>(&sat), sizeof(float));
-        pushParams(reinterpret_cast<uint8_t*>(&ad), sizeof(float));
-        pushParams(reinterpret_cast<uint8_t*>(&bd), sizeof(float));
         
         _txStatus = Maint::TX_STATUS::TX_SET;
         
@@ -1177,30 +1175,25 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
         {
             float roll_kp = *(reinterpret_cast<float*>(pPayload + 0));
             float roll_ki = *(reinterpret_cast<float*>(pPayload + 4));
-            float roll_kt = *(reinterpret_cast<float*>(pPayload + 8));
+            float roll_kd = *(reinterpret_cast<float*>(pPayload + 8));
             float roll_sat = *(reinterpret_cast<float*>(pPayload + 12));
-            float roll_ad = *(reinterpret_cast<float*>(pPayload + 16));
-            float roll_bd = *(reinterpret_cast<float*>(pPayload + 20));
 
-            float pitch_kp = *(reinterpret_cast<float*>(pPayload + 24));
-            float pitch_ki = *(reinterpret_cast<float*>(pPayload + 28));
-            float pitch_kt = *(reinterpret_cast<float*>(pPayload + 32));
-            float pitch_sat = *(reinterpret_cast<float*>(pPayload + 36));
-            float pitch_ad = *(reinterpret_cast<float*>(pPayload + 40));
-            float pitch_bd = *(reinterpret_cast<float*>(pPayload + 44));
+            float pitch_kp = *(reinterpret_cast<float*>(pPayload + 16));
+            float pitch_ki = *(reinterpret_cast<float*>(pPayload + 20));
+            float pitch_kd = *(reinterpret_cast<float*>(pPayload + 24));
+            float pitch_sat = *(reinterpret_cast<float*>(pPayload + 28));
 
-            float yaw_kp = *(reinterpret_cast<float*>(pPayload + 48));
-            float yaw_ki = *(reinterpret_cast<float*>(pPayload + 52));
-            float yaw_kt = *(reinterpret_cast<float*>(pPayload + 56));
-            float yaw_sat = *(reinterpret_cast<float*>(pPayload + 60));
-            float yaw_ad = *(reinterpret_cast<float*>(pPayload + 64));
-            float yaw_bd = *(reinterpret_cast<float*>(pPayload + 68));
+            float yaw_kp = *(reinterpret_cast<float*>(pPayload + 32));
+            float yaw_ki = *(reinterpret_cast<float*>(pPayload + 36));
+            float yaw_kd = *(reinterpret_cast<float*>(pPayload + 40));
+            float yaw_sat = *(reinterpret_cast<float*>(pPayload + 44));
 
-            emit receivedPidParams(1, roll_kp, roll_ki, roll_kt, roll_sat, roll_ad, roll_bd);
-            emit receivedPidParams(2, pitch_kp, pitch_ki, pitch_kt, pitch_sat, pitch_ad, pitch_bd);
-            emit receivedPidParams(3, yaw_kp, yaw_ki, yaw_kt, yaw_sat, yaw_ad, yaw_bd);
 
-            pPayload += 18 * sizeof(uint32_t);
+            emit receivedPidParams(1, roll_kp, roll_ki, roll_kd, roll_sat);
+            emit receivedPidParams(2, pitch_kp, pitch_ki, pitch_kd, pitch_sat);
+            emit receivedPidParams(3, yaw_kp, yaw_ki, yaw_kd, yaw_sat);
+
+            pPayload += 12 * sizeof(uint32_t);
         }
         if (rx_header->Bits.ptf1_params)
         {

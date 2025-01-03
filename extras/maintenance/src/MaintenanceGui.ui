@@ -2315,6 +2315,13 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>KP</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QDoubleSpinBox" name="spinSetKp">
         <property name="toolTip">
          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;PID_KP&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
@@ -2327,6 +2334,13 @@
         </property>
         <property name="value">
          <double>1.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_11">
+        <property name="text">
+         <string>KI</string>
         </property>
        </widget>
       </item>
@@ -2344,15 +2358,29 @@
        </widget>
       </item>
       <item>
-       <widget class="QDoubleSpinBox" name="spinSetKt">
+       <widget class="QLabel" name="label_12">
+        <property name="text">
+         <string>KD</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QDoubleSpinBox" name="spinSetKd">
         <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;PID_KT&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;PID_AD&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
         </property>
         <property name="decimals">
          <number>3</number>
         </property>
         <property name="maximum">
          <double>1000.000000000000000</double>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_13">
+        <property name="text">
+         <string>SAT</string>
         </property>
        </widget>
       </item>
@@ -2369,32 +2397,6 @@
         </property>
         <property name="value">
          <double>50.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDoubleSpinBox" name="spinSetAd">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;PID_AD&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="maximum">
-         <double>1000.000000000000000</double>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QDoubleSpinBox" name="spinSetBd">
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;PID_BD_LEGACY&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="decimals">
-         <number>3</number>
-        </property>
-        <property name="maximum">
-         <double>1000.000000000000000</double>
         </property>
        </widget>
       </item>

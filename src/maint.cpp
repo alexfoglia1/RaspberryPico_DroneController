@@ -19,19 +19,15 @@
 // Once done, we can access this at XIP_BASE + 256k.
 #define FLASH_TARGET_OFFSET (256 * 1024)
 #define FLASH_PARAMS_OFFSET 0
-#define FLASH_PARAMS_SIZE   198 // 4 blocks of 3 4-bytes length uint32_t + 
-                                // 4 blocks of 2 4-bytes length uint32_t +
-                                // 3 blocks of 6 4-bytes length uint32_t +
-                                // 3 blocks of 3 4 bytes length uint32_t +
-                                // 1 block of  1 4 bytes length uint32_t +
-                                // 1 block of  3 2 bytes length uint16_t = 198
 
 #define FLASH_MOTORS_PARAMS_SIZE   48
 #define FLASH_JOYSTICK_PARAMS_SIZE 32
-#define FLASH_PID_PARAMS_SIZE      72
+#define FLASH_PID_PARAMS_SIZE      48
 #define FLASH_PTF1_PARAMS_SIZE     36
 #define FLASH_IMU_TYPE_SIZE         1
 #define FLASH_THROTTLE_PARAMS_SIZE  6
+
+#define FLASH_PARAMS_SIZE 174 // IMU type is 4 byte in flash
 
 const uint8_t *flash_target_contents = (const uint8_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
@@ -148,7 +144,7 @@ static uint32_t calc_exp_bytes(MAINT_HEADER_T* header)
         case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS:
-            return 25 + sizeof(REMOTE_CONTROL_TAG);
+            return 17 + sizeof(REMOTE_CONTROL_TAG);
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_GYRO_PARAMS:
         case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_MAGN_PARAMS:
@@ -311,11 +307,9 @@ void MAINT_Init()
     {
         MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KP)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 0 * sizeof(uint32_t)]);
         MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KI)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 1 * sizeof(uint32_t)]);
-        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KT)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 2 * sizeof(uint32_t)]);
+        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KD)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 2 * sizeof(uint32_t)]);
         MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 3 * sizeof(uint32_t)]);
-        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 4 * sizeof(uint32_t)]);
-        MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<const uint32_t*>(&flash_target_contents[eeprom_offset + 5 * sizeof(uint32_t)]);
-        
+
         eeprom_offset += (int(MAINT_PID_PARAM::SIZE) * sizeof(uint32_t));
     }
 
@@ -357,7 +351,7 @@ void MAINT_Init()
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE + FLASH_PTF1_PARAMS_SIZE + FLASH_IMU_TYPE_SIZE], reinterpret_cast<uint8_t*>(&MAINT_ThrottleParams), FLASH_THROTTLE_PARAMS_SIZE);
     
     uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
-    if (true)//eeprom_cks != current_cks)
+    if (eeprom_cks != current_cks)
     {
         /** Set fail code **/
         CBIT_Set_fail_code(fail_code.Dword, true);
@@ -390,20 +384,16 @@ void MAINT_Init()
 
         for (int i = int(EULER_ANGLES::FIRST); i < int(EULER_ANGLES::SIZE); i++)
         {
-            maint_float_t kp, ki, kt, sat, ad, bd;
+            maint_float_t kp, ki, kd, sat;
             kp.fval = 1.0f;
             ki.fval = 0.0f;
-            kt.fval = 1.0f / static_cast<float>(CTRL_LOOP_FREQUENCY_HZ);
+            kd.fval = 0.0f;
             sat.fval = 50.0f;
-            ad.fval = 0.0f;
-            bd.fval = 0.0f;
 
             MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KP)]  = kp.ival;
             MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KI)]  = ki.ival;
-            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KT)]  = kt.ival;
+            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_KD)]  = kd.ival;
             MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_SAT)] = sat.ival;
-            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_AD)]  = ad.ival;
-            MAINT_PidParameters[i][int(MAINT_PID_PARAM::PID_BD)]  = bd.ival;
         }
 
         for (int i = int(SENSOR_SOURCE::FIRST); i < int(SENSOR_SOURCE::SIZE); i++)
@@ -512,26 +502,20 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
             case MAINT_CMD_ID::MAINT_CMD_SET_ROLL_PID_PARAMS:
                 MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KI)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
-                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));       
-                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_AD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[16]));   
-                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_BD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[20]));       
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));           
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS:
                 MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KI)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));       
-                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_AD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[16]));   
-                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_BD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[20]));  
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS:
                 MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KI)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
-                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
+                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
                 MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));       
-                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_AD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[16]));   
-                MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_BD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[20]));  
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_PTF1_ACC_PARAMS:
                 MAINT_Ptf1Parameters[int(SENSOR_SOURCE::ACCELEROMETER)][int(EUCLIDEAN_AXES::X)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));

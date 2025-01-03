@@ -96,24 +96,18 @@ void MOTORS_Handler()
 
     pid_roll_gain[int(MAINT_PID_PARAM::PID_KP)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KP)]);
     pid_roll_gain[int(MAINT_PID_PARAM::PID_KI)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KI)]);
-    pid_roll_gain[int(MAINT_PID_PARAM::PID_KT)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KT)]);
+    pid_roll_gain[int(MAINT_PID_PARAM::PID_KD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KD)]);
     pid_roll_gain[int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_SAT)]);
-    pid_roll_gain[int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_AD)]);
-    pid_roll_gain[int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_BD)]);
 
     pid_pitch_gain[int(MAINT_PID_PARAM::PID_KP)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KP)]);
     pid_pitch_gain[int(MAINT_PID_PARAM::PID_KI)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KI)]);
-    pid_pitch_gain[int(MAINT_PID_PARAM::PID_KT)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KT)]);
+    pid_pitch_gain[int(MAINT_PID_PARAM::PID_KD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KD)]);
     pid_pitch_gain[int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_SAT)]);
-    pid_pitch_gain[int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_AD)]);
-    pid_pitch_gain[int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_BD)]);
 
     pid_yaw_gain[int(MAINT_PID_PARAM::PID_KP)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KP)]);
     pid_yaw_gain[int(MAINT_PID_PARAM::PID_KI)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KI)]);
-    pid_yaw_gain[int(MAINT_PID_PARAM::PID_KT)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KT)]);
+    pid_yaw_gain[int(MAINT_PID_PARAM::PID_KD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KD)]);
     pid_yaw_gain[int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_SAT)]);
-    pid_yaw_gain[int(MAINT_PID_PARAM::PID_AD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_AD)]);
-    pid_yaw_gain[int(MAINT_PID_PARAM::PID_BD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_BD)]);
     
     MOTOR_Throttle = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_rpm, max_rpm);
 

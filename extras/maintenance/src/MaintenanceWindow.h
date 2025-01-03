@@ -26,10 +26,8 @@ typedef struct
 {
 	float kp;
 	float ki;
-	float kt;
+	float kd;
 	float sat;
-	float ad;
-	float bd;
 } pid_params_format;
 
 typedef struct
@@ -168,7 +166,7 @@ private slots:
 
 	void OnReceivedMotorsParams(uint32_t motor_no, bool enabled, uint16_t min_signal, uint16_t max_signal);
 	void OnReceivedJsParams(uint32_t channel_no, float alpha, float beta);
-	void OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
+	void OnReceivedPidParams(uint32_t angle_no, float kp, float ki, float kd, float sat);
 	void OnReceivedPtf1Params(uint32_t source_no, float x, float y, float z);
 	void OnReceivedImuType(uint8_t imu_type);
 	void OnReceivedI2CRead(uint8_t i2c_read);

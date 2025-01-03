@@ -161,10 +161,8 @@ enum class MAINT_PID_PARAM
     FIRST = 0,
     PID_KP = FIRST,
     PID_KI,
-    PID_KT,
+    PID_KD,
     PID_SAT,
-    PID_AD,
-    PID_BD,
     SIZE
 };
 

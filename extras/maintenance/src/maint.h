@@ -8,7 +8,7 @@
 
 #define FLASH_MOTORS_PARAMS_SIZE   48
 #define FLASH_JOYSTICK_PARAMS_SIZE 32
-#define FLASH_PID_PARAMS_SIZE      72
+#define FLASH_PID_PARAMS_SIZE      48
 #define FLASH_PTF1_PARAMS_SIZE     36
 #define FLASH_IMU_TYPE_SIZE         1
 #define FLASH_THROTTLE_PARAMS_SIZE  6
@@ -209,7 +209,7 @@ public:
     void TxSetMotors(uint32_t motorNo, uint16_t data);
     void TxMotorParams(uint32_t motorNo, uint8_t enabled, uint16_t minParam, uint16_t maxParam);
     void TxJoystickParams(uint32_t jsChannel, float alpha, float beta);
-    void TxPidParams(uint32_t eulerAngle, float kp, float ki, float kt, float sat, float ad, float bd);
+    void TxPidParams(uint32_t eulerAngle, float kp, float ki, float kd, float sat);
     void TxPtf1params(uint32_t sensorSource, float x, float y, float z);
     void TxThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb);
     void TxImuType(IMU_TYPE imuType);
@@ -285,7 +285,7 @@ signals:
     void receivedCbit(uint32_t data);
     void receivedMotorsParams(uint32_t motor_no, bool enabled, uint16_t min_signal, uint16_t max_signal);
     void receivedJsParams(uint32_t channel_no, float alpha, float beta);
-    void receivedPidParams(uint32_t angle_no, float kp, float ki, float kt, float sat, float ad, float bd);
+    void receivedPidParams(uint32_t angle_no, float kp, float ki, float kd, float sat);
     void receivedPtf1Params(uint32_t source_no, float x, float y, float z);
     void receivedImuType(uint8_t imu_type);
     void receivedI2CRead(uint8_t i2c_read);
