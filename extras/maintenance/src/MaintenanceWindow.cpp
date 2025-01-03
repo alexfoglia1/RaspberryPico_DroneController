@@ -183,6 +183,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_ui.actionClear_logs, SIGNAL(triggered()), this, SLOT(OnClearLogs()));
 	connect(_ui.actionOpen, SIGNAL(triggered()), this, SLOT(OnActionOpen()));
 
+
 	connect(_maintHandler, SIGNAL(receivedRawAccelX(float)), this, SLOT(OnReceivedRawAccelX(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelY(float)), this, SLOT(OnReceivedRawAccelY(float)));
 	connect(_maintHandler, SIGNAL(receivedRawAccelZ(float)), this, SLOT(OnReceivedRawAccelZ(float)));
@@ -247,7 +248,6 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)), this, SLOT(OnReceivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)));
 	connect(_maintHandler, SIGNAL(receivedImuOffset(float, float)), this, SLOT(OnReceivedImuOffset(float, float)));
 	connect(_maintHandler, SIGNAL(receivedThrottleParams(uint16_t, uint16_t, uint16_t)), this, SLOT(OnReceivedThrottleParams(uint16_t, uint16_t, uint16_t)));
-
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
@@ -430,6 +430,7 @@ void MaintenanceWindow::OnComboTrack4TextChanged(const QString& newText)
 		_ui.plot->ClearData(3);
 	}
 }
+
 
 
 void MaintenanceWindow::OnOverrideRadio(bool radioOverride)

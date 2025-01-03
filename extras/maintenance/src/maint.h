@@ -219,7 +219,7 @@ public:
     void ReplayLogFile(const char* path);
     void CreateMatlabMatrix(const char* path);
     void TxImuOffset(float roll_offset, float pitch_offset);
-    int ClearLogs();
+    int  ClearLogs();
 
 public slots:
     void Tx();
