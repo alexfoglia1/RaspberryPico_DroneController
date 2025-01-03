@@ -113,7 +113,8 @@ void JoystickBridge::onAxisEvent(const QJoystickAxisEvent& evt)
 
 		if (evt.axis == 5)
 		{
-			qreal fSignal = 1000.0 + evtValue * 1000.0;// deadCenterZone(-evtValue, 0.1, 1500.0, -1.0, 1.0);
+			if (evtValue < 0) evtValue = 0;
+			qreal fSignal = mapValue(evtValue, 0, 1.0, 1000.0, 2000.0);// deadCenterZone(-evtValue, 0.1, 1500.0, -1.0, 1.0);
 
 			_throttleSignal = (quint16)(fSignal);
 		}
