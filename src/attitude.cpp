@@ -118,9 +118,6 @@ static void estimate_attitude()
     body_roll = atan2(ay_flt_tag.filt_k, az_flt_tag.filt_k) * RADIANS_TO_DEGREES;
     body_pitch = atan2(-ax_flt_tag.filt_k, sqrt(ay_flt_tag.filt_k * ay_flt_tag.filt_k + az_flt_tag.filt_k * az_flt_tag.filt_k)) * RADIANS_TO_DEGREES;
 
-    body_roll = atan2(sin(body_roll * DEGREES_TO_RADIANS), cos(body_roll * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
-    body_pitch = atan2(sin(body_pitch * DEGREES_TO_RADIANS), cos(body_pitch * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
-
     float heading;
 
     if (!imu->haveMagneticField())
@@ -139,7 +136,7 @@ static void estimate_attitude()
             }
             else
             {
-                /** Integrate over gyro_z **/
+                /** Integrate over gyro_z and normalize **/
                 float dGz = -gz_flt_tag.filt_k;
                 body_yaw += dGz * CTRL_LOOP_PERIOD_S;
                 body_yaw = atan2(sin(body_yaw * DEGREES_TO_RADIANS), cos(body_yaw * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
@@ -186,8 +183,8 @@ bool ATTITUDE_Init()
 
     filter_on = false;
 
-    ATTITUDE_Roll0 = 2.4375f;
-    ATTITUDE_Pitch0 = 175.75f;
+    ATTITUDE_Roll0 = 0.0f;
+    ATTITUDE_Pitch0 = 0.0f;
 
     switch (MAINT_ImuType)
     {
@@ -207,28 +204,6 @@ bool ATTITUDE_Init()
 }
 
 
-static void rotateRollPitch(float* roll, float* pitch)
-{
-    // Angolo di rotazione in radianti (45°)
-    const double angleZ = M_PI / 4.0;
-
-    // Calcola seno e coseno dell'angolo
-    double cosZ = cos(angleZ);
-    double sinZ = sin(angleZ);
-
-    float rollRadians = *roll * DEGREES_TO_RADIANS;
-    float pitchRadians = *pitch * DEGREES_TO_RADIANS;
-
-    float newRoll, newPitch;
-
-    // Ruota roll e pitch rispetto all'asse Z
-    newRoll = rollRadians * cosZ - pitchRadians * sinZ;
-    newPitch = rollRadians * sinZ + pitchRadians * cosZ;
-
-    *roll = newRoll * RADIANS_TO_DEGREES;
-    *pitch = newPitch * RADIANS_TO_DEGREES;
-}
-
 void ATTITUDE_Handler()
 {
     float ax, ay, az;
@@ -241,10 +216,29 @@ void ATTITUDE_Handler()
 
     if (imu->haveAbsoluteOrientation())
     {
-        pt1f_init(ax, ay, az, gx, gy, gz, mx, my, mz);
-        imu->getAbsoluteOrientation(&body_roll, &body_pitch, &body_yaw);
-        body_roll = atan2(sin(body_roll * DEGREES_TO_RADIANS), cos(body_roll * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
-        body_pitch = atan2(sin(body_pitch * DEGREES_TO_RADIANS), cos(body_pitch * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+        if (filter_on == false)
+        {
+            pt1f_init(ax, ay, az, gx, gy, gz, mx, my, mz); // Can be useful to obtain forces :)
+
+            imu->getAbsoluteOrientation(&body_roll, &body_pitch, &body_yaw);
+            filter_on = true;
+        }
+        else
+        {
+            pt1f_update(ax, ay, az, gx, gy, gz, mx, my, mz);
+
+            const float ALPHA = 0.2f;
+            float roll, pitch, yaw;
+            imu->getAbsoluteOrientation(&roll, &pitch, &yaw);
+
+            bool roll_flipped  = ((roll  * body_roll)  < 0);
+            bool pitch_flipped = ((pitch * body_pitch) < 0);
+            bool yaw_flipped   = ((yaw   * body_yaw)   < 0);
+
+            body_roll  = roll_flipped  ? roll  : ALPHA * roll  + (1.0f - ALPHA) * body_roll;
+            body_pitch = pitch_flipped ? pitch : ALPHA * pitch + (1.0f - ALPHA) * body_pitch;
+            body_yaw   = yaw_flipped   ? yaw   : ALPHA * yaw   + (1.0f - ALPHA) * body_yaw;
+        }
     }
     else
     {
@@ -260,8 +254,6 @@ void ATTITUDE_Handler()
 
         estimate_attitude();
     }
-
-    //rotateRollPitch(&body_roll, &body_pitch);
 }
 
 
@@ -269,15 +261,9 @@ void ATTITUDE_Calibrate()
 {
     ATTITUDE_Handler();
 
-    if (ATTITUDE_RelRoll() != 0.0f)
-    {
-        ATTITUDE_Roll0 = body_roll;
-    }
-    
-    if (ATTITUDE_RelPitch() != 0.0f)
-    {
-        ATTITUDE_Pitch0 = body_pitch;
-    }
+    const float epsilon = 1e-4;
+    ATTITUDE_Roll0 = body_roll;
+    ATTITUDE_Pitch0 = body_pitch;
 }
 
 

@@ -91,7 +91,6 @@ int main()
     else
     {
         CBIT_Set_fail_code(fail_code.Dword, false);
-        //ATTITUDE_Calibrate();
     }
     
     JOYSTICK_Init(MIN_ROLL_DEGREES,

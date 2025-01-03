@@ -73,7 +73,7 @@ void BNO055Interface::getAbsoluteOrientation(float* roll, float* pitch, float* y
     _bno055.readFusedData(oriData);
 
     // Driver reads starting from heading (x, y, z is just the order of read not the relative axes)
-    *yaw = atan2(sin(oriData.X * DEGREES_TO_RADIANS), cos(oriData.X * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
-    *roll = atan2(sin(oriData.Y * DEGREES_TO_RADIANS), cos(oriData.Y * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
-    *pitch = atan2(sin(oriData.Z * DEGREES_TO_RADIANS), cos(oriData.Z * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+    *yaw = oriData.X;
+    *roll = oriData.Y;
+    *pitch = oriData.Z;
 }

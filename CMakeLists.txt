@@ -5,6 +5,7 @@ include(pico_sdk_import.cmake)
 project(DroneController C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_BUILD_TYPE Release)
 
 pico_sdk_init()
  
@@ -13,7 +14,7 @@ add_executable(DroneController
   src/drivers/lsm9ds1/LSM9DS1.h
   src/drivers/lsm9ds1/LSM9DS1_Registers.h
   src/drivers/lsm9ds1/LSM9DS1_Types.h
-  src/drivers/mpu6050/mpu6050.h
+  src/drivers/mpu6050/mpu6050.h 
   src/drivers/bno055/bno055.h
   src/drivers/servo/servo.h 
   src/drivers/servo/pulse.h
