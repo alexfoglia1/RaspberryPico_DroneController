@@ -26,6 +26,8 @@
 #define MOTOR_3_GPIO 6
 #define MOTOR_4_GPIO 9
 
+#define IMU_RESET_PIN 16
+
 #define IMU_SDA_PIN 2
 #define IMU_SCL_PIN 3
 

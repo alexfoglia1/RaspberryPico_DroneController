@@ -75,7 +75,6 @@ int main()
     CBIT_TAG fail_code;
     fail_code.Dword = 0;
     fail_code.Bits.imu_failure = 1;
-
     if (!ATTITUDE_Init())
     {
         CBIT_Set_fail_code(fail_code.Dword, true);

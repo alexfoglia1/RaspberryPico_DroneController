@@ -24,6 +24,10 @@ void InitBoard()
     gpio_init(PICO_DEFAULT_LED_PIN);
     gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 
+    gpio_init(IMU_RESET_PIN);
+    gpio_set_dir(IMU_RESET_PIN, GPIO_OUT);
+    gpio_put(IMU_RESET_PIN, false);
+
     irq_set_priority(IO_IRQ_BANK0, 0x40);
 
     i2c_init(i2c1, I2C_FREQUENCY_HZ);

@@ -357,7 +357,7 @@ void MAINT_Init()
     memcpy(&eeprom_img[FLASH_MOTORS_PARAMS_SIZE + FLASH_JOYSTICK_PARAMS_SIZE + FLASH_PID_PARAMS_SIZE + FLASH_PTF1_PARAMS_SIZE + FLASH_IMU_TYPE_SIZE], reinterpret_cast<uint8_t*>(&MAINT_ThrottleParams), FLASH_THROTTLE_PARAMS_SIZE);
     
     uint8_t current_cks = checksum(reinterpret_cast<uint8_t*>(eeprom_img), FLASH_PARAMS_SIZE);
-    if (eeprom_cks != current_cks)
+    if (true)//eeprom_cks != current_cks)
     {
         /** Set fail code **/
         CBIT_Set_fail_code(fail_code.Dword, true);
