@@ -15,7 +15,12 @@ extern Servo motor4;
 extern PID_CONTROL_TAG pid_roll;
 extern PID_CONTROL_TAG pid_pitch;
 extern PID_CONTROL_TAG pid_yaw;
+
+#ifdef __CONTROL_RPM__
 extern uint32_t MOTOR_Throttle;
+#else
+#define MOTOR_ARMED_THRESHOLD 250
+#endif
 
 void MOTORS_Init();
 void MOTORS_Handler();

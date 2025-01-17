@@ -68,6 +68,7 @@ private:
 	int64_t _rxT0millis;
 	bool _jsIsControlling;
 	bool _jsIsArmed;
+	bool _spikeStop;
 
 	void autoScanComPorts();
 	void checkPlot(QString expectedText, double value);
@@ -171,8 +172,9 @@ private slots:
 	void OnReceivedImuType(uint8_t imu_type);
 	void OnReceivedI2CRead(uint8_t i2c_read);
 	void OnReceivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
-	void OnReceivedImuOffset(float, float);
+	void OnReceivedImuOffset(float roll_offset, float pitch_offset);
 	void OnReceivedThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb);
+	void OnReceivedGyroXYfiltered(float gyro_x_f, float gyro_y_f);
 	void OnActionOpen();
 };
 

@@ -95,16 +95,38 @@ void PlotWidget::AddValue(int track, double val)
 		if (_values[track].size() < _xSpan)
 		{
 			_values[track].push_back(val);
+
+			if (val > _maxY[track]) _maxY[track] = val;
+			if (val < _minY[track]) _minY[track] = val;
 		}
 		else
 		{
-			
 			_values[track].pop_front();
 			_values[track].push_back(val);
+
+
+			double max = 0;
+			double min = _ySpan[track];
+
+			for (double& val : _values[track])
+			{
+				if (val < min)
+				{
+					min = val;
+				}
+
+				if (val > max)
+				{
+					max = val;
+				}
+			}
+
+			_maxY[track] = max;
+			_minY[track] = min;
 		}
 
-		if (val > _maxY[track]) _maxY[track] = val;
-		if (val < _minY[track]) _minY[track] = val;
+
+
 
 		updatePixmap(rect());
 	}

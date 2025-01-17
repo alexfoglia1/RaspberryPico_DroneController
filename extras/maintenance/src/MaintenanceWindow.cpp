@@ -9,7 +9,6 @@
 
 MaintenanceWindow::MaintenanceWindow()
 {
-
 	_ui.setupUi(this);
 	_progressUi.setupUi(&_autoscanProgressWindow);
 	_autoscanProgressWindow.setVisible(false);
@@ -19,6 +18,7 @@ MaintenanceWindow::MaintenanceWindow()
 	_rxT0millis = -1;
 	_jsIsControlling = false;
 	_jsIsArmed = false;
+	_spikeStop = false;
 
 	_imuTypeToString =
 	{
@@ -86,7 +86,9 @@ MaintenanceWindow::MaintenanceWindow()
 		{"MOTOR_2", 4000},
 		{"MOTOR_3", 4000},
 		{"MOTOR_4", 4000},
-		{"MOTORS_ARMED", 2}
+		{"MOTORS_ARMED", 2},
+		{"FORCE_X", 20},
+		{"FORCE_Y", 20}
 	};
 
 	_rxMotorParams =
@@ -248,6 +250,7 @@ MaintenanceWindow::MaintenanceWindow()
 	connect(_maintHandler, SIGNAL(receivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)), this, SLOT(OnReceivedSwVer(uint8_t, uint8_t, uint8_t, uint8_t)));
 	connect(_maintHandler, SIGNAL(receivedImuOffset(float, float)), this, SLOT(OnReceivedImuOffset(float, float)));
 	connect(_maintHandler, SIGNAL(receivedThrottleParams(uint16_t, uint16_t, uint16_t)), this, SLOT(OnReceivedThrottleParams(uint16_t, uint16_t, uint16_t)));
+	connect(_maintHandler, SIGNAL(receivedGyroXYfiltered(float, float)), this, SLOT(OnReceivedGyroXYfiltered(float, float)));
 
 	connect(_maintHandler, SIGNAL(txRawData(quint8*, int)), this, SLOT(OnTxRawData(quint8*, int)));
 	connect(_maintHandler, SIGNAL(rxRawData(bool, quint8*, int)), this, SLOT(OnRxRawData(bool, quint8*, int)));
@@ -1128,6 +1131,22 @@ void MaintenanceWindow::OnHeaderChanged()
 		_ui.lineRxPitchOffset->setText("");
 	}
 
+	if (_ui.checkTxForce->isChecked())
+	{
+		header.Bits.gyro_x_f = 1;
+		header.Bits.gyro_y_f = 1;
+	
+		_ui.checkTxFiltGyroX->setChecked(true);
+		_ui.checkTxFiltGyroY->setChecked(true);
+	}
+	else
+	{
+		_ui.checkRxForceX->setChecked(false);
+		_ui.checkRxForceY->setChecked(false);
+		_ui.lineRxForceX->setText("");
+		_ui.lineRxForceY->setText("");
+	}
+
 	if (_ui.checkTxMotorParams->isChecked())
 	{
 		header.Bits.motor_params = 1;
@@ -1201,6 +1220,17 @@ void MaintenanceWindow::OnBtnSendSetMotors()
 		if (motorNo < 6)
 		{
 			_maintHandler->TxSetMotors(motorNo, data);
+			_spikeStop = false;
+
+			if (_ui.checkTxMotorSpike->isChecked())
+			{
+				QTimer::singleShot(7 * _txDelayMillis, [this, motorNo]() {
+					_maintHandler->TxSetMotors(motorNo, 1000);
+					QTimer::singleShot(5 * _txDelayMillis, [this]() {
+						_spikeStop = true;
+						});
+				});
+			}
 		}
 		else
 		{
@@ -2034,6 +2064,39 @@ void MaintenanceWindow::OnReceivedImuOffset(float roll_offset, float pitch_offse
 
 	_ui.lineRxRollOffset->setText(QString::number(_rxRollOffset));
 	_ui.lineRxPitchOffset->setText(QString::number(_rxPitchOffset));
+}
+
+
+void MaintenanceWindow::OnReceivedGyroXYfiltered(float gyro_x_f, float gyro_y_f)
+{
+	if (_ui.checkTxForce->isChecked())
+	{
+		double gx, gy, gz;
+		gz = 0;
+
+		rotateRollPitch(gyro_x_f, gyro_y_f, 0.0, gx, gy, gz);
+
+		double dt_s = 0.005;
+
+		double omega_dot[2] = { gx / dt_s, gy / dt_s };
+		const double I = 1.106156250000000e-02;
+		const double L = 0.227;
+
+		double torque[2] = { omega_dot[0] * I, omega_dot[1] * I };
+		double force[2]  = { torque[0] / L, torque[1] / L };
+
+		_ui.checkRxForceX->setChecked(true);
+		_ui.checkRxForceY->setChecked(true);
+
+		_ui.lineRxForceX->setText(QString::number(torque[0], 103, 4));
+		_ui.lineRxForceY->setText(QString::number(torque[1], 103, 4));
+
+		if (!_spikeStop)
+		{
+			checkPlot("FORCE_X", torque[0]);
+			checkPlot("FORCE_Y", torque[1]);
+		}
+	}
 }
 
 

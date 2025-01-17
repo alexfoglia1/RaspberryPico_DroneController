@@ -261,7 +261,6 @@ void ATTITUDE_Calibrate()
 {
     ATTITUDE_Handler();
 
-    const float epsilon = 1e-4;
     ATTITUDE_Roll0 = body_roll;
     ATTITUDE_Pitch0 = body_pitch;
 }

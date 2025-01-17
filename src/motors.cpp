@@ -17,6 +17,7 @@ PID_CONTROL_TAG pid_roll;
 PID_CONTROL_TAG pid_pitch;
 PID_CONTROL_TAG pid_yaw;
 
+#ifdef __CONTROL_RPM__
 uint32_t MOTOR_Throttle;
 
 
@@ -38,7 +39,7 @@ static uint32_t rpm_to_pwm(uint32_t rpm)
 
     return static_cast<uint32_t>(round(px));
 }
-
+#endif 
 
 static void init_pwm()
 {
@@ -51,9 +52,11 @@ static void init_pwm()
 
 void MOTORS_Init()
 {
+#ifdef __CONTROL_RPM__    
     MOTOR_Throttle = 0;
     min_rpm = 5700;
     max_rpm = 12000;
+#endif
     
     pid_reset(&pid_roll);
     pid_reset(&pid_pitch);
@@ -109,8 +112,6 @@ void MOTORS_Handler()
     pid_yaw_gain[int(MAINT_PID_PARAM::PID_KD)]  = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KD)]);
     pid_yaw_gain[int(MAINT_PID_PARAM::PID_SAT)] = *reinterpret_cast<float*>(&MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_SAT)]);
     
-    MOTOR_Throttle = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, min_rpm, max_rpm);
-
     if (JOYSTICK_MotorsArmed)
     {
         double body_roll = ATTITUDE_RelRoll();
@@ -123,6 +124,7 @@ void MOTORS_Handler()
         pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, body_roll_rotated);
         pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, body_pitch_rotated);
 
+#ifdef __CONTROL_RPM__
         uint32_t m1_rpm = uint32_t(round(MOTOR_Throttle - pid_pitch.output));
         uint32_t m2_rpm = uint32_t(round(MOTOR_Throttle - pid_roll.output));
         uint32_t m3_rpm = uint32_t(round(MOTOR_Throttle + pid_roll.output));
@@ -133,11 +135,24 @@ void MOTORS_Handler()
         m3_signal = rpm_to_pwm(m3_rpm);
         m4_signal = rpm_to_pwm(m4_rpm);
 
-        // Con gli RPM in teoria non dovrei mai modificare le soglie minime e massime di PWM da maintenance
+         // Con gli RPM in teoria non dovrei mai modificare le soglie minime e massime di PWM da maintenance
         m1_signal = to_range(m1_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)], MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         m2_signal = to_range(m2_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)], MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         m3_signal = to_range(m3_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)], MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         m4_signal = to_range(m4_signal, MOTOR_MIN_SIGNAL, MOTOR_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)], MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+    
+#else
+        float m1_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M1)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m2_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M2)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+        float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
+
+        m1_signal = uint32_t(round(m1_signal_armed - pid_pitch.output));
+        m2_signal = uint32_t(round(m2_signal_armed - pid_roll.output));
+        m3_signal = uint32_t(round(m3_signal_armed + pid_roll.output));
+        m4_signal = uint32_t(round(m4_signal_armed + pid_pitch.output));
+#endif
+
     }
     else
     {

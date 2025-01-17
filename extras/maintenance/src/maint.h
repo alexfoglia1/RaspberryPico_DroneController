@@ -292,6 +292,7 @@ signals:
     void receivedSwVer(uint8_t major_v, uint8_t minor_v, uint8_t stage_v, uint8_t rel_type);
     void receivedImuOffset(float offset_roll, float offset_pitch);
     void receivedThrottleParams(uint16_t descend, uint16_t hovering, uint16_t climb);
+    void receivedGyroXYfiltered(float gyro_x_f, float gyro_y_filtered);
 
 private:
 	QSerialPort* _serialPort;

@@ -710,6 +710,7 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 
     emit rxRawData(local_cks == rx_cks, reinterpret_cast<quint8*>(&_rx_buf[0]), data_len);
 
+    float gxf, gyf;
     if (local_cks == rx_cks)
     {
         if (rx_header->Bits.accel_x)
@@ -824,6 +825,7 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
         {
             uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
             float fdata = *(reinterpret_cast<float*>(&idata));
+            gxf = fdata;
 
             emit receivedFilteredGyroX(fdata);
 
@@ -833,6 +835,7 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
         {
             uint32_t idata = *(reinterpret_cast<uint32_t*>(pPayload));
             float fdata = *(reinterpret_cast<float*>(&idata));
+            gyf = fdata;
 
             emit receivedFilteredGyroY(fdata);
 
@@ -1256,6 +1259,11 @@ void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
             emit receivedThrottleParams(descend, hovering, climb);
             pPayload += (3 * sizeof(uint16_t));
         }
+        if (rx_header->Bits.gyro_x_f && rx_header->Bits.gyro_y_f)
+        {
+            emit receivedGyroXYfiltered(gxf, gyf);
+        }
+
     }
 }
 
