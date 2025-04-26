@@ -38,8 +38,8 @@ F4 = kf * omega(4)^2;
 
 % Total thrust and torques
 Tz = F1 + F2 + F3 + F4;
-Tx = d * (F1 - F4);
-Ty = d * (F2 - F3);
+Tx = d * (F3 - F2);
+Ty = d * (F1 - F4);
 Tyaw = km * (omega(1)^2 - omega(2)^2 + omega(3)^2 - omega(4)^2);
 
 % Rotation matrix (body to world frame)
