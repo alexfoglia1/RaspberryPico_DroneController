@@ -60,11 +60,11 @@ static bool controlling_motors;
 
 static void put_packet(uint8_t* buf, uint32_t len)
 {
-    putchar(MAINT_SYNC_CHAR);
+    putchar_raw(MAINT_SYNC_CHAR);
 
     for (uint32_t i = 0; i < len; i++)
     {
-        putchar(buf[i]);
+        putchar_raw(buf[i]);
     }
 
     if (uart_is_writable(uart0))
