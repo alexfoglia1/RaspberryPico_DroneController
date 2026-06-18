@@ -127,9 +127,13 @@ int main()
         }
     }
 
+//extern uint8_t SIGN_X, SIGN_Y, SIGN_Z;
+//extern uint8_t AXE_X, AXE_Y, AXE_Z;
     UART_Init();
     while (1)
     {
+        //printf("SIGN_X(%hhu), SIGN_Y(%hhu), SIGN_Z(%hhu)\n", SIGN_X, SIGN_Y, SIGN_Z);
+
         MAINT_Handler();
     }
 

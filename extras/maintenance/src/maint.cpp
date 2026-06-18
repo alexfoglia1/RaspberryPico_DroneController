@@ -179,8 +179,8 @@ Maint::Maintenance::Maintenance()
     _rx_payload_idx = 0;
     memset(&_rx_buf, 0x00, 1024);
 
-    _remCtrl.override_radio = 0;
-    _remCtrl.armed_signal = 1000;
+    _remCtrl.override_radio = 1;
+    _remCtrl.armed_signal = 2000;
     _remCtrl.roll_signal = 1500;
     _remCtrl.pitch_signal = 1500;
     _remCtrl.throttle_signal = 1000;

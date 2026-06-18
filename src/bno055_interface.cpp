@@ -11,7 +11,9 @@ BNO055Interface::BNO055Interface()
 {
 
 }
-    
+
+uint8_t SIGN_X, SIGN_Y, SIGN_Z;
+
 bool BNO055Interface::begin(i2c_inst_t* i2c_channel, int sdaPin, int sclPin)
 {
     ImuInterface::begin(i2c_channel, sdaPin, sclPin);
@@ -20,6 +22,12 @@ bool BNO055Interface::begin(i2c_inst_t* i2c_channel, int sdaPin, int sclPin)
 
     if (success)
     {
+        equipment_handlers::BNO055_IMU::AxesConfiguration config = _bno055.getAxesConfiguration();
+
+        SIGN_X = config.x.sign;
+        SIGN_Y = config.y.sign;
+        SIGN_Z = config.z.sign;
+
         equipment_handlers::BNO055_IMU::AxesSigns remap;
         remap.x = equipment_handlers::BNO055_IMU::AxisSignSelection::REMAP_TO_POSITIVE;
         remap.y = equipment_handlers::BNO055_IMU::AxisSignSelection::REMAP_TO_POSITIVE;

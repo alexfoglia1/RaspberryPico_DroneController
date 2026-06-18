@@ -213,7 +213,7 @@ void ATTITUDE_Handler()
     imu->getAccel(&ax, &ay, &az);
     imu->getGyro(&gx, &gy, &gz);
     imu->getMagneticField(&mx, &my, &mz);
-
+#if 0
     if (imu->haveAbsoluteOrientation())
     {
         if (filter_on == false)
@@ -241,6 +241,7 @@ void ATTITUDE_Handler()
         }
     }
     else
+#endif
     {
         if (filter_on == false)
         {

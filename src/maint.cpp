@@ -503,13 +503,15 @@ void MAINT_OnByteReceived(uint8_t byte_rx)
                 MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KI)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
                 MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_KD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
-                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));           
+                MAINT_PidParameters[int(EULER_ANGLES::ROLL)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));
+                pid_reset(&pid_roll);         
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_PITCH_PID_PARAMS:
                 MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));
                 MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KI)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[4]));
                 MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_KD)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[8]));
-                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12]));       
+                MAINT_PidParameters[int(EULER_ANGLES::PITCH)][int(MAINT_PID_PARAM::PID_SAT)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[12])); 
+                pid_reset(&pid_pitch);          
                 break;
             case MAINT_CMD_ID::MAINT_CMD_SET_YAW_PID_PARAMS:
                 MAINT_PidParameters[int(EULER_ANGLES::YAW)][int(MAINT_PID_PARAM::PID_KP)] = (*reinterpret_cast<uint32_t*>(&rx_message.payload[0]));

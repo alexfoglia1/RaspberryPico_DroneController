@@ -116,10 +116,12 @@ void MOTORS_Handler()
     {
         double body_roll = ATTITUDE_RelRoll();
         double body_pitch = ATTITUDE_RelPitch();
-        double body_roll_rotated = 0.0;
-        double body_pitch_rotated = 0.0;
 
-        rotateRollPitch(body_roll, body_pitch, body_roll_rotated, body_pitch_rotated);
+        double body_roll_rotated = body_roll;
+        double body_pitch_rotated = body_pitch;
+
+        // NO NEED TO ROTATE ANYTHING IN PLUS CONFIG, NEED TO BE ROTATED IN "X" CONFIG
+        //rotateRollPitch(body_roll, body_pitch, body_roll_rotated, body_pitch_rotated);
         
         pid_controller(&pid_roll, pid_roll_gain, JOYSTICK_Roll, body_roll_rotated);
         pid_controller(&pid_pitch, pid_pitch_gain, JOYSTICK_Pitch, body_pitch_rotated);
@@ -147,10 +149,10 @@ void MOTORS_Handler()
         float m3_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M3)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
         float m4_signal_armed = to_range(JOYSTICK_Throttle, RADIO_MIN_SIGNAL, RADIO_MAX_SIGNAL, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MIN_SIGNAL)] + MOTOR_ARMED_THRESHOLD, MAINT_MotorsParameters[int(MOTORS::M4)][int(MAINT_MOTOR_PARAM::MAX_SIGNAL)]);
 
-        m1_signal = uint32_t(round(m1_signal_armed - pid_pitch.output));
-        m2_signal = uint32_t(round(m2_signal_armed - pid_roll.output));
-        m3_signal = uint32_t(round(m3_signal_armed + pid_roll.output));
-        m4_signal = uint32_t(round(m4_signal_armed + pid_pitch.output));
+        m2_signal = uint32_t(round(m2_signal_armed - pid_pitch.output));
+        m1_signal = uint32_t(round(m1_signal_armed - pid_roll.output));
+        m4_signal = uint32_t(round(m4_signal_armed + pid_roll.output));
+        m3_signal = uint32_t(round(m3_signal_armed + pid_pitch.output));
 #endif
 
     }
