@@ -268,13 +268,13 @@ void ATTITUDE_Calibrate()
 
 float ATTITUDE_RelRoll()
 {
-    return atan2(sin((body_roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS), cos((body_roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+    return body_roll;////atan2(sin((body_roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS), cos((body_roll - ATTITUDE_Roll0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
 }
 
 
 float ATTITUDE_RelPitch()
 {
-    return atan2(sin((body_pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS), cos((body_pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
+    return body_pitch;//atan2(sin((body_pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS), cos((body_pitch - ATTITUDE_Pitch0) * DEGREES_TO_RADIANS)) * RADIANS_TO_DEGREES;
 }
 
 
