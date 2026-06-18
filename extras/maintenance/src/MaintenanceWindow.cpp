@@ -261,8 +261,8 @@ MaintenanceWindow::MaintenanceWindow()
 	autoscanComPortsTimer->setSingleShot(true);
 	autoscanComPortsTimer->setTimerType(Qt::PreciseTimer);
 
-	connect(autoscanComPortsTimer, &QTimer::timeout, this, [this, autoscanComPortsTimer] { this->autoScanComPorts(); autoscanComPortsTimer->deleteLater(); });
-	//autoscanComPortsTimer->start(500);
+	connect(autoscanComPortsTimer, &QTimer::timeout, this, [this, autoscanComPortsTimer] { this->autoScanComPorts(true); autoscanComPortsTimer->deleteLater(); });
+	autoscanComPortsTimer->start(500);
 
 	QTimer* checkHeaderChanged = new QTimer();
 	checkHeaderChanged->setSingleShot(false);
@@ -292,7 +292,7 @@ void MaintenanceWindow::OnPicoDownlink()
 }
 
 
-void MaintenanceWindow::autoScanComPorts()
+void MaintenanceWindow::autoScanComPorts(bool enumerateAll)
 {
 	_progressUi.autoscanStatusPrompt->setText("");
 
@@ -304,6 +304,13 @@ void MaintenanceWindow::autoScanComPorts()
 #else
 		QString portName = QString("COM%1").arg(i);
 #endif
+		if (enumerateAll)
+		{
+			_ui.comboSelPort->addItem(portName);
+
+			continue;
+		}
+
 		_progressUi.autoscanStatusPrompt->append(QString("Testing %1").arg(portName));
 		qApp->processEvents();
 
@@ -545,7 +552,7 @@ void MaintenanceWindow::OnBtnOpenBoot()
 void MaintenanceWindow::OnBtnRescanPorts()
 {
 	_ui.comboSelPort->clear();
-	autoScanComPorts();
+	autoScanComPorts(true);
 }
 
 

@@ -8,8 +8,164 @@
 #include <qregularexpression.h>
 #include <qthread.h>
 
+#include <cstring>
+#include <cstdint>
+
+namespace
+{
+    static QString hexU8(uint8_t v)
+    {
+        return QString("0x%1")
+            .arg(static_cast<uint32_t>(v), 2, 16, QLatin1Char('0'))
+            .toUpper();
+    }
+
+    static QString hexU16(uint16_t v)
+    {
+        return QString("0x%1")
+            .arg(static_cast<uint32_t>(v), 4, 16, QLatin1Char('0'))
+            .toUpper();
+    }
+
+    static QString hexU32(uint32_t v)
+    {
+        return QString("0x%1")
+            .arg(v, 8, 16, QLatin1Char('0'))
+            .toUpper();
+    }
+
+    static QString hexU64(uint64_t v)
+    {
+        return QString("0x%1")
+            .arg(static_cast<qulonglong>(v), 16, 16, QLatin1Char('0'))
+            .toUpper();
+    }
+
+    static uint16_t readLeU16(const uint8_t* p)
+    {
+        return static_cast<uint16_t>(p[0]) |
+            static_cast<uint16_t>(p[1] << 8);
+    }
+
+    static uint32_t readLeU32(const uint8_t* p)
+    {
+        return static_cast<uint32_t>(p[0]) |
+            static_cast<uint32_t>(p[1]) << 8 |
+            static_cast<uint32_t>(p[2]) << 16 |
+            static_cast<uint32_t>(p[3]) << 24;
+    }
+
+    static uint64_t readLeU64(const uint8_t* p)
+    {
+        uint64_t v = 0;
+
+        for (int i = 0; i < 8; ++i)
+        {
+            v |= static_cast<uint64_t>(p[i]) << (8 * i);
+        }
+
+        return v;
+    }
+
+    static float readLeF32(const uint8_t* p)
+    {
+        uint32_t raw = readLeU32(p);
+
+        float f;
+        std::memcpy(&f, &raw, sizeof(float));
+
+        return f;
+    }
+
+    static QString byteDump(const uint8_t* data, uint32_t len)
+    {
+        QString s;
+
+        for (uint32_t i = 0; i < len; ++i)
+        {
+            s += hexU8(data[i]);
+            s += " ";
+        }
+
+        return s.trimmed();
+    }
+
+    static const char* bitName(int bit)
+    {
+        static const char* names[] =
+        {
+            "accel_x",          // 0
+            "accel_y",          // 1
+            "accel_z",          // 2
+            "gyro_x",           // 3
+            "gyro_y",           // 4
+            "gyro_z",           // 5
+            "magn_x",           // 6
+            "magn_y",           // 7
+            "magn_z",           // 8
+            "accel_x_f",        // 9
+            "accel_y_f",        // 10
+            "accel_z_f",        // 11
+            "gyro_x_f",         // 12
+            "gyro_y_f",         // 13
+            "gyro_z_f",         // 14
+            "magn_x_f",         // 15
+            "magn_y_f",         // 16
+            "magn_z_f",         // 17
+            "throttle_sgn",     // 18
+            "roll_sgn",         // 19
+            "pitch_sgn",        // 20
+            "cmd_thr",          // 21
+            "cmd_roll",         // 22
+            "cmd_pitch",        // 23
+            "body_roll",        // 24
+            "body_pitch",       // 25
+            "body_yaw",         // 26
+            "roll_pid_err",     // 27
+            "roll_pid_p",       // 28
+            "roll_pid_i",       // 29
+            "roll_pid_d",       // 30
+            "roll_pid_u",       // 31
+            "pitch_pid_err",    // 32
+            "pitch_pid_p",      // 33
+            "pitch_pid_i",      // 34
+            "pitch_pid_d",      // 35
+            "pitch_pid_u",      // 36
+            "yaw_pid_err",      // 37
+            "yaw_pid_p",        // 38
+            "yaw_pid_i",        // 39
+            "yaw_pid_d",        // 40
+            "yaw_pid_u",        // 41
+            "motor1",           // 42
+            "motor2",           // 43
+            "motor3",           // 44
+            "motor4",           // 45
+            "motors_armed",     // 46
+            "cbit",             // 47
+            "motor_params",     // 48
+            "js_params",        // 49
+            "pid_params",       // 50
+            "ptf1_params",      // 51
+            "imu_type",         // 52
+            "i2c_read",         // 53
+            "sw_ver",           // 54
+            "imu_offset",       // 55
+            "throttle_params"   // 56
+        };
+
+        if (bit < 0 || bit >= static_cast<int>(sizeof(names) / sizeof(names[0])))
+        {
+            return "unknown";
+        }
+
+        return names[bit];
+    }
+}
+
 Maint::Maintenance::Maintenance()
 {
+    _logFile = NULL;
+
     _txMessageGet.All = 0;
     _txMessageSet.All = 0;
 
@@ -261,7 +417,7 @@ void Maint::Maintenance::TxImuType(IMU_TYPE imuType)
     uint32_t iImuType = static_cast<uint32_t>(imuType);
 
     _txSetParams.clear();
-    pushParams(reinterpret_cast<uint8_t*>(&iImuType), sizeof(uint32_t));
+    pushParams(reinterpret_cast<uint8_t*>(&iImuType), sizeof(uint8_t));
     
     _txStatus = Maint::TX_STATUS::TX_SET;
     
@@ -701,16 +857,35 @@ void Maint::Maintenance::update_fsm(uint8_t byte_rx)
     }
 }
 
-
 void Maint::Maintenance::data_ingest(uint8_t rx_cks, uint32_t data_len)
 {
     uint8_t local_cks = checksum(&_rx_buf[0], data_len - 1);
-    Maint::MAINT_HEADER_T* rx_header = reinterpret_cast<Maint::MAINT_HEADER_T*>(&_rx_buf[0]);
-    uint8_t* pPayload = reinterpret_cast<uint8_t*>(&_rx_buf[sizeof(Maint::MAINT_HEADER_T)]);
+    bool cks_ok = local_cks == rx_cks;
 
-    emit rxRawData(local_cks == rx_cks, reinterpret_cast<quint8*>(&_rx_buf[0]), data_len);
+    Maint::MAINT_HEADER_T* rx_header =
+        reinterpret_cast<Maint::MAINT_HEADER_T*>(&_rx_buf[0]);
 
-    float gxf, gyf;
+    uint8_t* pPayload =
+        reinterpret_cast<uint8_t*>(&_rx_buf[sizeof(Maint::MAINT_HEADER_T)]);
+
+    emit rxRawData(cks_ok, reinterpret_cast<quint8*>(&_rx_buf[0]), data_len);
+
+    logDecodedRxPacket(
+        cks_ok,
+        rx_cks,
+        local_cks,
+        reinterpret_cast<const uint8_t*>(&_rx_buf[0]),
+        data_len
+    );
+
+    if (!cks_ok)
+    {
+        return;
+    }
+
+    float gxf = 0.0f;
+    float gyf = 0.0f;
+
     if (local_cks == rx_cks)
     {
         if (rx_header->Bits.accel_x)
@@ -1526,4 +1701,388 @@ void Maint::Maintenance::onDownlinkTimeout()
     _checkDownlink->stop();
 
     emit downlink();
+}
+
+
+void Maint::Maintenance::logDecodedRxPacket(bool cksOk,
+    uint8_t rxCks,
+    uint8_t localCks,
+    const uint8_t* packet,
+    uint32_t packetLen)
+{
+    if (_logFile == nullptr || packet == nullptr)
+    {
+        return;
+    }
+
+    QString log;
+
+    log += "\n";
+    log += "============================================================\n";
+    log += QString("[%1] RX MAINT PACKET\n")
+        .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss.zzz"));
+
+    log += QString("LEN          : %1 bytes\n").arg(packetLen);
+    log += QString("CHECKSUM     : %1  rx=%2 local=%3\n")
+        .arg(cksOk ? "OK" : "FAIL")
+        .arg(hexU8(rxCks))
+        .arg(hexU8(localCks));
+
+    log += QString("RAW          : %1\n").arg(byteDump(packet, packetLen));
+
+    if (packetLen < sizeof(MAINT_HEADER_T) + 1)
+    {
+        log += "ERROR        : packet too short\n";
+        log += "============================================================\n";
+
+        const QByteArray out = log.toUtf8();
+        fprintf(_logFile, "%s", out.constData());
+        fflush(_logFile);
+        return;
+    }
+
+    const uint8_t* headerPtr = packet;
+    const uint8_t* payloadPtr = packet + sizeof(MAINT_HEADER_T);
+    const uint8_t* payloadEnd = packet + packetLen - 1; // checksum escluso
+
+    const uint64_t header = readLeU64(headerPtr);
+    const uint64_t payloadMask = header & ((1ULL << 57) - 1ULL);
+    const uint8_t maintCmdId = static_cast<uint8_t>((header >> 57) & 0x7FULL);
+
+    log += QString("HEADER       : %1\n").arg(hexU64(header));
+    log += QString("PAYLOAD MASK : %1\n").arg(hexU64(payloadMask));
+    log += QString("MAINT CMD ID : %1 %2\n")
+        .arg(static_cast<uint32_t>(maintCmdId))
+        .arg(hexU8(maintCmdId));
+
+    log += "SET FIELDS   : ";
+
+    bool first = true;
+
+    for (int bit = 0; bit <= 56; ++bit)
+    {
+        if ((payloadMask & (1ULL << bit)) != 0)
+        {
+            if (!first)
+            {
+                log += ", ";
+            }
+
+            log += bitName(bit);
+            first = false;
+        }
+    }
+
+    if (first)
+    {
+        log += "none";
+    }
+
+    log += "\n";
+
+    log += QString("PAYLOAD LEN  : %1 bytes\n")
+        .arg(static_cast<uint32_t>(payloadEnd - payloadPtr));
+
+    log += "PAYLOAD\n";
+
+    const uint8_t* p = payloadPtr;
+
+    auto offset = [&]() -> uint32_t
+        {
+            return static_cast<uint32_t>(p - payloadPtr);
+        };
+
+    auto has = [&](int bit) -> bool
+        {
+            return (payloadMask & (1ULL << bit)) != 0;
+        };
+
+    auto ensure = [&](uint32_t n, const char* fieldName) -> bool
+        {
+            if (p + n <= payloadEnd)
+            {
+                return true;
+            }
+
+            log += QString("  %1 @ +%2 : TRUNCATED, need %3 byte, remaining %4\n")
+                .arg(QString::fromLatin1(fieldName), -28)
+                .arg(offset())
+                .arg(n)
+                .arg(static_cast<uint32_t>(payloadEnd - p));
+
+            return false;
+        };
+
+    auto appendF32 = [&](const char* name) -> float
+        {
+            if (!ensure(sizeof(uint32_t), name))
+            {
+                return 0.0f;
+            }
+
+            const uint32_t raw = readLeU32(p);
+            const float value = readLeF32(p);
+
+            log += QString("  %1 @ +%2 : %3  raw=%4\n")
+                .arg(QString::fromLatin1(name), -28)
+                .arg(offset(), 3)
+                .arg(QString::number(value, 'g', 9))
+                .arg(hexU32(raw));
+
+            p += sizeof(uint32_t);
+            return value;
+        };
+
+    auto appendU32 = [&](const char* name) -> uint32_t
+        {
+            if (!ensure(sizeof(uint32_t), name))
+            {
+                return 0;
+            }
+
+            const uint32_t value = readLeU32(p);
+
+            log += QString("  %1 @ +%2 : %3  %4\n")
+                .arg(QString::fromLatin1(name), -28)
+                .arg(offset(), 3)
+                .arg(value)
+                .arg(hexU32(value));
+
+            p += sizeof(uint32_t);
+            return value;
+        };
+
+    auto appendU16 = [&](const char* name) -> uint16_t
+        {
+            if (!ensure(sizeof(uint16_t), name))
+            {
+                return 0;
+            }
+
+            const uint16_t value = readLeU16(p);
+
+            log += QString("  %1 @ +%2 : %3  %4\n")
+                .arg(QString::fromLatin1(name), -28)
+                .arg(offset(), 3)
+                .arg(static_cast<uint32_t>(value))
+                .arg(hexU16(value));
+
+            p += sizeof(uint16_t);
+            return value;
+        };
+
+    auto appendU8 = [&](const char* name) -> uint8_t
+        {
+            if (!ensure(sizeof(uint8_t), name))
+            {
+                return 0;
+            }
+
+            const uint8_t value = *p;
+
+            log += QString("  %1 @ +%2 : %3  %4\n")
+                .arg(QString::fromLatin1(name), -28)
+                .arg(offset(), 3)
+                .arg(static_cast<uint32_t>(value))
+                .arg(hexU8(value));
+
+            p += sizeof(uint8_t);
+            return value;
+        };
+
+    if (has(0))  appendF32("accel_x");
+    if (has(1))  appendF32("accel_y");
+    if (has(2))  appendF32("accel_z");
+
+    if (has(3))  appendF32("gyro_x");
+    if (has(4))  appendF32("gyro_y");
+    if (has(5))  appendF32("gyro_z");
+
+    if (has(6))  appendF32("magn_x");
+    if (has(7))  appendF32("magn_y");
+    if (has(8))  appendF32("magn_z");
+
+    if (has(9))  appendF32("accel_x_f");
+    if (has(10)) appendF32("accel_y_f");
+    if (has(11)) appendF32("accel_z_f");
+
+    if (has(12)) appendF32("gyro_x_f");
+    if (has(13)) appendF32("gyro_y_f");
+    if (has(14)) appendF32("gyro_z_f");
+
+    if (has(15)) appendF32("magn_x_f");
+    if (has(16)) appendF32("magn_y_f");
+    if (has(17)) appendF32("magn_z_f");
+
+    if (has(18)) appendU16("throttle_sgn");
+    if (has(19)) appendU16("roll_sgn");
+    if (has(20)) appendU16("pitch_sgn");
+
+    if (has(21)) appendU16("cmd_thr");
+    if (has(22)) appendF32("cmd_roll");
+    if (has(23)) appendF32("cmd_pitch");
+
+    if (has(24)) appendF32("body_roll");
+    if (has(25)) appendF32("body_pitch");
+    if (has(26)) appendF32("body_yaw");
+
+    if (has(27)) appendF32("roll_pid_err");
+    if (has(28)) appendF32("roll_pid_p");
+    if (has(29)) appendF32("roll_pid_i");
+    if (has(30)) appendF32("roll_pid_d");
+    if (has(31)) appendF32("roll_pid_u");
+
+    if (has(32)) appendF32("pitch_pid_err");
+    if (has(33)) appendF32("pitch_pid_p");
+    if (has(34)) appendF32("pitch_pid_i");
+    if (has(35)) appendF32("pitch_pid_d");
+    if (has(36)) appendF32("pitch_pid_u");
+
+    if (has(37)) appendF32("yaw_pid_err");
+    if (has(38)) appendF32("yaw_pid_p");
+    if (has(39)) appendF32("yaw_pid_i");
+    if (has(40)) appendF32("yaw_pid_d");
+    if (has(41)) appendF32("yaw_pid_u");
+
+    if (has(42)) appendU16("motor1");
+    if (has(43)) appendU16("motor2");
+    if (has(44)) appendU16("motor3");
+    if (has(45)) appendU16("motor4");
+
+    if (has(46)) appendU8("motors_armed");
+
+    if (has(47)) appendU32("cbit");
+
+    if (has(48))
+    {
+        log += "  motor_params\n";
+
+        appendU32("motor_params.m1_enabled");
+        appendU32("motor_params.m1_min");
+        appendU32("motor_params.m1_max");
+
+        appendU32("motor_params.m2_enabled");
+        appendU32("motor_params.m2_min");
+        appendU32("motor_params.m2_max");
+
+        appendU32("motor_params.m3_enabled");
+        appendU32("motor_params.m3_min");
+        appendU32("motor_params.m3_max");
+
+        appendU32("motor_params.m4_enabled");
+        appendU32("motor_params.m4_min");
+        appendU32("motor_params.m4_max");
+    }
+
+    if (has(49))
+    {
+        log += "  js_params\n";
+
+        appendF32("js_params.alpha_throttle");
+        appendF32("js_params.beta_throttle");
+        appendF32("js_params.alpha_roll");
+        appendF32("js_params.beta_roll");
+        appendF32("js_params.alpha_pitch");
+        appendF32("js_params.beta_pitch");
+
+        appendU32("js_params.ignored_0");
+        appendU32("js_params.ignored_1");
+    }
+
+    if (has(50))
+    {
+        log += "  pid_params\n";
+
+        appendF32("pid_params.roll_kp");
+        appendF32("pid_params.roll_ki");
+        appendF32("pid_params.roll_kd");
+        appendF32("pid_params.roll_sat");
+
+        appendF32("pid_params.pitch_kp");
+        appendF32("pid_params.pitch_ki");
+        appendF32("pid_params.pitch_kd");
+        appendF32("pid_params.pitch_sat");
+
+        appendF32("pid_params.yaw_kp");
+        appendF32("pid_params.yaw_ki");
+        appendF32("pid_params.yaw_kd");
+        appendF32("pid_params.yaw_sat");
+    }
+
+    if (has(51))
+    {
+        log += "  ptf1_params\n";
+
+        appendF32("ptf1_params.acc_x");
+        appendF32("ptf1_params.acc_y");
+        appendF32("ptf1_params.acc_z");
+
+        appendF32("ptf1_params.gyro_x");
+        appendF32("ptf1_params.gyro_y");
+        appendF32("ptf1_params.gyro_z");
+
+        appendF32("ptf1_params.magn_x");
+        appendF32("ptf1_params.magn_y");
+        appendF32("ptf1_params.magn_z");
+    }
+
+    if (has(52)) appendU8("imu_type");
+    if (has(53)) appendU8("i2c_read");
+
+    if (has(54))
+    {
+        if (ensure(sizeof(SW_VER_TAG), "sw_ver"))
+        {
+            SW_VER_TAG swVer;
+            std::memcpy(&swVer, p, sizeof(SW_VER_TAG));
+
+            log += QString("  %1 @ +%2 : major=%3 minor=%4 stage=%5 rel_type=%6\n")
+                .arg("sw_ver", -28)
+                .arg(offset(), 3)
+                .arg(static_cast<uint32_t>(swVer.major_v))
+                .arg(static_cast<uint32_t>(swVer.minor_v))
+                .arg(static_cast<uint32_t>(swVer.stage_v))
+                .arg(static_cast<uint32_t>(swVer.rel_type));
+
+            p += sizeof(SW_VER_TAG);
+        }
+    }
+
+    if (has(55))
+    {
+        appendF32("imu_offset.roll");
+        appendF32("imu_offset.pitch");
+    }
+
+    if (has(56))
+    {
+        appendU16("throttle_params.descend");
+        appendU16("throttle_params.hovering");
+        appendU16("throttle_params.climb");
+    }
+
+    const int32_t consumed = static_cast<int32_t>(p - payloadPtr);
+    const int32_t expected = static_cast<int32_t>(payloadEnd - payloadPtr);
+
+    log += QString("PAYLOAD USED : %1 / %2 bytes\n")
+        .arg(consumed)
+        .arg(expected);
+
+    if (consumed != expected)
+    {
+        log += QString("WARNING      : payload decode size mismatch, remaining=%1 bytes\n")
+            .arg(expected - consumed);
+
+        if (p < payloadEnd)
+        {
+            log += QString("REMAINING    : %1\n")
+                .arg(byteDump(p, static_cast<uint32_t>(payloadEnd - p)));
+        }
+    }
+
+    log += "============================================================\n";
+
+    const QByteArray out = log.toUtf8();
+    fprintf(_logFile, "%s", out.constData());
+    fflush(_logFile);
 }

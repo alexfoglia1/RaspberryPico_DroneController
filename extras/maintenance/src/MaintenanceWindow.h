@@ -70,7 +70,7 @@ private:
 	bool _jsIsArmed;
 	bool _spikeStop;
 
-	void autoScanComPorts();
+	void autoScanComPorts(bool enumerateAll);
 	void checkPlot(QString expectedText, double value);
 
 private slots:

@@ -317,6 +317,11 @@ private:
     void data_ingest(uint8_t rx_cks, uint32_t data_len);
     uint32_t calc_exp_bytes(Maint::MAINT_HEADER_T* header);
     QByteArray txMsg(Maint::MAINT_HEADER_T* header);
+        void logDecodedRxPacket(bool cksOk,
+            uint8_t rxCks,
+            uint8_t localCks,
+            const uint8_t* packet,
+            uint32_t packetLen);
 };
 
 };
