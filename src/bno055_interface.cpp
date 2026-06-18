@@ -18,6 +18,15 @@ bool BNO055Interface::begin(i2c_inst_t* i2c_channel, int sdaPin, int sclPin)
     
     bool success = _bno055.initialize(equipment_handlers::BNO055_IMU::BNO055_Primary_Address, i2c_channel);
 
+    if (success)
+    {
+        equipment_handlers::BNO055_IMU::AxesSigns remap;
+        remap.x = equipment_handlers::BNO055_IMU::AxisSignSelection::REMAP_TO_POSITIVE;
+        remap.y = equipment_handlers::BNO055_IMU::AxisSignSelection::REMAP_TO_POSITIVE;
+        remap.z = equipment_handlers::BNO055_IMU::AxisSignSelection::REMAP_TO_NEGATIVE;
+        
+        _bno055.RemapSigns(remap);
+    }
     return success;
 }
 
